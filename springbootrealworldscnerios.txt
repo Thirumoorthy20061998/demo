@@ -1,0 +1,1637 @@
+@Primary - Setting a Default Service
+Imagine you have an application that sends notifications. You have two implementations of a NotificationService interface: one for Email and one for SMS. Most of your application should use the Email service by default.
+
+Bean Definitions: You mark the EmailNotificationService as the primary one.
+
+Java
+
+// The Interface
+public interface NotificationService { 
+    void send(String message); 
+}
+
+// Default choice
+@Component
+@Primary // This is the default bean
+public class EmailNotificationService implements NotificationService { 
+    public void send(String message) { 
+        System.out.println("Email: " + message); 
+    } 
+}
+
+// Alternative choice
+@Component
+public class SmsNotificationService implements NotificationService { 
+    public void send(String message) { 
+        System.out.println("SMS: " + message); 
+    } 
+}
+Injection Point (Usage):
+
+Java
+
+@Service
+public class DefaultUserService {
+    @Autowired
+    private NotificationService notificationService; // No @Qualifier needed
+
+    public void notifyUser(String message) {
+        // Spring automatically injects EmailNotificationService
+        notificationService.send(message); 
+    }
+}
+// Output: Email: Welcome! 
+2. @Qualifier - Specifying a Non-Default Service
+Now, let's say a specific part of your application (like an administrative module) must use the SMS service.
+
+Injection Point (Usage): You use @Qualifier to override the default.
+
+Java
+
+@Service
+public class AdminService {
+    @Autowired
+    @Qualifier("smsNotificationService") // Explicitly requests the SMS bean
+    private NotificationService notificationService; 
+
+    public void sendCriticalAlert(String message) {
+        // Spring injects SmsNotificationService, ignoring the @Primary
+        notificationService.send(message);
+    }
+}
+// Output: SMS: Critical System Alert!
+Summary:
+Use @Primary when one implementation is the most common default. It reduces boilerplate code across many injection points.
+
+Use @Qualifier when you need to explicitly select a specific bean among many, especially when overriding the @Primary default.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Default methods in Java are methods defined in an interface that have a method body (an implementation).
+
+They were introduced in Java 8 to allow developers to add new methods to an existing interface without requiring all classes that implement that interface to immediately provide an implementation, thus maintaining backward compatibility.
+
+
+
+
+
+Explain the concept of a thread pool and the benefits of using ExecutorService. How would you create a fixed-size thread pool and submit a task that returns a value?"
+
+The Answer:
+Thread Pool: A thread pool is a managed collection of pre-initialized threads that can be reused to execute tasks. Instead of creating a new thread for every task, a thread pool reuses existing threads, which reduces the overhead of thread creation and destruction.
+
+Benefits of ExecutorService: It's a high-level API for managing thread pools and executing tasks. Its benefits include:
+
+Reduced Overhead: By reusing threads, it minimizes the performance cost of creating and destroying threads.
+
+Resource Management: It provides control over the number of threads, preventing the application from being overwhelmed by too many threads.
+
+Task Management: It decouples the task from its execution, simplifying code.
+
+Future and Callable: It allows you to submit tasks that can return a value or throw a checked exception, which is not possible with the Runnable interface.
+
+
+RestTemplate is a class provided by the Spring Framework that acts as a synchronous client for consuming (calling) RESTful web services.
+
+In a Spring Boot application, it is commonly used to make HTTP requests (like GET, POST, PUT, DELETE) to interact with external APIs or services, especially in a microservices architecture.
+HTTP Method Support: It provides dedicated methods for all standard HTTP verbs:
+GET: getForObject(), getForEntity(), exchange()
+
+POST: postForObject(), postForLocation(), exchange()
+
+PUT: put(), exchange()
+
+DELETE: delete(), exchange()
+
+
+
+
+
+System design is the process of defining the architecture, modules, interfaces, to satisfy specific requirements. It's about  out how to build a complex software or hardware system that is reliable, scalable, and maintainable.
+
+A design pattern is a reusable solution to a common problem in software design. It's not a finished design that you can directly plug into your code. Instead, it's a template or a blueprint that describes how to solve a recurring problem.
+
+
+
+
+ What are Microservices? How do they differ from a Monolithic Architecture?
+Answer:
+Microservices is an architectural style that structures an application as a collection of small, independent, and loosely coupled services. Each service is self-contained, focused on a single business capability, and can be developed, deployed, and scaled independently. They communicate over lightweight protocols, typically HTTP/REST or asynchronous messaging.
+ 
+What is Spring Cloud Stream, and when would you use it?
+Answer:
+Spring Cloud Stream is a framework for building highly scalable, event-driven microservices connected with shared messaging systems (like Kafka or RabbitMQ). It abstracts away the complexities of interacting directly with message brokers.
+When to use it:
+
+Event-Driven Architecture: When your microservices communicate primarily through events (e.g., an "Order Placed" event triggers updates in inventory, shipping, and payment services).
+
+
+What is the Spring Framework? What are its core modules?
+* Answer: Spring Framework is an open-source Java framework that provides comprehensive infrastructure support for developing robust, enterprise-grade applications. Its core modules include IoC Container, AOP, Data Access/Integration, and Web (MVC).
+
+ Explain Inversion of Control (IoC) and Dependency Injection (DI) in Spring.
+* Answer:
+* IoC: A design principle where the flow of control of a program or object creation is inverted. Instead of the developer creating and managing objects, the framework (Spring Container) handles it.
+
+ What are Spring Beans? How do you define them?
+* Answer: Spring Beans are objects that are instantiated, assembled, and managed by the Spring IoC container. You define them using:
+
+
+What are the different scopes of Spring Beans? Which is the default?
+* Answer:
+* Singleton (Default): A single instance of the bean is created per Spring IoC container.
+* Prototype: A new instance of the bean is created every time it's requested.
+* Request: A new instance is created for each HTTP request (web scope).
+* Session: A new instance is created for each HTTP session (web scope).
+* Application/GlobalSession: (Web scopes, less common).
+* The default scope is Singleton.
+
+
+Indexing in Spring Boot is the practice of defining and utilizing database indexes to optimize data retrieval operations, which is commonly achieved through libraries like Spring Data JPA (for relational databases) or Spring Data 
+A CompletableFuture is a Java class used for asynchronous programming. It represents a value that will be available in the future, allowing your program to continue executing other tasks without blocking.
+
+
+Describe the Spring Bean lifecycle phases.
+* Answer: The key phases are:
+1.  Instantiation: The bean is created (object instantiated).
+2.  Population of Properties: Dependencies are injected (e.g., @Autowired fields are set).
+3.  Aware Interfaces: Spring-aware interfaces are invoked (e.g., BeanNameAware, BeanFactoryAware, ApplicationContextAware).
+4.  BeanPostProcessor.postProcessBeforeInitialization(): Custom pre-initialization logic is applied.
+5.  Initialization:
+* @PostConstruct method is invoked.
+* InitializingBean's afterPropertiesSet() is called.
+* Custom init-method (if configured) is called.
+6.  BeanPostProcessor.postProcessAfterInitialization(): Custom post-initialization logic is applied.
+7.  Ready for Use: The bean is now ready and available in the application context.
+8.  Destruction:
+* @PreDestroy method is invoked.
+* DisposableBean's destroy() is called.
+* Custom destroy-method (if configured) is called.
+* The bean is removed from the container.
+
+
+ How do you handle configuration properties as a strongly typed object in Spring Boot?
+* Answer: You use @ConfigurationProperties. You create a POJO (Plain Old Java Object), annotate it with @ConfigurationProperties(prefix = "my.prefix"), and then define properties within that POJO that map to properties in your application.properties/application.yml. This provides type safety, validation, and good IDE support.
+
+
+ What is the purpose of DispatcherServlet in a Spring MVC application?
+* Answer: DispatcherServlet is the front controller in a Spring MVC application. It receives all incoming HTTP requests, dispatches them to appropriate handler methods (controllers) based on URL mappings, and orchestrates the entire request processing workflow (including view resolution if applicable). In Spring Boot, it's auto-configured.
+
+Reason: JdbcTemplate allows you to write raw, native SQL queries directly. This gives you maximum control over query optimization, hints, and database-specific features
+choose JdbcTemplate over Spring Data JPA for:
+
+Direct SQL Control: When you need to write complex, highly optimized, or database-specific native SQL queries (e.g., for reporting, specific stored procedures).
+
+Performance Criticality: For high-volume batch operations where JPA's ORM overhead might be a bottleneck.
+
+Legacy/De-normalized Schemas: When dealing with database schemas that don't map cleanly to an object-oriented entity model.
+
+Avoiding ORM Complexity: For very simple data access where JPA's features are overkill, or if the team prefers direct SQL.
+
+
+. What is the role of SpringApplication.run() method?
+* Answer: It's the static method that bootstraps a Spring Boot application. It performs several crucial tasks:
+* Creates an appropriate ApplicationContext instance.
+* Registers a CommandLinePropertySource to expose command-line arguments as Spring properties.
+* Performs auto-configuration.
+* Runs any CommandLineRunner or ApplicationRunner beans.
+* Starts the embedded web server (if applicable).
+
+
+
+ResponseEntity in a REST API provides full control over the HTTP response. It allows you to:
+
+Set the HTTP status code (e.g., 200 OK, 201 Created, 404 Not Found, 500 Internal Server Error).
+
+Add custom headers (e.g., Location for created resources, caching directives).
+
+Include the response body (your JSON/XML data).
+
+
+How does Spring Boot handle resource loading (e.g., loading files from classpath)?
+
+Spring Boot uses Spring Framework's Resource Abstraction to load files.
+
+cold start:
+
+A "cold start" in Spring Boot refers to the time it takes for an application to fully launch and become ready to serve requests from a completely stopped state. This includes:
+
+JVM startup: Initializing the Java Virtual Machine.
+
+Spring context loading: Scanning components, wiring up dependencies, and configuring beans.
+
+Database connections: Establishing connections to the database.
+
+Initialization of other resources: Any other setup required by your application.
+
+Optimization in Short:
+
+Optimize cold start by:
+
+Reducing component scanning: Be specific with @ComponentScan or use @SpringBootApplication defaults effectively.
+
+Lazy initialization: Use @Lazy where appropriate for non-critical beans.
+
+Conditional configuration: Use @ConditionalOnProperty, @ConditionalOnClass, etc., to load beans only when needed.
+
+Minimizing auto-configuration: Exclude unnecessary auto-configurations with @SpringBootApplication(exclude = { ... }).
+
+Faster database startup: Optimize database connection pooling (e.g., HikariCP) and ensure the database itself starts quickly.
+
+GraalVM Native Image: For significant improvements, consider compiling your Spring Boot application to a native executable using GraalVM. This eliminates the JVM startup overhead.
+
+
+A "cold start" situation for a Spring Boot application occurs whenever a new instance of the application needs to be launched from a completely stopped state
+
+Deployment/Redeployment:
+Application Restart (Maintenance/Crash Recovery):
+
+
+
+
+
+The two most common and impactful production issues in Spring Boot microservices are Performance Bottlenecks & High Latency and Distributed System Complexity.
+
+1. Performance Bottlenecks & High Latency:
+
+Why Common: Easy startup doesn't guarantee performance. Inefficiencies in code, database interactions (e.g., N+1 queries, missing indexes), high resource consumption (CPU/memory), and thread contention cause slowdowns. Cold starts are particularly problematic in cloud/serverless environments.
+
+Solutions:
+
+Deep Observability: Crucial for identification. Use Spring Boot Actuator with Prometheus/Grafana for metrics, centralized logs (e.g., ELK Stack), and Distributed Tracing (Spring Cloud Sleuth/Micrometer Tracing + Jaeger/Zipkin) to pinpoint bottlenecks across services.
+
+Proactive Optimization: Tune database queries (indexes, JOIN FETCH), implement caching (Spring Cache/Redis), tune HikariCP connection pools, and manage I/O resources.
+
+Cold Start Specific: Consider GraalVM Native Image for drastic startup speed and lower memory.
+
+Profiling: Use JVM profilers in non-prod environments.
+
+2. Distributed System Complexity (Cascading Failures & Observability):
+
+Why Common: Microservices introduce network communication unreliability and independent failures. A single failing service can domino, and tracing requests across many services is hard.
+
+Solutions:
+
+Resilience Patterns: Non-negotiable. Implement Circuit Breakers (Resilience4j), Timeouts, Retries, and Bulkheads to prevent cascading failures and gracefully handle outages.
+
+Comprehensive Observability: Absolutely essential for diagnosis. Distributed Tracing (Sleuth/Micrometer Tracing) provides end-to-end request visibility. Centralized Logging with correlation IDs helps reconstruct events. Set up Dashboards & Alerts for proactive issue detection.
+
+Asynchronous Communication: Use Message Queues (Kafka/RabbitMQ) to decouple services, improve resilience, and handle eventual consistency.
+
+API Gateway: Centralize concerns like routing, authentication, and edge-level resilience (e.g., Spring Cloud Gateway).
+
+Health Checks: Use /actuator/health/liveness and /actuator/health/readiness for orchestrators like Kubernetes to manage service lifecycle.
+
+3.memoryleaks out of memory error:
+
+Here's a short summary of memory leak/OOM causes and prevention:
+
+Causes (Short):
+
+Unbounded Collections: Storing objects in lists/maps that keep growing without limits or removal.
+
+Unclosed Resources: Not releasing database connections, file streams, or network sockets properly.
+
+Listener/Callback Mismanagement: Registering event listeners that are never unregistered.
+
+ThreadLocal Issues: Not cleaning up ThreadLocal values on reused threads.
+
+Improper Caching: Caches without eviction policies, constantly accumulating data.
+
+Prevention (Short):
+
+Monitor Heap Usage: Track memory with tools (Prometheus/Grafana) to detect slow leaks early.
+
+Generate Heap Dumps: Configure JVM to auto-dump on OOM (-XX:+HeapDumpOnOutOfMemoryError).
+
+Analyze Heap Dumps: Use tools like Eclipse Memory Analyzer (MAT) to find leaking objects and their references.
+
+Resource Management: Always use try-with-resources for AutoCloseable types.
+
+Bounded Collections/Caches: Use size-limited collections and caches with eviction policies (e.g., Caffeine).
+
+Clean Up ThreadLocal: Always call ThreadLocal.remove() in finally blocks.
+
+Code Review: Look for common leak patterns during development.
+
+
+When handling backward-incompatible API changes in a live microservice environment, the core strategy is to run old and new API versions in parallel for a transition period.
+
+Here's the simplified process:
+
+Version the API: Create a new version of the API (e.g., /v1/users becomes /v2/users) in your microservice code. The same service now supports both versions.
+
+Deploy Both Versions: Deploy this new service alongside the old ones. Use techniques like Blue/Green deployments.
+
+Communicate & Document: Announce the new API (v2) and the deprecation of the old (v1) with a clear "sunset date" for removal. Provide migration guides.
+
+Client Migration: Give client applications time to switch from calling the v1 endpoint to the v2 endpoint.
+
+Monitor Usage: Track how many clients are still using v1.
+
+Sunset & Remove: Once v1 usage is minimal (or by the sunset date), remove the old API code from the service.
+
+
+
+java 17 is a Long-Term Support (LTS) release, meaning it receives extended support and updates, making it a popular choice for enterprise applications. 
+
+Sealed Classes (JEP 409):
+Pattern Matching for switch (JEP 406 - Preview, now standardized in later versions):
+
+Imagine a restaurant:
+
+Blocking (Spring MVC): Each waiter (thread) takes one customer's order (request), goes to the kitchen, waits for the food to be cooked, serves it, and then takes the next customer. If the kitchen is slow, the waiter just stands there, doing nothing, and other customers wait in line.
+
+Non-Blocking (Spring WebFlux): Waiters (threads) take orders from multiple customers. When they place an order with the kitchen, they don't wait. They immediately go take more orders or serve other customers whose food is ready. When the kitchen finishes an order, it signals a waiter, who then picks it up and serves it. This way, fewer waiters can serve many more customers efficiently.
+
+
+
+@Mock // Creates a mock instance of ProductRepository
+    private ProductRepository productRepository;
+
+    @InjectMocks // Injects the mocks into ProductService
+    private ProductService productService;
+
+
+Key Difference: findById() performs an eager load and returns an Optional, while getById()/getReferenceById() performs a lazy load and returns a proxy, potentially throwing an EntityNotFoundException later.
+
+
+
+
+
+
+
+
+Deep Research
+
+Canvas
+
+G
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+What is Aspect-Oriented Programming (AOP) in Spring? Give an example of its use.
+* Answer: AOP is a programming paradigm that aims to increase modularity by allowing the separation of cross-cutting concerns (e.g., logging, security, transaction management) from core business logic.
+* Example: Using AOP to automatically log method execution times (@Around advice) or apply transaction boundaries (@Transactional).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+State management" in Spring Boot usually refers to how the server-side application maintains information about a user or a specific process across multiple HTTP requests. Since HTTP is inherently stateless, the server needs mechanisms to remember things about a client's interaction.
+
+Here's a breakdown of common state management approaches in Spring Boot:
+
+1. HttpSession (Servlet Container's Default)
+
+Concept: This is the most traditional way to manage state in Java web applications. When a user interacts with the application, the servlet container (like Tomcat or Jetty, embedded in Spring Boot) creates an HttpSession object for that user. A unique session ID is generated and typically sent back to the client as a cookie (e.g., JSESSIONID). On subsequent requests, the client sends this cookie back, allowing the server to retrieve the correct session.
+
+
+How to use:
+
+You can inject HttpServletRequest into your controller methods and then call request.getSession() to get the HttpSession object.
+
+Store data using session.setAttribute("key", value) and retrieve it with session.getAttribute("key").
+
+Configure session timeout in application.properties: server.servlet.session.timeout=30m (for 30 minutes).
+
+Invalidate a session: session.invalidate().
+
+Pros: Simple to use for basic scenarios, built-in with servlet containers.
+
+Cons:
+
+Scalability issues: Sessions are typically stored in the memory of the specific server instance. In a load-balanced environment with multiple server instances, a user might hit a different server on a subsequent request that doesn't have their session data, leading to problems. This is known as the "sticky session" problem, where the load balancer tries to send the same user to the same server, but it's not foolproof and creates single points of failure.
+
+Memory consumption: Storing a lot of session data in memory can consume significant server resources.
+
+Not ideal for RESTful APIs: REST principles advocate for statelessness on the server, with the client sending all necessary information in each request. While you can use sessions with REST, it often goes against the design philosophy.
+
+2. Spring Session (for Distributed Sessions)
+
+Concept: Spring Session is a project designed to address the scalability issues of HttpSession in distributed environments. It provides an API and implementations to externalize session data to a shared, persistent store. This means multiple instances of your Spring Boot application can share the same session data.
+
+
+How it works: Spring Session replaces the default HttpSession implementation. When a session is created or updated, the data is written to a centralized store (e.g., Redis, JDBC database, Hazelcast). When a request comes in, Spring Session retrieves the session data from this shared store.
+
+
+Common Backing Stores:
+
+Redis: Very popular for its speed and in-memory nature, making it excellent for session storage. You'd add spring-boot-starter-data-redis and spring-session-data-redis dependencies.
+
+
+JDBC (Relational Database): Sessions can be stored in a relational database like MySQL or PostgreSQL. This is more persistent but can be slower than Redis. You'd use spring-session-jdbc.
+
+Hazelcast: A distributed in-memory data grid that can also be used for session clustering.
+
+Pros:
+
+Scalability: Enables seamless session management across multiple server instances.
+
+Fault tolerance: If a server goes down, sessions are still available from the shared store.
+
+Container-agnostic: Decouples session management from the servlet container.
+
+Cons: Introduces an external dependency (e.g., Redis server, database), which adds operational overhead.
+
+3. Token-Based Authentication (Stateless Approach)
+
+Concept: This is the preferred method for managing "state" (specifically, authentication and authorization state) in modern, stateless applications, especially microservices and RESTful APIs. Instead of the server storing session data, the client receives a token (e.g., JSON Web Token - JWT) upon successful authentication. The client then sends this token with every subsequent request in the Authorization header.
+
+How it works:
+
+Login: User sends credentials to the server.
+
+Server generates JWT: If credentials are valid, the server generates a JWT containing user information (e.g., user ID, roles, expiration time) and signs it with a secret key.
+
+Client stores JWT: The JWT is sent back to the client (e.g., in a cookie or localStorage).
+
+Subsequent requests: For every subsequent request, the client includes the JWT in the Authorization: Bearer <token> header.
+
+Server validates JWT: The server verifies the token's signature (using the secret key) and checks its claims (e.g., expiration). No server-side session lookup is needed.
+
+Pros:
+
+Truly stateless on the server: The server doesn't need to store any session information, greatly simplifying scaling.
+
+Highly scalable: Easily scales horizontally as no session affinity is required.
+
+Mobile-friendly: Tokens are easily used by mobile apps.
+
+Cross-domain compatible: Can be sent across different domains.
+
+Cons:
+
+Token size: Larger tokens can increase request/response size.
+
+Revocation: Revoking a JWT before its natural expiration is more complex (requires blacklisting or shorter expiration times with refresh tokens).
+
+Security: Requires careful handling (e.g., HTTPS, secure storage on the client, managing secret keys). Spring Security is essential for implementing this securely.
+
+
+
+
+When would you use @Query with JPQL versus native SQL?
+
+Answer: Use JPQL (Java Persistence Query Language) for most custom queries as it operates on entities, making your queries database-independent. Use native SQL only when JPQL cannot express the required query (e.g., highly optimized vendor-specific features, complex joins that JPQL struggles with, or when dealing with stored procedures).
+
+
+
+
+
+
+
+Explain propagation and isolation in @Transactional. Give examples.
+
+Answer:
+
+propagation: Defines how transactional boundaries behave when one transactional method calls another.
+
+isolation: Defines how concurrent transactions interact with each other (level of data consistency).
+
+
+
+
+Can @Transactional be used on private methods? Why or why not?
+
+Answer: No, typically not directly. Spring's @Transactional works by creating a proxy around the bean. For this proxy to intercept method calls, the method must be public. If a private method within the same object calls another private transactional method, the proxy is bypassed.
+@Modifying queries do not interact with the persistence context; they directly execute SQL. You often need to clear the persistence context (entityManager.clear()) after such operations to avoid stale data.
+In Spring Boot, the @Modifying annotation is used whenever you want to perform a database operation that changes data (like UPDATE, DELETE, or INSERT) using custom JPQL or SQL queries.
+
+
+
+What is the Persistence Context? How does EntityManager relate to it?
+
+Answer: The Persistence Context is a cache that holds managed entities. It acts as a first-level cache and keeps track of changes made to entities. The EntityManager is the primary interface used to interact with the persistence context, allowing you to perform CRUD operations (persist, find, merge, remove) and execute queries. It's effectively the API into the persistence context.
+
+
+
+What is optimistic locking, and how do you implement it in JPA/Spring Data JPA?
+
+Answer: Optimistic locking prevents "lost updates" when multiple users try to modify the same record concurrently. It assumes conflicts are rare.
+
+Implementation: Add an @Version annotation to an integer or timestamp field in your entity.
+
+Java
+
+@Entity
+public class Product {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+    private double price;
+
+    @Version // This field is used for optimistic locking
+    private int version;
+
+
+
+
+
+
+
+
+
+
+
+Answer: Using @Modifying annotation with @Query.
+
+Java
+
+@Modifying
+@Transactional
+@Query("UPDATE User u SET u.status = :newStatus WHERE u.id = :userId")
+int updateStatus(@Param("newStatus") String newStatus, @Param("userId") Long userId);
+
+@Modifying
+@Transactional
+@Query("DELETE FROM User u WHERE u.status = :status")
+int deleteByStatus(@Param("status") String status);
+
+
+
+
+
+
+
+
+
+
+Nginx is a separate web server that sits in front of your Spring Boot application.
+
+Why use it?
+
+Front Door: Nginx handles incoming requests first, before they even reach your Spring Boot app.
+
+Security: It hides your app's direct address and can block bad requests.
+
+Speed: Nginx is super fast at serving static files (like images, CSS, JavaScript) and handling secure connections (HTTPS). It takes this burden off your Spring Boot app.
+
+Load Balancing: If you have multiple copies of your Spring Boot app running, Nginx can share the incoming traffic evenly among them, making your app handle more users.
+
+Easy Updates: You can update your Spring Boot app without downtime because Nginx can temporarily send traffic away from the updating version.
+
+
+
+
+
+
+
+
+
+
+How can you return specific columns instead of the entire entity using Spring Data JPA queries?
+
+Answer:
+
+DTO Projections (Constructor Expression): Create a DTO (Data Transfer Object) and use a constructor expression in your @Query.
+
+Java
+
+public class UserDto { // A non-entity class
+    private Long id;
+    private String name;
+    public UserDto(Long id, String name) { this.id = id; this.name = name; }
+    // Getters
+}
+
+// In Repository:
+@Query("SELECT new com.example.dto.UserDto(u.id, u.name) FROM User u WHERE u.status = 'ACTIVE'")
+List<UserDto> findActiveUserDtos();
+
+
+
+
+
+
+
+
+
+
+
+
+Feature	Filter (Servlet API)	HandlerInterceptor (Spring MVC)
+Level	Servlet Container	Spring MVC Framework
+When Executed	Before DispatcherServlet	After DispatcherServlet, Before Controller
+Access to	HttpServletRequest, HttpServletResponse	HttpServletRequest, HttpServletResponse, HandlerMethod, ModelAndView
+Granularity	URL patterns	Specific to Spring MVC handlers
+Common Use Cases	Encoding, Compression, Generic Security	Authentication, Authorization, Logging (MVC-specific), Performance Monitoring, MVC-level Request/Response modification
+
+
+
+
+
+Default Rollback Behavior
+By default:
+
+Runtime Exceptions (Unchecked Exceptions): Transactions are rolled back for RuntimeException and its subclasses (e.g., NullPointerException, IllegalArgumentException, DataAccessException in Spring, EJBException in EJB). These typically indicate programming errors or unexpected system failures.
+
+Errors: Transactions are also rolled back for Error and its subclasses (e.g., OutOfMemoryError).
+
+Checked Exceptions: Transactions are NOT rolled back for checked exceptions (exceptions that are direct subclasses of Exception but not RuntimeException, like IOException, SQLException). The reasoning is that checked exceptions are expected and part of the normal business flow, often in
+
+rollbackFor (or rollbackForClassName)
+Purpose: Specifies one or more exception types that should cause the transaction to roll back, even if they are checked exceptions.
+
+noRollbackFor (or noRollbackForClassName)
+Purpose: Specifies one or more exception types that should NOT cause the transaction to roll back, even if they are RuntimeExceptions or Errors, or exceptions that would otherwise trigger a rollback (e.g., if also specified in rollbackFor due to precedence rules, which can get tricky).
+
+
+
+
+
+
+Question: Explain the lifecycle of auto-configuration. How does Spring Boot decide which auto-configurations to apply? (Mention @ConditionalOnClass, @ConditionalOnMissingBean, @ConditionalOnProperty, etc.).
+
+Answer: Spring Boot's auto-configuration process starts with @EnableAutoConfiguration (part of @SpringBootApplication). This annotation effectively tells Spring Boot to look for AutoConfiguration classes, which are listed in META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports (or spring.factories in older versions) within dependency JARs. Each of these AutoConfiguration classes uses @Conditional annotations (like @ConditionalOnClass for specific classes being present, @ConditionalOnMissingBean if a bean of a certain type isn't already defined, @ConditionalOnProperty based on property values, etc.) to determine whether their configurations and @Bean definitions should be applied to the Spring application c
+
+
+
+uestion: How would you debug an unexpected auto-configuration behavior?
+
+Answer: My primary tool for debugging unexpected auto-configuration behavior is to enable debug logging for org.springframework.boot.autoconfigure. This can be done by running the application with the --debug flag (e.g., java -jar myapp.jar --debug) or by setting logging.level.org.springframework.boot.autoconfigure=DEBUG in application.properties. This generates a detailed report at startup, showing precisely which auto-configura
+
+
+Describe a scenario where you had to create a custom Spring Boot Starter. Walk me through the steps and its benefits.
+
+Answer: I created a custom starter for integrating with an internal identity and access management (IAM) system. All our microservices needed to authenticate against this specific IAM service.
+
+
+uestion: Discuss the pros and cons of @Autowired field injection vs. constructor injection. Why is constructor injection generally preferred for mandatory dependencies?
+
+Answer:
+
+Field Injection (@Autowired private MyService myService;):
+
+Pros: Very concise, minimal boilerplate.
+
+Cons:
+
+Poor Testability: Hard to unit test without Spring's context or reflection because the dependency isn't exposed in the constructor.
+
+Hides Dependencies: It's not immediately obvious what dependencies a class has just by looking at its constructor.
+
+Mutability: Dependencies are typically not final, meaning they can be changed post-construction, which can lead to unexpected state issues.
+
+Circular Dependency Masking: Can sometimes mask circular dependencies, allowing them to occur at runtime rather than failing at startup.
+
+Constructor Injection (public MyController(MyService myService) { this.myService = myService; }):
+
+Pros:
+
+Preferred for Mandatory Dependencies: Guarantees that all required dependencies are provided at object creation, ensuring the object is always in a valid state.
+
+Testability: Makes unit testing much easier as dependencies can be easily mocked and passed into the constructor.
+
+Explicitness: Dependencies are clearly declared, improving code readability and maintainability.
+
+Immutability: Allows dependencies to be declared as final, promoting immutability and thread safety.
+
+Circular Dependency Detection: Spring detects constructor-based circular dependencies at startup, forcing you to resolve them early.
+
+Con
+
+
+
+
+Question: How do you handle circular dependencies in Spring? What are the implications?
+
+Answer: A circular dependency occurs when Bean A requires Bean B, and Bean B simultaneously requires Bean A.
+
+Handling:
+
+Constructor Injection: If both beans use constructor injection, Spring cannot resolve the cycle and will throw a BeanCurrentlyInCreationException at application startup. This forces you to address the design flaw.   
+
+Setter/Field Injection: Spring can resolve circular dependencies in these cases. It does this by creating a partially constructed instance of the first bean, injecting it into the second bean, and then completing the injection for the first bean.
+
+@Lazy: You can break a circular dependency by annotating one of the dependencies with @Lazy. This causes Spring to inject a proxy for that bean instead of the actual instance. The real bean is only instantiated when the proxy is first used.
+
+
+
+
+Question: Explain @Lazy annotation. When is it useful and what are its potential downsides?
+
+Answer: The @Lazy annotation tells the Spring IoC container to initialize a bean only when it's first requested or actually used, rather than eagerly initializing it during application startup. By default, singleton beans are eagerly initialized.
+
+
+
+
+Have you used Spring Cloud Config or similar external configuration services? Describe your experience.
+
+Answer: Yes, I've used Spring Cloud Config extensively in a microservices environment.
+
+Experience: It acted as a centralized configuration server for all our microservices. Configuration was stored in a Git repository, allowing developers to manage property files (application.yml, service-a.yml, service-a-dev.yml, etc.) under version control. Each microservice acted as a Config Client, fetching its specific configuration (based on application name and active profile) from the Config Server during startup.
+
+Benefits:
+
+Centralization: All configurations were in one place, making them easier to manage, audit, and update.
+
+Version Control: Configuration changes were tracked in Git, providing a clear history and rollback capability.
+
+
+
+uestion: How would you create a custom HealthIndicator for a specific application dependency (e.g., a custom external service)?
+
+Answer: To create a custom HealthIndicator for an external service, I would:
+
+Implement org.springframework.boot.actuate.health.HealthIndicator interface.
+
+Override the health() method. This method contains the actual logic to check the dependency's status.
+
+Perform the check: Inside health(), I'd attempt to interact with the external service (e.g., make a light "ping" or status API call, check a connection pool status, verify a queue is reachable).
+
+Return Health.up() or Health.down():
+
+If the check is successful, return Health.up().withDetail("message", "Service is up and running").build(). The withDetail() part is useful for adding more context.
+
+If the check fails, return Health.down().withException(e).withDetail("error", errorMessage).build(). Including the exception is very helpful for debugging.
+
+Annotate with @Component: To ensure Spring discovers it and registers it as a health indicator.
+
+
+
+
+
+Explain the concepts of Race Condition and Deadlock in concurrent programming. How can they be prevented or handled?
+
+: A race condition occurs when the correctness of a program depends on the sequence or timing of events, or when multiple threads access and modify shared resources concurrently, and the final outcome depends on the non-deterministic order of execution. This can lead to unpredictable and incorrect results.
+
+volatile Keyword:
+
+Purpose: The volatile keyword ensures visibility of changes to variables across threads and prevents certain types of instruction reordering. When a variable is declared volatile:
+
+3: What is the Java Memory Model (JMM), and why is it important for concurrent programming?
+A3:
+
+Explanation: The Java Memory Model (JMM) defines how threads interact with memory and how changes made by one thread become visible to other threads
+
+
+
+Explain the difference between Thread.sleep() and Object.wait() in Java concurrency.
+A4: Both methods pause the execution of a thread, but they serve very different purposes and behave differently regarding locks.
+
+Feature	Thread.sleep(long millis)	Object.wait() (and wait(long), wait(long, int))
+Purpose	To pause the execution of the current thread for a specified duration.	To cause the current thread to wait until another thread notifies it (using notify() or notifyAll()) or a timeout occurs.
+Lock Release	Does NOT release any locks held by the thread. The thread remains the owner of any monitors it has acquired.	Releases the monitor (lock) of the object on which wait() is called. This allows other threads to acquire the lock and potentially modify the shared resource.
+
+
+
+
+What is the ForkJoinPool in Java, and when would you use it?
+A8:
+
+Explanation: The ForkJoinPool is a specialized ExecutorService introduced in Java 7, designed for executing ForkJoinTasks. It's an implementation of the work-stealing algorithm, 
+
+
+
+Fork: A large task is "forked" (split) into smaller subtasks.
+
+Join: The results of the subtasks are "joined" (combined) to produce the final result for the larger task. This process is recursive until the subtasks are small enough to be computed directly.
+
+
+
+
+
+
+
+Got it! Here's the short and easy version of that unique issue for a Loan Origination System.
+
+Production Issue: Slow Loan Approvals (Hidden File Cleanup Problem)
+1. The Problem:
+Our system for processing loan applications got slow and fell behind, especially when a lot of credit reports (which came as big files) needed to be processed. Loans weren't getting approved on time.
+
+2. The Clue:
+The app's CPU and memory looked fine, but it was getting swamped with incoming data. We noticed a lot of temporary files building up, and the process seemed to choke when deleting them.
+
+3. The Cause:
+Our app was doing two things at once:
+
+Reading and analyzing big credit report files.
+
+Deleting old temporary files.
+The problem was, the deletion of these temporary files was blocking the main work. Even though deleting one file was quick, doing hundreds of them quickly, especially on a busy shared storage, made the app wait. This backlog slowed down everything.
+
+4. The Fix:
+We changed how files were deleted. Instead of deleting them immediately and waiting, the app now puts file paths into a separate list. A background cleanup crew (a low-priority process) handles the deletions separately and asynchronously, without slowing down the main work of processing new reports.
+
+5. The Learning:
+Even small, common tasks like deleting files can cause big problems under heavy load if they're not handled efficiently. Always look for hidden "waiting" p
+
+
+
+
+
+
+
+
+
+
+
+
+: What are Executors and ExecutorService in Java, and why are they preferred over directly creating Thread objects?
+A5:
+
+Executors (Utility Class): This is a utility class that provides factory methods for creating various types of ExecutorService instances (e.g., newFixedThreadPool, newCachedThreadPool, newSingleThreadExecutor, newScheduledThreadPool). You typically don't instantiate ExecutorService directly but use methods from Executors.
+
+ExecutorService (Interface): This interface extends Executor and provides more advanced features for managing the lifecycle of threads and tasks.
+
+
+
+
+
+kubernates:
+ClusterIP (Default):
+
+Purpose: Exposes Service on an internal IP within the cluster.
+
+Access: Only from inside the cluster. Good for internal microservice communication.
+
+NodePort:
+
+Purpose: Exposes Service on a specific port on each Node's IP.
+
+Access: From outside the cluster via <NodeIP>:<NodePort>. Used for dev/test or self-managed external load balancing.
+
+LoadBalancer:
+
+Purpose: Exposes Service externally using a cloud provider's load balancer.
+
+Access: From outside the cluster via a dedicated external IP. Standard for public-facing cloud apps.
+
+ExternalName:
+
+Purpose: Maps Service to an external DNS name.
+
+Access: Clients use internal Service name, which resolves to the external DNS. No proxying. For external services.
+
+Headless Service:
+
+Purpose: No ClusterIP; DNS returns Pod IPs directly.
+
+Access: Clients connect directly to individual Pods. Used for stateful sets or custom service discovery.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Two-Phase Commit (2PC)
+Concept: 2PC is a synchronous, blocking protocol designed to provide strong consistency (ACID properties) across distributed systems. It involves a central coordinator and multiple participants.
+
+
+
+
+
+
+
+
+
+
+Thread Scheduler Interview Questions
+1. What is a Thread Scheduler in Java?
+
+Answer: The Thread Scheduler is a component of the Java Virtual Machine (JVM) or, more accurately, 
+the underlying operating system's scheduler, that decides which thread should run at any given time among 
+multiple runnable threads. It's responsible for allocating CPU time to threads. 
+Its behavior is platform-dependent and generally non-deterministic, meaning you cannot
+ predict the exact order in which threads will execute.
+
+2. How does the Thread Scheduler work (briefly explain time-slicing and preemption)?
+
+Answer: Thread scheduling typically involves:
+
+Time-Slicing: The scheduler allocates a small unit of CPU time (a "time slice") to each runnable thread. When a thread's time slice expires, it's preempted (interrupted) and another runnable thread gets its turn. This creates the illusion of parallel execution on a single-core CPU.
+
+Preemption: A higher-priority thread can interrupt a lower-priority thread that is currently running. Also, a thread might be preempted if it enters a waiting or blocked state (e.g., waiting for I/O or a lock).
+
+Note: While Java allows setting thread priorities (1-10), the actual implementation of how these priorities are honored by the OS scheduler can vary. It's more of a hint than a strict guarantee.
+
+3. Why is thread execution non-deterministic in Java?
+
+Answer: Because the thread scheduler is external to your Java program and its exact algorithm is operating system-dependent. Factors like the number of cores, other processes running on the system, and the scheduler's internal logic all influence when and for how long a thread gets CPU time. This non-deterministic nature makes multithreaded programming complex, as you cannot rely on a specific execution order unless you explicitly enforce it through synchronization mechanisms.
+
+4. What are the different states of a thread in Java? How do they relate to the scheduler?
+
+Answer: Threads can be in various states, which dictate whether they are eligible for scheduling:
+
+NEW: A thread that has been created but not yet started. It's not yet considered by the scheduler.
+
+RUNNABLE: A thread that is either currently executing or is ready to execute and waiting for the scheduler to allocate CPU time.
+
+BLOCKED: A thread that is waiting to acquire a monitor lock to enter a synchronized block/method. It cannot execute until the lock is released and acquired.
+
+WAITING: A thread that is waiting indefinitely for another thread to perform a particular action (e.g., calling Object.wait(), Thread.join(), Lock.lock()).
+
+TIMED_WAITING: A thread that is waiting for another thread to perform an action for a specified waiting time (e.g., Thread.sleep(long millis), Object.wait(long millis), Thread.join(long millis)).
+
+TERMINATED: A thread that has completed its execution (its run() method has finished). It's no longer considered by the scheduler.
+
+5. How do Thread.yield(), Thread.sleep(), Object.wait(), Object.notify(), and Object.notifyAll() interact with the thread scheduler?
+
+Thread.yield(): A hint to the scheduler that the current thread is willing to yield its current use of a processor. The scheduler is free to ignore this hint. The thread moves from RUNNING to RUNNABLE state. It doesn't release any locks.
+
+Thread.sleep(long millis): Causes the currently executing thread to pause for a specified duration. The thread moves from RUNNING to TIMED_WAITING state. It does not release any locks it holds.
+
+Object.wait(): Causes the current thread to wait indefinitely until another thread invokes the notify() or notifyAll() method on the same object. The thread moves from RUNNING to WAITING state and releases the lock it holds on that object.
+
+Object.notify(): Wakes up a single thread that is waiting on this object's monitor. The awakened thread then competes for the lock.
+
+Object.notifyAll(): Wakes up all threads that are waiting on this object's monitor. All awakened threads then compete for the lock.
+
+Key difference between sleep() and wait(): sleep() doesn't release locks, wait() does. wait(), notify(), and notifyAll() must be called from within a synchronized block/method, while sleep() can be called anywhere.
+
+Deadlocks Interview Questions
+1. What is a Deadlock in Multithreading?
+
+Answer: A deadlock is a situation in concurrent programming where two or more threads are permanently blocked, 
+waiting for each other to release the resources (typically locks) that they need to proceed. Each thread holds a
+ resource and waits for a resource held by another blocked thread, forming a circular dependency.
+
+2. What are the four necessary conditions for a Deadlock to occur (Coffman Conditions)?
+
+Answer: For a deadlock to occur, all four of the following conditions must be met simultaneously:
+
+Mutual Exclusion: At least one resource must be held in a non-sharable mode, meaning only one thread can use the resource at any given time.
+
+Hold and Wait: A thread must be holding at least one resource and waiting to acquire additional resources that are currently being held by other threads.
+
+No Preemption: Resources cannot be forcibly taken from a thread. A resource can only be released voluntarily by the thread holding it after it has completed its task.
+
+Circular Wait: A set of threads T_1,T_2,...,T_n must exist such that T_1 is waiting for a resource held by T_2, T_2 is waiting for a resource held by T_3, ..., T_n−1 is waiting for a resource held by T_n, and T_n is waiting for a resource held by T_1.
+
+3. Provide a simple Java code example that demonstrates a Deadlock.
+
+Answer: A classic example involves two threads trying to acquire two locks in opposite orders.
+
+Java
+
+public class DeadlockExample {
+    private static Object lock1 = new Object();
+    private static Object lock2 = new Object();
+
+    public static void main(String[] args) {
+        // Thread 1
+        Thread thread1 = new Thread(() -> {
+            synchronized (lock1) {
+                System.out.println("Thread 1: Acquired lock1");
+                try {
+                    Thread.sleep(100); // Simulate some work
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                System.out.println("Thread 1: Waiting for lock2...");
+                synchronized (lock2) {
+                    System.out.println("Thread 1: Acquired lock2");
+                }
+            }
+        });
+
+        // Thread 2
+        Thread thread2 = new Thread(() -> {
+            synchronized (lock2) {
+                System.out.println("Thread 2: Acquired lock2");
+                try {
+                    Thread.sleep(100); // Simulate some work
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                System.out.println("Thread 2: Waiting for lock1...");
+                synchronized (lock1) {
+                    System.out.println("Thread 2: Acquired lock1");
+                }
+            }
+        });
+
+        thread1.start();
+        thread2.start();
+    }
+}
+Explanation:
+
+Thread 1 acquires lock1, then tries to acquire lock2.
+
+Thread 2 acquires lock2, then tries to acquire lock1.
+
+If Thread 1 acquires lock1 and then the scheduler switches to Thread 2, which acquires lock2, both threads will then be stuck waiting for the lock held by the other, resulting in a deadlock.
+
+4. How can you detect a Deadlock in a running Java application?
+
+Answer:
+
+Thread Dumps: This is the most common and effective way. You can generate a thread dump (e.g., using jstack <pid> or kill -3 <pid> on Linux/Unix, or Ctrl+Break on Windows for command prompt Java applications). A thread dump shows the state of all threads, including which locks they hold and which locks they are waiting for. 
+Deadlocks are usually explicitly labeled as "found one Java-level deadlock."
+
+Monitoring Tools: Tools like JConsole, VisualVM, or commercial APM (Application Performance Monitoring) tools can also provide real-time monitoring and deadlock detection.
+
+5. How can you prevent/avoid Deadlocks in Java?
+
+Answer: To prevent deadlocks, you need to break at least one of the four Coffman conditions:
+
+Break Mutual Exclusion: This is usually not possible or desirable for resources that inherently require exclusive access (e.g., writing to a file, updating a shared counter).
+
+Break Hold and Wait (Acquire All Resources at Once): A thread should acquire all the resources it needs before starting its work. If it can't acquire all of them, it releases any resources it's currently holding and retries later. This can lead to starvation if resources are constantly busy.
+
+Break No Preemption (Preempt Resources): If a thread is holding some resources and requests another that cannot be immediately granted, it could be forced to release its currently held resources. This is complex to implement correctly and can lead to data inconsistency. Java's Lock interface (specifically tryLock()) allows for this.
+
+Break Circular Wait (Resource Ordering): This is the most common and practical approach in Java. Establish a global ordering for acquiring locks. If all threads always acquire locks in the same predefined order, a circular wait cannot form.
+
+Example: If you have lockA and lockB, always acquire lockA before lockB.
+
+Other strategies:
+
+Use java.util.concurrent utilities: The java.util.concurrent package provides higher-level concurrency constructs like ReentrantLock (with tryLock() for non-blocking acquisition), Semaphore, CountDownLatch, CyclicBarrier, and Executors which are designed to minimize the risk of deadlocks by handling underlying synchronization more robustly.
+
+Avoid Nested Locks: As shown in the example, nested synchronized blocks or acquiring locks on different objects can easily lead to deadlocks if not carefully managed.
+
+Set Timeouts for Lock Acquisition: Use lock.tryLock(long timeout, TimeUnit unit) with ReentrantLock to attempt to acquire a lock within a certain time frame. If the lock isn't acquired, the thread can back off and try again, preventing indefinite waiting.
+
+6. What's the difference between synchronized blocks/methods and ReentrantLock regarding deadlock avoidance?
+
+Answer:
+
+synchronized: Provides implicit locking. It's simpler to use but less flexible. It only supports blocking lock acquisition (a thread waits indefinitely for the lock). You cannot attempt to acquire a lock, check if it's available, or time out. This makes breaking the "Hold and Wait" or "No Preemption" conditions difficult.
+
+ReentrantLock: Offers more control and flexibility. It provides:
+
+tryLock(): Attempts to acquire the lock. Returns true if successful, false otherwise, allowing the thread to do something else or back off.
+
+tryLock(long timeout, TimeUnit unit): Attempts to acquire the lock within a specified timeout. This directly helps in breaking the "Hold and Wait" condition by allowing a thread to give up waiting if it can't get the lock in time.
+
+Interruptible Lock Acquisition: lock.lockInterruptibly() allows a thread to be interrupted while waiting for a lock, which synchronized doesn't directly support (a thread waiting on a synchronized block cannot be interrupted from that wait).
+
+While ReentrantLock provides tools to avoid deadlocks, it's still up to the developer to use them correctly to prevent the Coffman conditions from being met. synchronized offers less control, making it easier to accidentally create deadlocks if multiple locks are involved.
+
+7. Can you have a deadlock with only one thread?
+
+Answer: No. By definition, a deadlock involves two or more threads waiting for each other to release resources. A single thread cannot be waiting for a resource it itself is holding or for another thread that doesn't exist.
+
+8. Can volatile variables lead to deadlocks?
+
+Answer: No. volatile ensures visibility of variable changes across threads and prevents reordering of instructions around volatile reads/writes. It does not involve locking mechanisms. Deadlocks occur due to threads blocking on shared locks, which volatile does not manage. While volatile is crucial for thread safety in certain scenarios, it's unrelated to deadlocks.
+
+
+
+
+
+
+
+
+
+
+ Explain Livelock and compare it with Deadlock.
+* Answer:
+* Livelock: A situation where two or more threads are not blocked, but they are continuously changing their state in response to each other's actions, without making any progress towards completing their tasks. They are "busy waiting" and endlessly reacting, like two people trying to pass each other in a narrow hallway, constantly moving side to side but never getting past.
+* Comparison with Deadlock:
+* State: In a deadlock, threads are blocked and waiting. In a livelock, threads are active (running) but unproductive.
+* CPU Usage: Deadlocked threads consume minimal CPU (unless woken up for a context switch), as they are just waiting. Livelocked threads can consume significant CPU as they are constantly executing logic.
+* Progress: Neither makes progress.
+* Detection: Deadlocks are easier to detect via thread dumps (explicit "BLOCKED" state). Livelocks are harder to detect programmatically; they often manifest as high CPU usage without task completion.
+* Example (Livelock): Two threads trying to acquire two resources. If Thread A tries to acquire Resource 1, fails, releases Resource 2, and Thread B tries to acquire Resource 2, fails, releases Resource 1, and they keep repeating this dance without ever acquiring both. This can happen if threads repeatedly give up locks and retry immediately without a backoff strategy.
+* Prevention: Introducing randomness or exponential backoff when retrying lock acquisition or resource access can help break livelocks.
+
+
+
+
+
+Question: What is the N+1 query problem in JPA/Hibernate, and how can you solve it?
+
+Concepts Tested: N+1 problem, performance optimization, fetching strategies.
+
+Answer:
+The N+1 query problem is a common performance anti-pattern in ORM frameworks like JPA/Hibernate that occurs when fetching data with LAZY loaded associations.
+
+Problem Description:
+Imagine you have a Department entity with a OneToMany relationship to Employee entities (which is LAZY by default).
+
+You execute one query (N=1) to fetch N parent entities (e.g., SELECT * FROM Department;).
+
+Then, for each of these N parent entities, if you iterate through them and try to access their lazy-loaded collection of child entities (e.g., department.getEmployees()), Hibernate executes an additional query (N queries) to fetch the children for each parent.
+This results in 1 + N queries, which can be extremely inefficient for a large number of parent entities.
+
+Example (pseudo-code):
+
+Java
+
+List<Department> departments = departmentRepository.findAll(); // 1 query: SELECT * FROM Department;
+
+for (Department dept : departments) {
+    // Accessing lazy-loaded employees for each department
+    System.out.println(dept.getName() + ": " + dept.getEmployees().size() + " employees");
+    // This line triggers N additional queries: SELECT * FROM Employee WHERE department_id = ?;
+}
+Solutions:
+
+JOIN FETCH (Recommended for specific use cases):
+
+Use JOIN FETCH in your JPQL/HQL queries or Spring Data JPA custom queries. This tells Hibernate to fetch the associated entities (e.g., employees) along with the parent entity (department) in a single SQL query using an INNER JOIN or LEFT JOIN.
+
+Java
+
+// In DepartmentRepository interface:
+@Query("SELECT d FROM Department d JOIN FETCH d.employees WHERE d.id = :id")
+Optional<Department> findByIdWithEmployees(@Param("id") Long id);
+
+@Query("SELECT d FROM Department d JOIN FETCH d.employees")
+List<Department> findAllWithEmployees(); // All departments and their employees in one query
+Drawback: Can lead to a Cartesian product if you JOIN FETCH multiple ToMany relationships, potentially resulting in duplicated parent rows (which Hibernate handles by de-duplicating in memory, but the underlying SQL result set can be large).
+
+Entity Graphs (@NamedEntityGraph or @EntityGraph):
+
+A more declarative way to specify which associated entities to fetch EAGERly. You define an entity graph, and then you can apply it to repository methods.
+
+Java
+
+// On Department entity
+@NamedEntityGraph(
+    name = "Department.employees",
+    attributeNodes = @NamedAttributeNode("employees")
+)
+public class Department { /* ... */ }
+
+// In DepartmentRepository interface
+@EntityGraph(value = "Department.employees", type = EntityGraph.EntityGraphType.FETCH)
+List<Department> findAll(); // Fetches departments and their employees eagerly
+Benefit: Clearer separation of fetching strategy from the query itself, reusable.
+
+Batch Fetching (@BatchSize or 
+
+
+
+
+
+@PathVariable extracts a value directly from the URI path itself. It's used to identify a specific resource.
+
+@RequestParam extracts a value from the query parameters in the URL. It's typically used for filtering, sorting, or providing optional parameters.
+
+
+
+
+400 Bad Request: This is a generic client-side error. It's often used when the request body is malformed (e.g., invalid JSON), or when a required parameter is missing or has an incorrect value. It signals that the request itself is invalid.
+
+401 Unauthorized: The client is not authenticated. This means the client either didn't provide credentials or provided invalid ones. Note that "unauthorized" means "unauthenticated."
+
+403 Forbidden: The client is authenticated but does not have permission to access the requested resource. This is an authorization error.
+
+404 Not Found: The server can't find the requested resource. This is one of the most common error codes for REST APIs, often occurring when a client requests a resource using an invalid ID or URL.
+
+405 Method Not Allowed: The HTTP method used in the request isn't supported for the requested resource. For example, trying to POST to a read-only endpoint that only accepts GET requests.
+
+409 Conflict: The request couldn't be completed due to a conflict with the current state of the resource. A common use case is for a duplicate entry error when trying to create a resource that already exists with the same unique identifier.
+
+422 Unprocessable Entity: The server understands the request content type and syntax, but it can't process the included instructions. This is typically used for validation errors where the data itself is semantically incorrect (e.g., a username that is too short).
+
+5xx Server Error Status Codes
+These codes indicate that the server failed to fulfill an otherwise valid request. The server is responsible for the error, and a client may retry the request later.
+
+500 Internal Server Error: This is a generic catch-all for unexpected server-side errors. It's used when a specific 5xx code isn't applicable. This often happens when the server encounters a bug, a database connection failure, or some other unhandled exception.
+
+503 Service Unavailable: The server is not ready to handle the request. This might be due to being overloaded, undergoing maintenance, or being down. It's a temporary condition.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ public static void main(String[] args) {
+        
+        try {
+            // Assume this method can throw either exception
+            processData(); 
+        } catch (FileNotFoundException | SQLException e) {
+            // A single block to handle both types of exceptions
+            System.out.println("An error occurred. Check logs for details.");
+            System.out.println("Exception type: " + e.getClass().getName());
+            System.out.println("Error message: " + e.getMessage());
+        }
+    }
+
+
+
+
+
+
+
+
+
+No, it won't create a new transaction by default. When a @Transactional service method in Spring calls another @Transactional method within the same class, the internal call bypasses Spring's AOP (Aspect-Oriented Programming) proxy.
+
+Spring's transaction management relies on a proxy that wraps the bean. When an external method call is made on the bean, the proxy intercepts it and starts a new transaction.
+
+
+
+
+multiple statements create,read,update,delete are executed in single transaction if the first half succeds but fetch fails what happens full rollback or partial sucess?
+
+Yes, it's fully rolled back.
+
+A transaction is an all-or-nothing operation. If any part of the process fails, the entire transaction is undone. It doesn't matter if the first few steps succeeded; the whole thing is canceled and returned to its original state.
+
+
+
+why would you use interface in application
+ou'd use an interface in an application to define a contract for a class. It outlines a set of methods that a class must implement, but it doesn't provide any of the implementation details
+. Abstraction and Contracts
+Loose Coupling
+Polymorphism
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+FetchType.EAGER (Eager Loading):
+
+Definition: When the parent entity is loaded, all associated (EAGERly fetched) entities are loaded from the database immediately as well.
+
+Behavior: A single database query (or a few highly optimized ones) might be executed to retrieve all the data in one go.
+
+When to Use:
+
+For small, frequently accessed relationships where you almost always need the associated data (e.g., a UserProfile associated with a User in a One-to-One, or a Country for a City in Many-to-One).
+
+
+
+
+
+
+
+
+
+orphanRemoval=true:
+
+Definition: This property is specifically used with @OneToMany and @OneToOne relationships. When set to true, if a child entity is removed from its parent's collection (i.e., it becomes "orphaned" because no parent references it), JPA will automatically delete that child entity from the database. It implies CascadeType.REMOVE for that specific scenario.
+
+
+CascadeType.ALL:
+
+Definition: This cascade type means that all persistence operations (like PERSIST, MERGE, REMOVE, REFRESH, DETACH) performed on the parent entity will automatically be applied to its associated child entities.
+
+
+
+
+
+FetchType.LAZY (Lazy Loading):
+
+Definition: Associated entities are not loaded from the database when the parent entity is loaded. Instead, a proxy is created, and the data is only loaded from the database when you explicitly access (call a getter on) the associated entity/collection.
+
+Behavior: A separate database query is executed only when the associated data is accessed.
+
+When to Use:
+
+For large collections or relationships that are not always needed when the parent entity is fetched (e.g., a Customer and their List<Order>).
+
+Default for @OneToMany and @ManyToMany.
+
+
+
+
+
+
+
+
+Idempotency means that making the same request multiple times has the same effect as making it once. It's a key concept for handling network failures and retries.
+
+Idempotent Methods: GET, PUT, DELETE, and HEAD are idempotent. For example, a DELETE request to /api/products/123 will remove the product the first time. If you send the same DELETE request again, the product is already gone, and the result is the same (the product is no longer there). The state of the system is the same as if the request had only been made once.
+
+Non-Idempotent Methods: POST is not idempotent. A POST request to create a new resource (e.g., POST /api/products) will create a new product each time it's sent, resulting in multiple resources being created.
+
+What are the different Propagation levels in Spring's @Transactional annotation? Explain REQUIRED and REQUIRES_NEW.
+
+Answer: Propagation levels define how a method's transaction relates to an existing transaction.
+
+REQUIRED: This is the default. If a transaction already exists, the method will join that transaction. If no transaction exists, a new one will be created.
+
+REQUIRES_NEW: This always creates a new, independent transaction. If an existing transaction is in progress, it will be suspended until the new transaction is complete. This is useful for operations that must be atomic regardless of the calling method's transaction, like logging.
+
+
+What are the different Propagation levels in Spring's @Transactional annotation? Explain REQUIRED and REQUIRES_NEW.
+
+Answer: Propagation levels define how a method's transaction relates to an existing transaction.
+
+REQUIRED: This is the default. If a transaction already exists, the method will join that transaction. If no transaction exists, a new one will be created.
+
+REQUIRES_NEW: This always creates a new, independent transaction. If an existing transaction is in progress, it will be suspended until the new transaction is complete. This is useful for operations that must be atomic regardless of the calling method's transaction, like logging.
+
+
+What is a "flaky" test, and how do you handle it?
+
+A flaky test is a test that sometimes passes and sometimes fails on the same code.
+
+
+
+
+SOAP (Simple Object Access Protocol) is a messaging protocol that uses XML to exchange 
+structured information in web services. It's a highly structured and strictly 
+typed protocol defined by a WSDL (Web Services Description Language) file.
+ It's often used in enterprise applications that require high security and reliability.
+ Unlike REST, it's not limited to HTTP and can operate over other protocols like SMTP.
+
+
+Best for public APIs, web and mobile applications, and stateless operations where speed and scalability are key.	Best for enterprise applications (e.g., banking, telecom) that require strict contracts, built-in security, and transactional reliability.
+Relies on HTTP only. It uses standard HTTP methods (GET, POST, PUT, DELETE).	Can be used with various protocols, including HTTP, SMTP, and others.
+Uses various lightweight formats like JSON and XML. JSON is most common due to its simplicity.	Uses XML only, which can be very verbose and result in larger messages.
+REST is an architectural style that uses a set of principles. It's more of a design philosophy.	SOAP is a strict protocol with specific rules and standards.
+
+
+
+
+
+
+
+
+Practical Example of Method Overriding and the super keyword
+Question: Explain how method overriding works in a real-world scenario. Provide a code example where a subclass overrides a method from its superclass and also calls the superclass's version of the method using the super keyword.
+
+Answer: Method overriding is essential for achieving runtime polymorphism. A common example is a Vehicle class and a Car subclass. The Vehicle class might have a general startEngine() method, while the Car subclass needs a specific implementation (e.g., checking the fuel level). The super keyword is useful for reusing the parent's logic before adding the subclass's specific behavior.
+
+Code Example:
+
+Java
+
+class Vehicle {
+    public void startEngine() {
+        System.out.println("Vehicle's engine started.");
+    }
+}
+
+class Car extends Vehicle {
+    @Override
+    public void startEngine() {
+        // We can call the parent's method first to reuse its logic
+        super.startEngine(); 
+        
+        // Then add specific logic for the Car
+        System.out.println("Car's specific start-up routine: Checking fuel and battery.");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Car myCar = new Car();
+        myCar.startEngine();
+    }
+}
+Output:
+
+Vehicle's engine started.
+Car's specific start-up routine: Checking fuel and battery.
+2. Constructor Chaining and the super() call
+Question: Explain constructor chaining in inheritance. When and why would you need to use super()? Provide a code example.
+
+Answer: Constructor chaining is the process of a subclass's constructor calling its immediate superclass's constructor. This ensures that the parent class is properly initialized before the child class. The super() call is used explicitly for this purpose. If you don't call super() explicitly, the Java compiler will automatically insert a call to the no-argument super() constructor as the first line of the subclass's constructor. You must use an explicit super() call if the parent class does not have a no-argument constructor.
+
+Code Example:
+
+Java
+
+class Animal {
+    String name;
+
+    Animal(String name) {
+        this.name = name;
+        System.out.println("Animal constructor called with name: " + this.name);
+    }
+}
+
+class Dog extends Animal {
+    String breed;
+
+    Dog(String name, String breed) {
+        // Must call the superclass constructor because Animal has no default constructor
+        super(name); 
+        this.breed = breed;
+        System.out.println("Dog constructor called with breed: " + this.breed);
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Dog myDog = new Dog("Buddy", "Golden Retriever");
+    }
+}
+Output:
+
+Animal constructor called with name: Buddy
+Dog constructor called with breed: Golden Retriever
+
+
+
+
+
+
+
+
+
+
+. Compile-Time Error: super() Call
+Question: "What's wrong with this code? How would you fix it? Explain why the error occurs."
+
+Java
+
+class Parent {
+    Parent(String name) {
+        System.out.println("Parent's name is " + name);
+    }
+}
+
+class Child extends Parent {
+    Child() {
+        System.out.println("Child created.");
+    }
+}
+Answer: This code will result in a compile-time error. The error message will be similar to "constructor Parent in class Parent cannot be applied to given types;".
+
+Why the error occurs:
+The Parent class has a constructor that takes a String argument, but it does not have a default (no-argument) constructor. When the Child class constructor is invoked, the Java compiler automatically tries to insert a call to super() as the first statement to initialize the parent class. However, since the Parent class lacks a no-argument constructor, this implicit super() call fails, causing a compilation error.
+
+How to fix it:
+You must explicitly call the parent class's constructor from the child's constructor using the super keyword and passing the required argument.
+
+Corrected Code:
+
+Java
+
+class Parent {
+    Parent(String name) {
+        System.out.println("Parent's name is " + name);
+    }
+}
+
+class Child extends Parent {
+    Child() {
+        // Explicitly call the parent constructor
+        super("Default"); 
+        System.out.println("Child created.");
+    }
+}
+
+
+
+Code Example (with error):
+
+Java
+
+class Vehicle {
+    private String manufacturer = "Unknown";
+}
+
+class Car extends Vehicle {
+    public void printManufacturer() {
+        // Compile-time error: The field Vehicle.manufacturer is not visible
+        System.out.println("Manufacturer: " + manufacturer); 
+    }
+}
+How to fix it:
+To provide controlled access to private members, you must use public or protected getter methods in the superclass. The subclass can then use these methods to access the value of the private field.
+
+Corrected Code:
+
+Java
+
+class Vehicle {
+    private String manufacturer = "Unknown";
+
+    // Public getter method to provide access to the private field
+    public String getManufacturer() {
+        return manufacturer;
+    }
+}
+
+class Car extends Vehicle {
+    public void printManufacturer() {
+        // Accessing the private field through the public getter method
+        System.out.println("Manufacturer: " + getManufacturer()); 
+    }
+}
+
+

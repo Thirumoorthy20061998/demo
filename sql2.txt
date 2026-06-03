@@ -1,0 +1,423 @@
+Okay, here's a set of common SQL interview questions along with their answers. These questions cover a range of SQL concepts from basic querying to joins, aggregation, and subqueries, which are frequently asked in technical interviews.
+
+For each question, I'll provide:
+
+The problem statement.
+
+Sample table structures (and some data for context).
+
+The SQL query answer.
+
+A brief explanation of the query.
+
+Sample Data Setup (Run this first to create tables and populate them)
+SQL
+
+-- Create Departments Table
+CREATE TABLE Departments (
+    department_id INT PRIMARY KEY,
+    department_name VARCHAR(50) NOT NULL,
+    location VARCHAR(50)
+);
+
+-- Insert data into Departments
+INSERT INTO Departments (department_id, department_name, location) VALUES
+(101, 'Engineering', 'New York'),
+(102, 'Sales', 'London'),
+(103, 'Marketing', 'New York'),
+(104, 'HR', 'London'),
+(105, 'Finance', 'Paris');
+
+-- Create Employees Table
+CREATE TABLE Employees (
+    employee_id INT PRIMARY KEY,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    department_id INT,
+    salary DECIMAL(10, 2),
+    hire_date DATE,
+    FOREIGN KEY (department_id) REFERENCES Departments(department_id)
+);
+
+-- Insert data into Employees
+INSERT INTO Employees (employee_id, first_name, last_name, department_id, salary, hire_date) VALUES
+(1, 'Alice', 'Smith', 101, 75000.00, '2020-01-15'),
+(2, 'Bob', 'Johnson', 102, 60000.00, '2019-03-20'),
+(3, 'Charlie', 'Brown', 101, 80000.00, '2021-06-01'),
+(4, 'Diana', 'Miller', 103, 70000.00, '2020-11-10'),
+(5, 'Eve', 'Davis', 102, 62000.00, '2022-02-28'),
+(6, 'Frank', 'White', 104, 55000.00, '2018-09-01'),
+(7, 'Grace', 'Lee', 101, 85000.00, '2021-03-05'),
+(8, 'Henry', 'Wilson', 103, 68000.00, '2023-01-01'),
+(9, 'Ivy', 'Garcia', NULL, 50000.00, '2024-05-15'); -- Employee with no department
+
+-- Create Customers Table
+CREATE TABLE Customers (
+    customer_id INT PRIMARY KEY,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    email VARCHAR(100) UNIQUE
+);
+
+-- Insert data into Customers
+INSERT INTO Customers (customer_id, first_name, last_name, email) VALUES
+(1, 'John', 'Doe', 'john.doe@example.com'),
+(2, 'Jane', 'Smith', 'jane.smith@example.com'),
+(3, 'Robert', 'Brown', 'robert.brown@example.com'),
+(4, 'Emily', 'Davis', 'emily.davis@example.com');
+
+-- Create Orders Table
+CREATE TABLE Orders (
+    order_id INT PRIMARY KEY,
+    customer_id INT,
+    order_date DATE,
+    total_amount DECIMAL(10, 2),
+    FOREIGN KEY (customer_id) REFERENCES Customers(customer_id)
+);
+
+-- Insert data into Orders
+INSERT INTO Orders (order_id, customer_id, order_date, total_amount) VALUES
+(101, 1, '2023-01-05', 150.00),
+(102, 2, '2023-01-07', 200.00),
+(103, 1, '2023-02-10', 300.00),
+(104, 3, '2023-02-15', 120.00),
+(105, 2, '2023-03-01', 50.00),
+(106, 1, '2023-03-20', 400.00),
+(107, 4, '2023-04-01', 75.00),
+(108, 2, '2023-04-10', 180.00);
+SQL Interview Questions and Answers
+Question 1: Retrieve all employees along with their department names.
+
+Concept: INNER JOIN
+
+Query:
+
+SQL
+
+SELECT
+    e.first_name,
+    e.last_name,
+    e.salary,
+    d.department_name
+FROM
+    Employees AS e
+INNER JOIN
+    Departments AS d ON e.department_id = d.department_id;
+Explanation: An INNER JOIN is used to combine rows from Employees and Departments tables based on a matching department_id in both tables. Only employees who are assigned to a department will appear in the result.
+
+Question 2: Find all departments that currently have no employees.
+
+Concept: LEFT JOIN and WHERE IS NULL
+
+Query:
+
+SQL
+
+SELECT
+    d.department_name
+FROM
+    Departments AS d
+LEFT JOIN
+    Employees AS e ON d.department_id = e.department_id
+WHERE
+    e.employee_id IS NULL;
+Explanation: A LEFT JOIN includes all rows from the Departments table. If a department has no matching employees, the employee_id (and other Employees table columns) will be NULL. We then filter for these NULL values to find departments without employees.
+
+Question 3: Calculate the average salary for each department. Include departments even if they have no employees (average salary would be NULL or 0).
+
+Concept: GROUP BY, Aggregate Functions (AVG), LEFT JOIN
+
+Query:
+
+SQL
+
+SELECT
+    d.department_name,
+    COALESCE(AVG(e.salary), 0) AS average_salary -- COALESCE handles NULL for departments with no employees
+FROM
+    Departments AS d
+LEFT JOIN
+    Employees AS e ON d.department_id = e.department_id
+GROUP BY
+    d.department_name
+ORDER BY
+    d.department_name;
+Explanation: We use a LEFT JOIN to ensure all departments are included. AVG(e.salary) calculates the average salary for each group (department). COALESCE(AVG(e.salary), 0) replaces NULL average salaries (for departments with no employees) with 0 for cleaner output. GROUP BY department_name aggregates the salaries for each distinct department.
+
+Question 4: Find departments where the average salary is greater than $70,000.
+
+Concept: GROUP BY, HAVING, Aggregate Functions (AVG)
+
+Query:
+
+SQL
+
+SELECT
+    d.department_name,
+    AVG(e.salary) AS average_salary
+FROM
+    Departments AS d
+INNER JOIN
+    Employees AS e ON d.department_id = e.department_id
+GROUP BY
+    d.department_name
+HAVING
+    AVG(e.salary) > 70000;
+Explanation: First, we INNER JOIN to get employees and their departments. Then, we GROUP BY department to calculate the AVG(e.salary) for each. Finally, HAVING filters the groups based on the condition that their average salary is greater than $70,000. HAVING is used for filtering on aggregated results, whereas WHERE is for filtering individual rows before aggregation.
+
+Question 5: Find the second highest salary among all employees.
+
+Concept: Subquery with DISTINCT and ORDER BY/LIMIT/OFFSET OR Window Function (DENSE_RANK)
+
+Query (using DENSE_RANK - more robust for ties):
+
+SQL
+
+SELECT salary
+FROM (
+    SELECT
+        salary,
+        DENSE_RANK() OVER (ORDER BY salary DESC) as rnk
+    FROM
+        Employees
+) AS ranked_salaries
+WHERE rnk = 2;
+Explanation:
+
+The inner query uses DENSE_RANK() OVER (ORDER BY salary DESC) to assign a rank to each unique salary in descending order. DENSE_RANK() assigns the same rank to employees with the same salary.
+
+The outer query then selects the salary where the calculated rank (rnk) is 2.
+
+Alternative (using LIMIT/OFFSET - less robust for ties):
+
+SQL
+
+SELECT DISTINCT salary
+FROM Employees
+ORDER BY salary DESC
+LIMIT 1 OFFSET 1;
+
+
+SELECT DISTINCT salary
+FROM Employees
+ORDER BY salary DESC
+LIMIT 1 OFFSET 2;
+
+
+
+
+
+
+
+Explanation (Alternative): This query first selects distinct salaries, orders them in descending order, and then uses LIMIT 1 OFFSET 1 to get the single salary after skipping the highest one. The drawback is if there are multiple employees with the same highest salary, this will still give you the next distinct salary, not necessarily the second highest value if there are ties at the top.
+
+Question 6: For each customer, list their total number of orders and the total amount spent.
+
+Concept: INNER JOIN, GROUP BY, Aggregate Functions (COUNT, SUM)
+
+Query:
+
+SQL
+
+SELECT
+    c.first_name,
+    c.last_name,
+    COUNT(o.order_id) AS total_orders,
+    SUM(o.total_amount) AS total_amount_spent
+FROM
+    Customers AS c
+INNER JOIN
+    Orders AS o ON c.customer_id = o.customer_id
+GROUP BY
+    c.customer_id, c.first_name, c.last_name -- Group by all non-aggregated columns from SELECT
+ORDER BY
+    total_amount_spent DESC;
+Explanation: We join Customers and Orders on customer_id. COUNT(o.order_id) counts the number of orders for each customer, and SUM(o.total_amount) calculates the total money spent. The GROUP BY clause aggregates these results for each unique customer.
+
+Question 7: Add a new employee to the Employees table.
+
+Concept: INSERT
+
+Query:
+
+SQL
+
+INSERT INTO Employees (employee_id, first_name, last_name, department_id, salary, hire_date)
+VALUES (10, 'Sophia', 'Chen', 101, 78000.00, '2024-07-25');
+Explanation: The INSERT INTO statement specifies the table and the columns you want to populate. The VALUES clause provides the data for those columns in the same order.
+
+Question 8: Update the salary of 'Alice Smith' to $82,000.
+
+Concept: UPDATE, WHERE
+
+Query:
+
+SQL
+
+UPDATE Employees
+SET salary = 82000.00
+WHERE first_name = 'Alice' AND last_name = 'Smith';
+Explanation: The UPDATE statement specifies the table to modify. SET defines the new value for the salary column. The WHERE clause is critical; it ensures that only the row(s) matching the condition (first_name = 'Alice' AND last_name = 'Smith') are updated. Without WHERE, all salaries in the table would be updated!
+
+Question 9: Delete the employee named 'Ivy Garcia'.
+
+Concept: DELETE, WHERE
+
+Query:
+
+SQL
+
+DELETE FROM Employees
+WHERE first_name = 'Ivy' AND last_name = 'Garcia';
+Explanation: The DELETE FROM statement specifies the table. The WHERE clause identifies the specific row(s) to be removed. Again, be very cautious with DELETE statements, as omitting WHERE will delete all records from the table.
+
+Question 10: Find customers who have placed more than 2 orders.
+
+Concept: INNER JOIN, GROUP BY, COUNT(), HAVING
+
+Query:
+
+SQL
+
+SELECT
+    c.first_name,
+    c.last_name,
+    COUNT(o.order_id) AS number_of_orders
+FROM
+    Customers AS c
+INNER JOIN
+    Orders AS o ON c.customer_id = o.customer_id
+GROUP BY
+    c.customer_id, c.first_name, c.last_name
+HAVING
+    COUNT(o.order_id) > 2;
+Explanation: This query joins customers and orders, groups them by customer, counts their orders, and then filters these groups to show only those with more than 2 orders using the HAVING clause.
+
+These questions cover a good range of fundamental to intermediate SQL skills often assessed in interviews. Practice writing them yourself without looking at the answers, and try to think of edge cases or alternative solutions!
+
+
+
+
+
+
+
+
+
+
+-- Get departments with an average salary greater than 70000,
+-- but only consider employees hired after 2020.
+SELECT
+    D.department_name,
+    AVG(E.salary) AS average_salary
+FROM
+    Employees AS E
+INNER JOIN
+    Departments AS D ON E.department_id = D.department_id
+WHERE
+    E.hire_date > '2020-12-31' -- WHERE filters individual employees first
+GROUP BY
+    D.department_name
+HAVING
+    AVG(E.salary) > 70000; -- HAVING filters the groups of departments
+
+
+
+
+A LEFT JOIN returns all rows from the left table
+
+A RIGHT JOIN returns all rows from the right table
+
+
+
+
+STUDENTS (Left Table),BOOKS (Right Table)
+Name,BookID
+Alice,101
+Bob,102
+Charlie,103
+David,(Doesn't exist)
+Note: David has no matching book.,Note: Book 103 has no student.
+
+
+SQLSELECT *
+FROM STUDENTS S
+LEFT JOIN BOOKS B ON S.StudentID = B.StudentID;
+Result: It returns every student, even if the second list (Books) has no match.NameBookIDAlice101Bob102Charlie103DavidNULL
+
+
+SQLSELECT *
+FROM STUDENTS S
+RIGHT JOIN BOOKS B ON S.StudentID = B.StudentID;
+Result: It returns every book, even if the first list (Students) has no match.NameBookIDAlice101Bob102NULL103David(Not in result)
+
+
+
+
+SELECT DeptID, COUNT(EmpID) AS TotalEmployees	
+FROM Employee	
+GROUP BY DeptID;
+
+
+
+
+
+
+uestion: Find the names and salaries of all employees who earn more than the average salary of their own department.
+
+
+select e1.Name, 
+e1.Salary, 
+e1.DeptID
+FROM
+Employee AS e1
+WHERE
+e1.Salary > (
+SELECT AVG(e2.Salary) AS AVGSALARY
+FROM Employee AS e2
+WHERE e2.DeptID = e1.DeptID
+); THIS IS CORRECT OR NOT
+
+
+
+
+Write a query to find employees who earn more than their managers. (Assume an Employee table with EmpId, Name, Salary, and ManagerId).
+
+
+SELECT e.Name AS Employee
+FROM Employee e
+JOIN Employee m ON e.ManagerId = m.EmpId
+WHERE e.Salary > m.Salary;
+
+
+Question: Write a query to find the department with the highest average salary.
+
+SELECT DepartmentId, AVG(Salary) AS AverageSalary
+FROM Employee
+GROUP BY DepartmentId
+ORDER BY AverageSalary DESC
+LIMIT 1; 
+-- Note: Use 'SELECT TOP 1' if you are using SQL Server
+
+
+
+Find all customers who have placed at least one order.
+
+SELECT c.CustomerID, c.CustomerName
+FROM Customers c
+WHERE EXISTS (
+    SELECT 1 
+    FROM Orders o 
+    WHERE o.CustomerID = c.CustomerID
+);
+
+
+
+Find all customers who have never placed an order.
+
+SELECT c.CustomerID, c.CustomerName
+FROM Customers c
+WHERE NOT EXISTS (
+    SELECT 1 
+    FROM Orders o 
+    WHERE o.CustomerID = c.CustomerID
+);

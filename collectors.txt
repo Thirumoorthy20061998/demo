@@ -1,0 +1,328 @@
+Great! After understanding Lambdas and Functional Interfaces, the next natural step is to explore the Stream API. And within the Stream API, the Collectors class is absolutely vital for performing terminal operations that accumulate stream elements into a final result.
+What is Collectors?
+The java.util.stream.Collectors class provides static methods that implement various useful reduction operations, such as accumulating elements into collections, summarizing elements according to various criteria, and so on.
+In essence, Collectors is used with the collect() terminal operation of a Stream. The collect() method takes a Collector as an argument, which then dictates how the elements processed by the intermediate stream operations should be gathered.
+Think of it this way:
+•	Stream API: Provides a way to process data (filter, map, sort, etc.).
+•	collect(): Is the "trigger" to start the accumulation.
+•	Collector (from Collectors class): Is the "recipe" or "blueprint" for how the data should be gathered and structured into a final result.
+Common Collectors Methods
+Let's look at the most frequently used Collectors methods with examples.
+Scenario: We'll use a List of Person objects for our examples.
+Java
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.Comparator;
+import java.util.DoubleSummaryStatistics;
+
+class Person {
+    private String name;
+    private int age;
+    private String city;
+    private double salary;
+
+    public Person(String name, int age, String city, double salary) {
+        this.name = name;
+        this.age = age;
+        this.city = city;
+        this.salary = salary;
+    }
+
+    // Getters
+    public String getName() { return name; }
+    public int getAge() { return age; }
+    public String getCity() { return city; }
+    public double getSalary() { return salary; }
+
+    @Override
+    public String toString() {
+        return "Person{" +
+               "name='" + name + '\'' +
+               ", age=" + age +
+               ", city='" + city + '\'' +
+               ", salary=" + salary +
+               '}';
+    }
+}
+
+public class CollectorsExample {
+
+    static List<Person> people = Arrays.asList(
+        new Person("Alice", 30, "New York", 70000.0),
+        new Person("Bob", 24, "London", 55000.0),
+        new Person("Charlie", 35, "New York", 85000.0),
+        new Person("David", 28, "Paris", 60000.0),
+        new Person("Eve", 30, "London", 72000.0),
+        new Person("Frank", 40, "New York", 95000.0)
+    );
+
+    public static void main(String[] args) {
+        // --- Examples below ---
+    }
+}
+________________________________________
+1. toList() / toSet() / toCollection()
+•	Purpose: Accumulates the input elements into a new List, Set, or a specific type of Collection.
+<!-- end list -->
+Java
+        // toList(): Collects elements into a List
+        List<String> names = people.stream()
+                                   .map(Person::getName) // Intermediate operation: maps Person to String (name)
+                                   .collect(Collectors.toList()); // Terminal operation: collects into a List
+        System.out.println("Names (List): " + names);
+        // Output: Names (List): [Alice, Bob, Charlie, David, Eve, Frank]
+
+        // toSet(): Collects elements into a Set (removes duplicates)
+        Set<String> cities = people.stream()
+                                  .map(Person::getCity)
+                                  .collect(Collectors.toSet());
+        System.out.println("Unique Cities (Set): " + cities);
+        // Output: Unique Cities (Set): [New York, London, Paris] (order may vary)
+
+        // toCollection(Supplier<Collection<T>> collectionFactory): Collects into a specific type of Collection
+        List<String> sortedNames = people.stream()
+                                        .map(Person::getName)
+                                        .sorted() // Intermediate operation: sorts names
+                                        .collect(Collectors.toCollection(java.util.LinkedList::new)); // Collects into a LinkedList
+        System.out.println("Names (LinkedList, sorted): " + sortedNames);
+        // Output: Names (LinkedList, sorted): [Alice, Bob, Charlie, David, Eve, Frank]
+________________________________________
+2. toMap(keyMapper, valueMapper)
+•	Purpose: Accumulates elements into a Map. You need to provide functions to extract the key and the value from each element.
+•	Overloads: 
+o	toMap(keyMapper, valueMapper): For simple cases. Throws IllegalStateException if duplicate keys are encountered.
+o	toMap(keyMapper, valueMapper, mergeFunction): Handles duplicate keys by applying a merge function.
+o	toMap(keyMapper, valueMapper, mergeFunction, mapFactory): Allows specifying the type of Map (e.g., TreeMap, LinkedHashMap).
+<!-- end list -->
+Java
+        // toMap(keyMapper, valueMapper): Basic map (throws error on duplicate keys)
+        try {
+            Map<String, Integer> nameAges = people.stream()
+                                                 .collect(Collectors.toMap(Person::getName, Person::getAge));
+            System.out.println("Name to Age Map: " + nameAges);
+            // Output: Name to Age Map: {Alice=30, Bob=24, Charlie=35, David=28, Eve=30, Frank=40}
+        } catch (IllegalStateException e) {
+            System.out.println("Error: Duplicate key encountered! " + e.getMessage());
+        }
+
+
+        // toMap(keyMapper, valueMapper, mergeFunction): Handle duplicate keys
+        // Example: Group people by age, if ages are same, concatenate names
+        Map<Integer, String> ageToNames = people.stream()
+                                                .collect(Collectors.toMap(
+                                                    Person::getAge,        // Key: age
+                                                    Person::getName,       // Value: name
+                                                    (oldValue, newValue) -> oldValue + ", " + newValue // Merge function: concatenate names
+                                                ));
+        System.out.println("Age to Names Map (with merge): " + ageToNames);
+        // Output: Age to Names Map (with merge): {24=Bob, 28=David, 30=Alice, Eve, 35=Charlie, 40=Frank} (order may vary)
+
+
+        // toMap(keyMapper, valueMapper, mergeFunction, mapFactory): Specify Map type
+        Map<Integer, String> treeMapAgeToNames = people.stream()
+                                                      .collect(Collectors.toMap(
+                                                          Person::getAge,
+                                                          Person::getName,
+                                                          (oldValue, newValue) -> oldValue + " & " + newValue,
+                                                          java.util.TreeMap::new // Collects into a TreeMap (sorted by key)
+                                                      ));
+        System.out.println("Age to Names TreeMap: " + treeMapAgeToNames);
+        // Output: Age to Names TreeMap: {24=Bob, 28=David, 30=Alice & Eve, 35=Charlie, 40=Frank}
+________________________________________
+3. groupingBy(classifier)
+•	Purpose: Groups input elements according to a classifier function, returning a Map. The keys are the results of the classifier function, and the values are lists of elements belonging to that group.
+•	Overloads: 
+o	groupingBy(classifier): Groups into a Map<K, List<T>>.
+o	groupingBy(classifier, downstreamCollector): Allows further processing of the grouped elements using another Collector.
+o	groupingBy(classifier, mapFactory, downstreamCollector): Allows specifying the type of Map and a downstream Collector.
+<!-- end list -->
+Java
+        // groupingBy(classifier): Group by city
+        Map<String, List<Person>> peopleByCity = people.stream()
+                                                      .collect(Collectors.groupingBy(Person::getCity));
+        System.out.println("People by City: " + peopleByCity);
+        /* Output (simplified):
+           People by City: {New York=[Alice, Charlie, Frank], London=[Bob, Eve], Paris=[David]}
+        */
+
+        // groupingBy(classifier, downstreamCollector): Group by city, then count people in each city
+        Map<String, Long> countPeopleByCity = people.stream()
+                                                    .collect(Collectors.groupingBy(
+                                                        Person::getCity,
+                                                        Collectors.counting() // downstream collector
+                                                    ));
+        System.out.println("Count of People by City: " + countPeopleByCity);
+        // Output: Count of People by City: {New York=3, London=2, Paris=1}
+
+        // groupingBy(classifier, downstreamCollector): Group by age, collect names into a Set
+        Map<Integer, Set<String>> namesByAge = people.stream()
+                                                     .collect(Collectors.groupingBy(
+                                                         Person::getAge,
+                                                         Collectors.mapping(Person::getName, Collectors.toSet()) // downstream mapping and collecting to Set
+                                                     ));
+        System.out.println("Names by Age (Set): " + namesByAge);
+        // Output: Names by Age (Set): {24=[Bob], 28=[David], 30=[Alice, Eve], 35=[Charlie], 40=[Frank]} (order of set elements may vary)
+
+        // groupingBy(classifier, mapFactory, downstreamCollector): Group by city, then average salary in each city, store in TreeMap
+        Map<String, Double> averageSalaryByCity = people.stream()
+                                                       .collect(Collectors.groupingBy(
+                                                           Person::getCity,
+                                                           java.util.TreeMap::new, // Use TreeMap for sorted keys
+                                                           Collectors.averagingDouble(Person::getSalary)
+                                                       ));
+        System.out.println("Average Salary by City (TreeMap): " + averageSalaryByCity);
+        // Output: Average Salary by City (TreeMap): {London=63500.0, New York=83333.33333333333, Paris=60000.0}
+________________________________________
+4. partitioningBy(predicate)
+•	Purpose: Partitions the input elements into two groups based on a Predicate: one for elements that satisfy the predicate, and one for elements that don't. Returns a Map<Boolean, List<T>>.
+•	Overloads: 
+o	partitioningBy(predicate): Default into Map<Boolean, List<T>>.
+o	partitioningBy(predicate, downstreamCollector): Allows further processing of the partitioned elements.
+<!-- end list -->
+Java
+        // partitioningBy(predicate): Partition by age (e.g., > 30 years old)
+        Map<Boolean, List<Person>> olderAndYoungerPeople = people.stream()
+                                                                .collect(Collectors.partitioningBy(p -> p.getAge() > 30));
+        System.out.println("People (Age > 30): " + olderAndYoungerPeople.get(true));
+        // Output: People (Age > 30): [Person{name='Charlie', age=35...}, Person{name='Frank', age=40...}]
+        System.out.println("People (Age <= 30): " + olderAndYoungerPeople.get(false));
+        // Output: People (Age <= 30): [Person{name='Alice', age=30...}, Person{name='Bob', age=24...}, Person{name='David', age=28...}, Person{name='Eve', age=30...}]
+
+
+        // partitioningBy(predicate, downstreamCollector): Partition by age, then count in each partition
+        Map<Boolean, Long> countOlderAndYounger = people.stream()
+                                                        .collect(Collectors.partitioningBy(
+                                                            p -> p.getAge() > 30,
+                                                            Collectors.counting()
+                                                        ));
+        System.out.println("Count (Age > 30): " + countOlderAndYounger.get(true));  // Output: 2
+        System.out.println("Count (Age <= 30): " + countOlderAndYounger.get(false)); // Output: 4
+________________________________________
+5. joining() / joining(delimiter) / joining(delimiter, prefix, suffix)
+•	Purpose: Concatenates the input CharSequence elements into a single String.
+<!-- end list -->
+Java
+        // joining(): Concatenate all names
+        String allNames = people.stream()
+                                .map(Person::getName)
+                                .collect(Collectors.joining());
+        System.out.println("All Names (joined): " + allNames);
+        // Output: All Names (joined): AliceBobCharlieDavidEveFrank
+
+        // joining(delimiter): Concatenate names with a comma
+        String namesCommaSeparated = people.stream()
+                                           .map(Person::getName)
+                                           .collect(Collectors.joining(", "));
+        System.out.println("Names (comma separated): " + namesCommaSeparated);
+        // Output: Names (comma separated): Alice, Bob, Charlie, David, Eve, Frank
+
+        // joining(delimiter, prefix, suffix): Concatenate names with prefix, suffix, and delimiter
+        String formattedNames = people.stream()
+                                      .map(Person::getName)
+                                      .collect(Collectors.joining(" | ", "Names: [", "]"));
+        System.out.println("Formatted Names: " + formattedNames);
+        // Output: Formatted Names: Names: [Alice | Bob | Charlie | David | Eve | Frank]
+________________________________________
+6. counting()
+•	Purpose: Counts the number of input elements. Returns Long.
+<!-- end list -->
+Java
+        long numberOfPeople = people.stream()
+                                    .collect(Collectors.counting());
+        System.out.println("Total number of people: " + numberOfPeople);
+        // Output: Total number of people: 6
+________________________________________
+7. minBy() / maxBy()
+•	Purpose: Returns an Optional<T> describing the minimum or maximum element of the input elements, according to the provided Comparator.
+<!-- end list -->
+Java
+        // minBy: Person with minimum age
+        java.util.Optional<Person> youngestPerson = people.stream()
+                                                           .collect(Collectors.minBy(Comparator.comparing(Person::getAge)));
+        youngestPerson.ifPresent(p -> System.out.println("Youngest Person: " + p.getName() + " (" + p.getAge() + ")"));
+        // Output: Youngest Person: Bob (24)
+
+        // maxBy: Person with highest salary
+        java.util.Optional<Person> highestPaidPerson = people.stream()
+                                                              .collect(Collectors.maxBy(Comparator.comparing(Person::getSalary)));
+        highestPaidPerson.ifPresent(p -> System.out.println("Highest Paid Person: " + p.getName() + " ($" + p.getSalary() + ")"));
+        // Output: Highest Paid Person: Frank ($95000.0)
+________________________________________
+8. summingInt() / summingLong() / summingDouble()
+•	Purpose: Computes the sum of a numeric-valued function applied to the input elements.
+<!-- end list -->
+Java
+        // summingInt: Sum of all ages
+        int totalAge = people.stream()
+                             .collect(Collectors.summingInt(Person::getAge));
+        System.out.println("Total Age of all people: " + totalAge);
+        // Output: Total Age of all people: 197
+
+        // summingDouble: Sum of all salaries
+        double totalSalary = people.stream()
+                                   .collect(Collectors.summingDouble(Person::getSalary));
+        System.out.println("Total Salary of all people: " + totalSalary);
+        // Output: Total Salary of all people: 437000.0
+________________________________________
+9. averagingInt() / averagingLong() / averagingDouble()
+•	Purpose: Computes the average of a numeric-valued function applied to the input elements. Returns Double.
+<!-- end list -->
+Java
+        // averagingDouble: Average salary
+        double averageSalary = people.stream()
+                                    .collect(Collectors.averagingDouble(Person::getSalary));
+        System.out.printf("Average Salary: %.2f%n", averageSalary);
+        // Output: Average Salary: 72833.33
+
+        // averagingInt: Average age
+        double averageAge = people.stream()
+                                  .collect(Collectors.averagingInt(Person::getAge));
+        System.out.printf("Average Age: %.2f%n", averageAge);
+        // Output: Average Age: 32.83
+________________________________________
+10. summarizingInt() / summarizingLong() / summarizingDouble()
+•	Purpose: Returns a special XXXSummaryStatistics object (IntSummaryStatistics, LongSummaryStatistics, DoubleSummaryStatistics) which can then be used to retrieve count, sum, min, max, and average of the elements. This is very efficient as it computes all statistics in a single pass.
+<!-- end list -->
+Java
+        // summarizingDouble: Get all salary statistics in one go
+        DoubleSummaryStatistics salaryStats = people.stream()
+                                                    .collect(Collectors.summarizingDouble(Person::getSalary));
+        System.out.println("Salary Statistics: " + salaryStats);
+        /* Output (example):
+           Salary Statistics: DoubleSummaryStatistics{count=6, sum=437000.000000, min=55000.000000, average=72833.333333, max=95000.000000}
+        */
+        System.out.println("Max Salary: " + salaryStats.getMax());
+        System.out.println("Min Salary: " + salaryStats.getMin());
+        System.out.println("Average Salary: " + salaryStats.getAverage());
+________________________________________
+11. reducing()
+•	Purpose: Performs a generalized reduction on the input elements, providing a way to implement custom aggregations. It's more general than summing, counting, etc., but also more verbose.
+•	Overloads: 
+o	reducing(binaryOperator): Reduces with a BinaryOperator, returns Optional<T>.
+o	reducing(identity, binaryOperator): Reduces with an identity and BinaryOperator, returns T.
+o	reducing(identity, mapper, binaryOperator): Maps elements first, then reduces.
+<!-- end list -->
+Java
+        // reducing: Concatenate all names into a single string
+        String allNamesReduced = people.stream()
+                                       .map(Person::getName)
+                                       .collect(Collectors.reducing("", (s1, s2) -> s1 + s2)); // Initial value empty string, concatenate
+        System.out.println("All Names (reducing): " + allNamesReduced);
+        // Output: All Names (reducing): AliceBobCharlieDavidEveFrank
+
+        // reducing: Find the person with the max age using reducing
+        java.util.Optional<Person> oldestPersonReduced = people.stream()
+                                                               .collect(Collectors.reducing((p1, p2) -> p1.getAge() > p2.getAge() ? p1 : p2));
+        oldestPersonReduced.ifPresent(p -> System.out.println("Oldest Person (reducing): " + p.getName()));
+        // Output: Oldest Person (reducing): Frank
+________________________________________
+Key Takeaways for Collectors:
+•	Terminal Operation: collect() is always a terminal operation, meaning it consumes the stream and produces a final result.
+•	Immutability: Most Collectors methods return immutable collections where possible or new mutable collections.
+•	Efficiency: They are often highly optimized for performance.
+•	Readability: They make complex data transformations and aggregations very concise and readable, especially when combined with other stream operations.
+•	Versatility: The groupingBy and partitioningBy collectors are incredibly powerful for complex data categorization.
+Mastering Collectors is crucial for effective use of the Java Stream API. It allows you to transform raw stream data into meaningful and structured results.

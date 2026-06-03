@@ -1,0 +1,356 @@
+Fantastic! This is an excellent summary of the core Stream API operations. You've clearly distinguished between Intermediate and Terminal operations, which is a fundamental concept in understanding streams.
+Let's break these down with examples, focusing on why and when you'd use each one. We'll continue to use our Person class for consistency.
+Java
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream; // Don't forget to import Stream!
+
+// Re-using the Person class for context
+class Person {
+    private String name;
+    private int age;
+    private String city;
+    private double salary;
+    private List<String> hobbies; // Added for flatMap example
+
+    public Person(String name, int age, String city, double salary, List<String> hobbies) {
+        this.name = name;
+        this.age = age;
+        this.city = city;
+        this.salary = salary;
+        this.hobbies = hobbies;
+    }
+
+    // Getters
+    public String getName() { return name; }
+    public int getAge() { return age; }
+    public String getCity() { return city; }
+    public double getSalary() { return salary; }
+    public List<String> getHobbies() { return hobbies; }
+
+    @Override
+    public String toString() {
+        return "Person{" +
+               "name='" + name + '\'' +
+               ", age=" + age +
+               ", city='" + city + '\'' +
+               ", salary=" + salary +
+               ", hobbies=" + hobbies +
+               '}';
+    }
+}
+
+public class StreamOperationsExample {
+
+    static List<Person> people = Arrays.asList(
+        new Person("Alice", 30, "New York", 70000.0, Arrays.asList("reading", "hiking")),
+        new Person("Bob", 24, "London", 55000.0, Arrays.asList("gaming", "coding")),
+        new Person("Charlie", 35, "New York", 85000.0, Arrays.asList("reading", "painting")),
+        new Person("David", 28, "Paris", 60000.0, Arrays.asList("traveling", "photography")),
+        new Person("Eve", 30, "London", 72000.0, Arrays.asList("cooking", "reading")),
+        new Person("Frank", 40, "New York", 95000.0, Arrays.asList("gardening", "hiking"))
+    );
+
+    public static void main(String[] args) {
+        System.out.println("--- Stream Operations Examples ---");
+        System.out.println("Initial People List:\n" + people.stream().map(Person::getName).collect(Collectors.joining(", ")));
+        System.out.println("----------------------------------");
+
+        // Intermediate Operations
+        filterExample();
+        mapExample();
+        flatMapExample();
+        distinctExample();
+        sortedExample();
+        peekExample();
+        limitExample();
+        skipExample();
+
+        System.out.println("\n--- Terminal Operations Examples ---");
+        forEachExample();
+        collectExample(); // Already covered extensively with Collectors
+        reduceExample();
+        minMaxCountExample();
+        anyAllNoneMatchExample();
+        findFirstAnyExample();
+        toArrayExample();
+
+        System.out.println("----------------------------------");
+    }
+
+    // --- INTERMEDIATE OPERATIONS ---
+
+    private static void filterExample() {
+        System.out.println("\n--- filter() ---");
+        // Selects elements based on a condition (Predicate)
+        List<Person> youngAdults = people.stream()
+                                         .filter(p -> p.getAge() <= 30) // Only people aged 30 or less
+                                         .collect(Collectors.toList());
+        System.out.println("People aged <= 30: " + youngAdults.stream().map(Person::getName).collect(Collectors.joining(", ")));
+        // Output: People aged <= 30: Alice, Bob, David, Eve
+    }
+
+    private static void mapExample() {
+        System.out.println("\n--- map() ---");
+        // Transforms each element to another value (Function)
+        List<String> namesInUppercase = people.stream()
+                                              .map(p -> p.getName().toUpperCase()) // Transforms Person object to their uppercase name
+                                              .collect(Collectors.toList());
+        System.out.println("Names in Uppercase: " + namesInUppercase);
+        // Output: Names in Uppercase: [ALICE, BOB, CHARLIE, DAVID, EVE, FRANK]
+
+        List<Integer> ages = people.stream()
+                                   .map(Person::getAge) // Using method reference for conciseness
+                                   .collect(Collectors.toList());
+        System.out.println("Ages: " + ages);
+        // Output: Ages: [30, 24, 35, 28, 30, 40]
+    }
+
+    private static void flatMapExample() {
+        System.out.println("\n--- flatMap() ---");
+        // Transforms each element to a stream and flattens them into a single stream.
+        // Useful when you have a Stream of Lists (or arrays) and you want a single Stream of elements.
+
+        List<String> allHobbies = people.stream()
+                                        .flatMap(person -> person.getHobbies().stream()) // Converts Stream<Person> to Stream<String> (hobbies)
+                                        .distinct() // Get unique hobbies
+                                        .collect(Collectors.toList());
+        System.out.println("All unique hobbies: " + allHobbies);
+        // Output: All unique hobbies: [reading, hiking, gaming, coding, painting, traveling, photography, cooking, gardening] (order may vary)
+    }
+
+    private static void distinctExample() {
+        System.out.println("\n--- distinct() ---");
+        // Returns a stream consisting of the distinct elements (based on equals() and hashCode())
+        List<String> distinctCities = people.stream()
+                                            .map(Person::getCity)
+                                            .distinct()
+                                            .collect(Collectors.toList());
+        System.out.println("Distinct Cities: " + distinctCities);
+        // Output: Distinct Cities: [New York, London, Paris] (order may vary)
+
+        List<Integer> distinctAges = people.stream()
+                                           .map(Person::getAge)
+                                           .distinct()
+                                           .collect(Collectors.toList());
+        System.out.println("Distinct Ages: " + distinctAges);
+        // Output: Distinct Ages: [30, 24, 35, 28, 40] (order may vary)
+    }
+
+    private static void sortedExample() {
+        System.out.println("\n--- sorted() ---");
+        // Sorts elements. Can take a Comparator or use natural ordering.
+
+        List<String> sortedNames = people.stream()
+                                          .map(Person::getName)
+                                          .sorted() // Natural order (alphabetical for String)
+                                          .collect(Collectors.toList());
+        System.out.println("Names Sorted Alphabetically: " + sortedNames);
+        // Output: Names Sorted Alphabetically: [Alice, Bob, Charlie, David, Eve, Frank]
+
+        List<Person> peopleSortedByAge = people.stream()
+                                               .sorted(Comparator.comparing(Person::getAge)) // Custom Comparator by age
+                                               .collect(Collectors.toList());
+        System.out.println("People Sorted by Age: " + peopleSortedByAge.stream().map(Person::getName).collect(Collectors.joining(", ")));
+        // Output: People Sorted by Age: Bob, David, Alice, Eve, Charlie, Frank
+
+        List<Person> peopleSortedBySalaryDesc = people.stream()
+                                                      .sorted(Comparator.comparing(Person::getSalary).reversed()) // Sort by salary descending
+                                                      .collect(Collectors.toList());
+        System.out.println("People Sorted by Salary (Desc): " + peopleSortedBySalaryDesc.stream().map(Person::getName).collect(Collectors.joining(", ")));
+        // Output: People Sorted by Salary (Desc): Frank, Charlie, Eve, Alice, David, Bob
+    }
+
+    private static void peekExample() {
+        System.out.println("\n--- peek() ---");
+        // Performs an action on each element as it passes through the stream, but doesn't modify the stream.
+        // Useful for debugging or logging intermediate states.
+
+        List<String> processedNames = people.stream()
+                                            .filter(p -> p.getAge() > 25)
+                                            .peek(p -> System.out.println("Processing person (peek): " + p.getName())) // Peeks here
+                                            .map(Person::getName)
+                                            .map(String::toUpperCase)
+                                            .collect(Collectors.toList());
+        System.out.println("Processed Names: " + processedNames);
+        /* Output will include:
+           Processing person (peek): Alice
+           Processing person (peek): Charlie
+           Processing person (peek): David
+           Processing person (peek): Eve
+           Processing person (peek): Frank
+           Processed Names: [ALICE, CHARLIE, DAVID, EVE, FRANK]
+        */
+    }
+
+    private static void limitExample() {
+        System.out.println("\n--- limit() ---");
+        // Truncates the stream to a given maximum size.
+        List<String> firstThreeNames = people.stream()
+                                             .map(Person::getName)
+                                             .limit(3)
+                                             .collect(Collectors.toList());
+        System.out.println("First 3 Names: " + firstThreeNames);
+        // Output: First 3 Names: [Alice, Bob, Charlie]
+    }
+
+    private static void skipExample() {
+        System.out.println("\n--- skip() ---");
+        // Discards the first 'n' elements of the stream.
+        List<String> namesAfterSkippingTwo = people.stream()
+                                                  .map(Person::getName)
+                                                  .skip(2)
+                                                  .collect(Collectors.toList());
+        System.out.println("Names after skipping first 2: " + namesAfterSkippingTwo);
+        // Output: Names after skipping first 2: [Charlie, David, Eve, Frank]
+    }
+
+    // --- TERMINAL OPERATIONS ---
+
+    private static void forEachExample() {
+        System.out.println("\n--- forEach() ---");
+        // Performs an action for each element. This is a consumer, does not return a new stream.
+        System.out.println("Printing all names with forEach:");
+        people.stream()
+              .map(Person::getName)
+              .forEach(System.out::println);
+        /* Output:
+           Alice
+           Bob
+           Charlie
+           David
+           Eve
+           Frank
+        */
+    }
+
+    // collect() was covered extensively with Collectors.
+    private static void collectExample() {
+        // No explicit example here, as it was the focus of the previous Collectors explanation.
+        // Just a reminder:
+        // List<Person> youngAdults = people.stream().filter(p -> p.getAge() <= 30).collect(Collectors.toList());
+    }
+
+
+    private static void reduceExample() {
+        System.out.println("\n--- reduce() ---");
+        // Combines elements into a single result using an associative accumulation function.
+
+        // Sum of all ages (with identity)
+        Integer totalAge = people.stream()
+                                 .map(Person::getAge)
+                                 .reduce(0, (sum, age) -> sum + age); // 0 is identity (initial sum)
+        System.out.println("Total age (reduce): " + totalAge);
+        // Output: Total age (reduce): 197
+
+        // Find the person with the highest salary (without identity, returns Optional)
+        Optional<Person> highestPaidPerson = people.stream()
+                                                   .reduce((p1, p2) -> p1.getSalary() > p2.getSalary() ? p1 : p2);
+        highestPaidPerson.ifPresent(p -> System.out.println("Highest paid person (reduce): " + p.getName()));
+        // Output: Highest paid person (reduce): Frank
+
+        // Concatenate all names (String concatenation)
+        String allNamesConcatenated = people.stream()
+                                            .map(Person::getName)
+                                            .reduce("", (currentNames, newName) -> currentNames + newName + " ");
+        System.out.println("All names (concatenated by reduce): " + allNamesConcatenated.trim());
+        // Output: All names (concatenated by reduce): Alice Bob Charlie David Eve Frank
+    }
+
+    private static void minMaxCountExample() {
+        System.out.println("\n--- min(), max(), count() ---");
+
+        // count(): Returns the number of elements in the stream
+        long count = people.stream().count();
+        System.out.println("Total number of people (count): " + count);
+        // Output: Total number of people (count): 6
+
+        // min(): Returns an Optional describing the minimum element of this stream, according to the provided Comparator.
+        Optional<Person> youngest = people.stream()
+                                          .min(Comparator.comparing(Person::getAge));
+        youngest.ifPresent(p -> System.out.println("Youngest person (min): " + p.getName()));
+        // Output: Youngest person (min): Bob
+
+        // max(): Returns an Optional describing the maximum element of this stream, according to the provided Comparator.
+        Optional<Person> oldest = people.stream()
+                                        .max(Comparator.comparing(Person::getAge));
+        oldest.ifPresent(p -> System.out.println("Oldest person (max): " + p.getName()));
+        // Output: Oldest person (max): Frank
+    }
+
+    private static void anyAllNoneMatchExample() {
+        System.out.println("\n--- anyMatch(), allMatch(), noneMatch() ---");
+        // Used for checking conditions across elements. They return boolean.
+
+        // anyMatch(): Returns whether any elements of this stream match the provided predicate.
+        boolean anyAdults = people.stream()
+                                  .anyMatch(p -> p.getAge() >= 18);
+        System.out.println("Are there any adults? " + anyAdults); // Output: true
+
+        // allMatch(): Returns whether all elements of this stream match the provided predicate.
+        boolean allFromNewYork = people.stream()
+                                       .allMatch(p -> p.getCity().equals("New York"));
+        System.out.println("Are all people from New York? " + allFromNewYork); // Output: false
+
+        // noneMatch(): Returns whether no elements of this stream match the provided predicate.
+        boolean noKids = people.stream()
+                               .noneMatch(p -> p.getAge() < 12);
+        System.out.println("Are there no kids (age < 12)? " + noKids); // Output: true
+    }
+
+    private static void findFirstAnyExample() {
+        System.out.println("\n--- findFirst(), findAny() ---");
+        // Return an Optional describing some element of the stream, or an empty Optional if the stream is empty.
+
+        // findFirst(): Returns an Optional describing the first element of this stream, or an empty Optional if the stream is empty.
+        // Guarantees the order for ordered streams.
+        Optional<Person> firstPerson = people.stream().findFirst();
+        firstPerson.ifPresent(p -> System.out.println("First person: " + p.getName()));
+        // Output: First person: Alice
+
+        // findAny(): Returns an Optional describing some element of the stream, or an empty Optional if the stream is empty.
+        // No guarantee on order. Can be more efficient in parallel streams.
+        Optional<Person> anyPersonFromLondon = people.stream()
+                                                     .filter(p -> p.getCity().equals("London"))
+                                                     .findAny();
+        anyPersonFromLondon.ifPresent(p -> System.out.println("Any person from London: " + p.getName()));
+        // Output: Any person from London: Bob (or Eve, depending on execution)
+    }
+
+    private static void toArrayExample() {
+        System.out.println("\n--- toArray() ---");
+        // Converts the stream to an array.
+
+        // To an array of Objects (default)
+        Object[] namesArray = people.stream()
+                                   .map(Person::getName)
+                                   .toArray();
+        System.out.println("Names array (Object[]): " + Arrays.toString(namesArray));
+        // Output: Names array (Object[]): [Alice, Bob, Charlie, David, Eve, Frank]
+
+        // To a specific type of array using a constructor reference
+        String[] specificNamesArray = people.stream()
+                                           .map(Person::getName)
+                                           .toArray(String[]::new); // Creates a String[]
+        System.out.println("Names array (String[]): " + Arrays.toString(specificNamesArray));
+        // Output: Names array (String[]): [Alice, Bob, Charlie, David, Eve, Frank]
+    }
+}
+Key Differences: Intermediate vs. Terminal Operations
+This distinction is crucial for understanding how streams work:
+•	Intermediate Operations: 
+o	Lazy: They don't execute until a terminal operation is invoked. They just build up a pipeline of operations.
+o	Return Stream: They always return another Stream, allowing for method chaining (fluent API).
+o	Stateless vs. Stateful: 
+	Stateless: filter, map, flatMap, peek (process one element independently).
+	Stateful: distinct, sorted, limit, skip (may require processing the entire stream or maintaining state to produce a result).
+•	Terminal Operations: 
+o	Eager: They trigger the processing of the entire stream pipeline.
+o	Return non-Stream: They return a result of a specific type (e.g., void, List, Optional, long, boolean, array), effectively "consuming" the stream. Once a terminal operation is called, the stream cannot be reused.
+Understanding these operations and their interaction is key to leveraging the power and conciseness of the Java 8 Stream API!
+Sources
+1. https://github.com/cristianchira/AJ

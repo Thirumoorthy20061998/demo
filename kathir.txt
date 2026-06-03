@@ -1,0 +1,206 @@
+. JVM (Java Virtual Machine)What it is: The Engine.What it does: It takes your compiled Java code (bytecode) and translates it line-by-line into machine code that your specific computer hardware can understand.  Key Interview Fact: The JVM is what makes Java platform-independent ("Write once, run anywhere"). However, the JVM itself is platform-dependent (Windows has a different JVM than Mac).  
+2. JRE (Java Runtime Environment)What it is: The Environment.What it does: It is everything an everyday user needs to run a Java application. It doesn't have tools to write code, but it provides the libraries and resources the JVM needs to execute a program.  The Formula: JRE = JVM + Core Java Libraries
+3. JDK (Java Development Kit)What it is: The Developer's Toolkit.What it does: This is what you install as a programmer. It gives you the tools to write, compile, and debug your code (like javac, the Java compiler). It also includes the JRE so you can test and run the code you just wrote.  The Formula: JDK = JRE + Development Tools (compiler, debugger, etc.)
+
+Static Methods (Java 8)
+What they are: Methods with a body and the static keyword, belonging entirely to the interface itself.
+
+Why they exist: To provide utility or helper methods directly related to the interface. (e.g., Collections.sort() could theoretically just be a static method on a Collection interface today).
+
+Key Fact: They cannot be overridden by implementing classes. You also cannot call them using an object instance; you must call them using the interface name itself (e.g., MyInterface.myStaticMethod()).
+
+
+Private Methods (Java 9)
+What they are: Helper methods inside the interface marked as private.
+
+Why they exist: Internal Code Reusability. If you have two different default methods in your interface that share 10 lines of the exact same logic, you can extract those 10 lines into a private method.
+
+Key Fact: They are completely hidden. Implementing classes cannot see, call, or override them. They exist solely to be used by the default or static methods inside that specific interface.
+
+
+Default Method (The Standard Perk): "Take a lunch break."
+Ten years later, the company decides everyone gets a break. Instead of tearing up everyone's old contracts (breaking the code), they add a standard 30-minute break as a default. Everyone automatically gets it. But, if you are an executive, you can override it to take a 2-hour lunch instead.
+
+Private Method (The Behind-the-Scenes Math): "Calculate tax deduction."
+Let's say the company adds a default "Give Holiday Bonus" method. To figure out the bonus, they need to do some tax math. They put this math into a private section of the contract. The employee never sees it, interacts with it, or changes it—it just helps the contract do its own internal paperwork.
+
+Static Method (The General Info): "Get Company Headquarters Address."
+You don't need to track down a specific employee to find out where the company is located. That information belongs to the company as a whole. You just look at the master contract itself to find it.
+
+
+1. Static Variables (Yes, but with a catch)
+The Rule: Yes, interfaces can have variables, but they are secretly always public static final (which means they are universal constants that can never change).
+
+The Interview Example: "Think of an interface variable like the Company's Tax ID Number printed at the top of the employment contract. It belongs to the company itself (static), anyone can see it (public), and no employee is allowed to change it (final)."
+
+2. Constructors (NO - Not Allowed)
+
+
+
+
+A Marker Interface is an interface with absolutely zero methods or variables inside it.
+
+Think of it like a VIP wristband for a class. The wristband itself doesn’t do anything, but when the bouncer (the Java Virtual Machine) sees it, it gives your class special permissions.
+
+
+
+
+HashMap: Has no locking mechanism. It is fast but will corrupt if multiple threads try to write to it at the same time.
+
+ConcurrentHashMap: Is thread-safe and high-performance. Instead of locking the whole map, it uses bucket-level locking (locking only the specific node being updated). This allows multiple threads to write to different buckets at the exact same time without blocking each other.
+
+
+A shallow copy copies only the top-level object and shares the nested references, while a deep copy copies the top-level object AND duplicates all nested objects, creating a completely independent clone."
+
+
+TaskExecutor is a core interface in Spring (inspired by Java's standard Executor interface) used for running tasks asynchronously. Instead of you manually spinning up and managing new Thread() objects every time you want to do something in the background, TaskExecutor abstracts that away and handles thread management automatically."
+
+
+
+
+SimpleAsyncTaskExecutor: Doesn't reuse threads. It literally fires up a brand-new thread for every single task. (Good to mention that this is Spring's default but bad for production!)
+
+ThreadPoolTaskExecutor: The gold standard. You configure a corePoolSize (ideal number of threads) and maxPoolSize (maximum allowed threads) to safely reuse threads.
+
+VirtualThreadTaskExecutor (Modern Java): Added in recent years (Java 21+) to run lightweight, concurrent tasks without heavy OS resource overhead.
+
+
+
+
+
+"An annotation is a metadata tag—essentially a label starting with the @ symbol—that we attach to Java code like classes, methods, or variables to provide extra information about them."
+
+
+
+RestClient is a synchronous HTTP client introduced in Spring Framework 6.1 (Spring Boot 3.2). It is the modern, fluent replacement for the old RestTemplate. It allows your application to easily make HTTP calls to external APIs using a clean, readable, and chainable builder pattern."
+
+
+
+Java 17 is a Long-Term Support (LTS) release that focused on making code cleaner, more secure, and less wordy. If I had to pick the top three features, they would be Records, Sealed Classes, and Pattern Matching."
+
+
+
+
+"Normalization is the process of organizing a relational database to eliminate duplicate data (redundancy) and protect data integrity. The goal is to break large, messy tables down into smaller, well-structured tables and link them together using relationships."
+
+
+
+EXISTS is a boolean operator used in a WHERE clause to test if a subquery returns any rows. It doesn't look at the actual data values; it just answers a simple True/False question: 'Does at least one record matching this condition exist?'"
+
+
+A cache is a high-speed, temporary data storage layer. It holds a copy of frequently or recently requested data so that future requests for that same data can be served lightning-fast, rather than re-fetching it from a much slower underlying storage system like a database or disk."
+
+
+@Primary — marks a bean as the default choice when multiple candidates exist. No changes needed at the injection point.
+@Qualifier("name") — explicitly selects a specific bean by name at the injection point, overriding @Primary.  it overrides the default 
+
+
+
+EntityManager is like a middleman between your Java code and the database.
+"EntityManager is the JPA interface that manages the lifecycle of entities and performs database operations like CRUD within a persistence context.
+
+API Gateway is a single entry point that handles routing, authentication, rate limiting, and load balancing for all microservices."
+
+API Scalability = making your API handle more load without breaking.
+
+Key Strategies:
+1. Caching
+
+Cache frequent responses (Redis, Memcached)
+Avoid hitting DB every time
+
+2. Load Balancing
+
+Distribute traffic across multiple servers
+Tools: Nginx, AWS ELB
+
+3. Database Optimization
+
+Indexing, connection pooling
+Read replicas for heavy reads
+
+4. Async Processing
+
+Use message queues (Kafka, RabbitMQ)
+Don't block threads for heavy tasks
+
+5. Horizontal Scaling
+
+Add more server instances (scale out)
+Better than vertical (bigger server)
+
+6. Rate Limiting
+
+Prevent abuse, protect resources
+Limit requests per user/IP
+
+7. Pagination
+
+Never return all records at once
+Use page & size params
+
+8. Microservices
+
+Split into small services
+Scale only what's needed
+
+
+
+
+What are Records in Java?
+Introduced in Java 16, a Record is a special type of class designed solely to hold immutable data. By using a single line of code, Java automatically generates the constructor, getters, equals(), hashCode(), and toString() methods for you.
+public record Employee(String name, int age, double salary) {}
+
+
+Records vs. POJOs vs. DTOs
+Think of them as having different jobs:
+
+POJO (Plain Old Java Object): The most general term. Any Java class that doesn’t depend on a specific framework. It usually has private fields, getters, and setters, and its data can be changed (mutable).
+
+DTO (Data Transfer Object): A design pattern used to ship data between systems or layers (like from a database to a frontend). DTOs are often immutable, but traditionally written as standard POJO classes.
+
+Record: A language feature (not just a pattern). It is a structurally immutable carrier of data.
+
+
+
+
+
+
+
+
+Do Records Contain Setter Methods?
+No. Records are strictly immutable. All fields are implicitly final. There are no setter methods, and you cannot change the data once the record is created.
+
+
+
+Write a program to calculate average salary of all employees whose age is greater than 40
+
+Do records contains setter metho
+
+double averageSalary = employees.stream()
+                .filter(e -> e.age() > 40) // Notice the record getter style: e.age()
+                .mapToDouble(Employee::salary)
+                .average()
+                .orElse(0.0);
+
+
+
+
+
+Comparable (compareTo) is used for internal or default sorting. The class itself implements this interface to define its natural sorting order.
+
+Comparator (compare) is used for external or custom sorting. You create a separate class (or lambda) to sort objects in different ways without changing the original class.
+
+
+
+Thread safety is a concept in concurrent programming where a piece of code (a class, method, or object) functions correctly when executed by multiple threads simultaneously.
+
+If code is thread-safe, it guarantees that threads won't corrupt data, cause race conditions, or produce unpredictable results when accessing shared resources at the same time.
+
+
+how implement ?
+
+atomicintegar class
+The Traditional Way: synchronized Keyword
+The Modern Way: Explicit ReentrantLock
+

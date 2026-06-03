@@ -1,0 +1,1284 @@
+
+Read a JSON file, map it to Java object, modify it, and return updated JSON.
+
+Requirements:
+
+Create DTO User {id, name, email, status}
+
+Read JSON from request body (POST /convert).
+
+Convert to Java object using Jackson.
+
+Set status = "ACTIVE" if email not null, else "INACTIVE".
+
+Return updated JSON in response.
+
+
+
+
+curl -X POST http://localhost:8080/convert -H "Content-Type: application/json" -d "{\"id\": 2, \"name\": \"Helen\", \"email\": null}"
+
+
+curl -X POST http://localhost:8080/convert -H "Content-Type: application/json" -d "{\"id\": 1, \"name\": \"George\", \"email\": \"george@example.com\"}"
+
+curl -X POST -H "Content-Type: application/json" -d "@C:\Users\Thirumoorthy M\Downloads\my_json_file.json" http://localhost:8080/convert
+
+	
+	
+}
+
+
+
+
+
+// Superclass (Parent)
+class Vehicle {
+    public void move() {
+        System.out.println("Vehicle is moving.");
+    }
+}
+
+// Subclass (Child)
+class Bike extends Vehicle {
+    // This method OVERRIDES the move() method in the Vehicle class
+    @Override 
+    public void move() {
+        System.out.println("Bike is pedaled on the street.");
+    }
+}
+
+public class OverridingExample {
+    public static void main(String[] args) {
+        Vehicle myVehicle = new Vehicle();
+        Bike myBike = new Bike();
+
+        System.out.println("--- Method Overriding Example ---");
+        
+        // Calls the Vehicle's move()
+        myVehicle.move(); // Output: Vehicle is moving.
+        
+        // Calls the Bike's move() (the overridden version)
+        myBike.move();    // Output: Bike is pedaled on the street.
+    }
+}
+
+
+class Printer {
+    
+    // 1. Overloaded method: prints an integer
+    public void print(int data) {
+        System.out.println("Printing an integer: " + data);
+    }
+
+    // 2. Overloaded method: prints a string (Different TYPE of parameter)
+    public void print(String data) {
+        System.out.println("Printing a string: " + data);
+    }
+
+    // 3. Overloaded method: prints an integer and a string (Different NUMBER and TYPES)
+    public void print(int number, String label) {
+        System.out.println("Printing labeled data: " + label + " - " + number);
+    }
+}
+
+public class OverloadingExample {
+    public static void main(String[] args) {
+        Printer p = new Printer();
+
+        System.out.println("\n--- Method Overloading Example ---");
+        
+        // Calls print(int)
+        p.print(101);             // Output: Printing an integer: 101
+        
+        // Calls print(String)
+        p.print("Hello Java!");  // Output: Printing a string: Hello Java!
+        
+        // Calls print(int, String)
+        p.print(25, "Count");     // Output: Printing labeled data: Count - 25
+    }
+}
+
+
+
+
+
+
+Encapsulation in Inheritance (Java)
+1. The Superclass (DataHolder) - Enforcing Encapsulation
+The parent class hides its data (secretNumber) using private. The only way to read the number is through the public method, getSecretNumber().
+
+Java
+
+class DataHolder {
+    // Encapsulated data: 'private' means no direct access, even by child classes
+    private int secretNumber = 42; 
+
+    // Public method to allow controlled access (Getter)
+    public int getSecretNumber() {
+        return secretNumber;
+    }
+}
+2. The Subclass (Accessor) - Respecting Encapsulation
+The child class inherits from DataHolder but cannot directly access secretNumber. It must use the inherited public method (getSecretNumber()).
+
+Java
+
+class Accessor extends DataHolder {
+    
+    public void displaySecret() {
+        // ERROR: If you uncomment the line below, the code will fail to compile.
+        // System.out.println(secretNumber); // Compiler Error: 'secretNumber' has private access
+
+        // SUCCESS: Must use the public getter method from the parent.
+        int value = getSecretNumber();
+        System.out.println("Child class accessed the secret number: " + value);
+    }
+}
+
+public class SimpleEncapsulationInheritanceDemo {
+    public static void main(String[] args) {
+        Accessor a = new Accessor();
+        
+        System.out.println("--- Encapsulation Maintained ---");
+        a.displaySecret(); 
+    }
+}
+Output:
+
+--- Encapsulation Maintained ---
+Child class accessed the secret number: 42
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+3. Provide a simple Java code example that demonstrates a Deadlock.
+
+Answer: A classic example involves two threads trying to acquire two locks in opposite orders.
+
+Java
+
+public class DeadlockExample {
+    private static Object lock1 = new Object();
+    private static Object lock2 = new Object();
+
+    public static void main(String[] args) {
+        // Thread 1
+        Thread thread1 = new Thread(() -> {
+            synchronized (lock1) {
+                System.out.println("Thread 1: Acquired lock1");
+                try {
+                    Thread.sleep(100); // Simulate some work
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                System.out.println("Thread 1: Waiting for lock2...");
+                synchronized (lock2) {
+                    System.out.println("Thread 1: Acquired lock2");
+                }
+            }
+        });
+
+        // Thread 2
+        Thread thread2 = new Thread(() -> {
+            synchronized (lock2) {
+                System.out.println("Thread 2: Acquired lock2");
+                try {
+                    Thread.sleep(100); // Simulate some work
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                System.out.println("Thread 2: Waiting for lock1...");
+                synchronized (lock1) {
+                    System.out.println("Thread 2: Acquired lock1");
+                }
+            }
+        });
+
+        thread1.start();
+        thread2.start();
+    }
+}
+Explanation:
+
+Thread 1 acquires lock1, then tries to acquire lock2.
+
+Thread 2 acquires lock2, then tries to acquire lock1.
+
+If Thread 1 acquires lock1 and then the scheduler switches to Thread 2, which acquires lock2, both threads will then be stuck waiting for the lock held by the other, resulting in a deadlock.
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Package and imports would be assumed or noted verbally
+// import org.springframework.web.bind.annotation.*;
+// import org.springframework.http.ResponseEntity;
+
+@RestController
+@RequestMapping("/products")
+public class ProductController {
+
+    // Assume a ProductService is injected
+    private final ProductService productService;
+
+    // Constructor Injection
+    public ProductController(ProductService productService) {
+        this.productService = productService;
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
+        Product product = productService.findById(id);
+        if (product != null) {
+            return ResponseEntity.ok(product);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+}
+
+// --- Supporting classes (briefly, or just mention) ---
+// public class Product {
+//     private Long id;
+//     private String name;
+//     // ... getters/setters
+// }
+
+// @Service
+// public class ProductService {
+//     public Product findById(Long id) {
+//         // Simulate finding a product
+//         if (id == 1L) {
+//             return new Product(1L, "Laptop");
+//         }
+//         return null;
+//     }
+// }
+
+
+
+
+
+
+
+
+
+
+cenario: Demonstrate constructor injection vs. setter injection.
+
+// import org.springframework.stereotype.Service;
+// import org.springframework.stereotype.Component;
+
+@Component // Or @Service, @Repository, etc.
+public class MyDependency {
+    public String doSomething() {
+        return "Dependency logic executed.";
+    }
+}
+
+@Service
+public class MyService {
+    private final MyDependency myDependency;
+
+    // Constructor Injection
+    public MyService(MyDependency myDependency) {
+        this.myDependency = myDependency;
+    }
+
+    public String performService() {
+        return "Service performing: " + myDependency.doSomething();
+    }
+}
+
+
+
+
+
+
+// ... MyDependency as above ...
+
+@Service
+public class AnotherService {
+    private MyDependency myDependency;
+
+    // Default constructor (Spring uses this then calls setter)
+    public AnotherService() {}
+
+    // Setter Injection
+    @Autowired // Optional but good for clarity on paper
+    public void setMyDependency(MyDependency myDependency) {
+        this.myDependency = myDependency;
+    }
+
+    public String performService() {
+        if (myDependency != null) {
+            return "Another service performing: " + myDependency.doSomething();
+        }
+        return "Dependency not set.";
+    }
+}
+
+
+
+
+
+
+
+
+
+
+// import org.springframework.http.HttpStatus;
+// import org.springframework.http.ResponseEntity;
+// import org.springframework.web.bind.annotation.ControllerAdvice;
+// import org.springframework.web.bind.annotation.ExceptionHandler;
+
+// Custom exception
+public class ResourceNotFoundException extends RuntimeException {
+    public ResourceNotFoundException(String message) {
+        super(message);
+    }
+}
+
+@ControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<String> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    // You might add a generic handler for all other exceptions
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> handleGenericException(Exception ex) {
+        return new ResponseEntity<>("An unexpected error occurred: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+}
+
+@GetMapping("/users/{id}")
+    public String getUser(@PathVariable Long id) {
+        // Assume this logic checks if a user exists
+        if (id > 100) {
+            // Throw the custom exception with a specific message
+            throw new ResourceNotFoundException("User with ID " + id + " not found.");
+        }
+        return "User found!";
+    }
+
+
+
+
+
+// In application.properties (or .yml):
+// app.greeting.message=Hello from Spring Boot!
+
+// In a class:
+// import org.springframework.beans.factory.annotation.Value;
+// import org.springframework.stereotype.Component;
+
+@Component
+public class AppInfo {
+    @Value("${app.greeting.message}")
+    private String greetingMessage;
+
+    public String getGreetingMessage() {
+        return greetingMessage;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import org.springframework.context.annotation.Bean;
+// import org.springframework.context.annotation.Configuration;
+// import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+// import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+// import org.springframework.security.core.userdetails.User;
+// import org.springframework.security.core.userdetails.UserDetails;
+// import org.springframework.security.core.userdetails.UserDetailsService;
+// import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+// import org.springframework.security.web.SecurityFilterChain;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .authorizeHttpRequests(authorize -> authorize
+                .requestMatchers("/public/**").permitAll() // Allow public access
+                .requestMatchers("/admin/**").hasRole("ADMIN") // Require ADMIN role
+                .anyRequest().authenticated() // All other requests require authentication
+            )
+            .httpBasic(httpBasic -> httpBasic.realmName("My Spring Boot App")); // Basic Auth
+
+        return http.build();
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+        UserDetails user = User.withDefaultPasswordEncoder() // For simplicity on paper, not for prod!
+            .username("user")
+            .password("password")
+            .roles("USER")
+            .build();
+        UserDetails admin = User.withDefaultPasswordEncoder()
+            .username("admin")
+            .password("adminpass")
+            .roles("ADMIN", "USER")
+            .build();
+        return new InMemoryUserDetailsManager(user, admin);
+    }
+
+    // In a real app, you'd also need a PasswordEncoder @Bean
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import org.springframework.scheduling.annotation.Scheduled;
+// import org.springframework.stereotype.Component;
+// import java.time.LocalTime;
+// import java.time.format.DateTimeFormatter;
+
+@Component
+public class MyScheduledTask {
+
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+
+    // Needs @EnableScheduling on the main app class or a config class
+    // @EnableScheduling
+    // @SpringBootApplication
+    // public class MyApp {}
+
+    @Scheduled(fixedRate = 5000) // Runs every 5 seconds
+    public void reportCurrentTime() {
+        System.out.println("The current time is: " + LocalTime.now().format(formatter));
+    }
+
+    // Could also be asked for @Scheduled(cron = "0 * * * * ?") // Every minute
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import org.springframework.scheduling.annotation.Async;
+// import org.springframework.stereotype.Service;
+// import java.util.concurrent.CompletableFuture;
+
+@Service
+public class AsyncService {
+
+    // Needs @EnableAsync on the main app class or a config class
+    // @EnableAsync
+    // @SpringBootApplication
+    // public class MyApp {}
+
+    @Async
+    public CompletableFuture<String> performAsyncOperation(String input) {
+        System.out.println("Executing async task for: " + input + " in thread: " + Thread.currentThread().getName());
+        try {
+            Thread.sleep(2000); // Simulate long-running task
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        return CompletableFuture.completedFuture("Result for " + input + " after 2 seconds.");
+    }
+}
+
+// How to call it from another service/controller:
+// @RestController
+// public class MyController {
+//     private final AsyncService asyncService;
+//
+//     public MyController(AsyncService asyncService) {
+//         this.asyncService = asyncService;
+//     }
+//
+//     @GetMapping("/async-test")
+//     public String testAsync() throws Exception {
+//         System.out.println("Calling async service from thread: " + Thread.currentThread().getName());
+//         CompletableFuture<String> future = asyncService.performAsyncOperation("Data");
+//         // You might block and get the result, or continue processing
+//         System.out.println("Async call initiated. Continuing main thread...");
+//         // String result = future.get(); // Blocking call to get result
+//         // System.out.println("Async result: " + result);
+//         return "Async operation started. Check console for output.";
+//     }
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Event Handling (Application Events):
+
+Scenario: Create a custom application event and a listener for it.
+
+Code (conceptual):
+
+Java
+
+// import org.springframework.context.ApplicationEvent;
+// import org.springframework.context.ApplicationListener;
+// import org.springframework.stereotype.Component;
+
+// 1. Define a custom event
+public class ProductCreatedEvent extends ApplicationEvent {
+    private String productName;
+
+    public ProductCreatedEvent(Object source, String productName) {
+        super(source);
+        this.productName = productName;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+}
+
+// 2. Define an event publisher (e.g., in a service)
+// import org.springframework.context.ApplicationEventPublisher;
+// import org.springframework.stereotype.Service;
+
+@Service
+public class ProductService {
+    private final ApplicationEventPublisher eventPublisher;
+
+    public ProductService(ApplicationEventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
+    }
+
+    public void createProduct(String name) {
+        System.out.println("Creating product: " + name);
+        // ... save product to DB ...
+        eventPublisher.publishEvent(new ProductCreatedEvent(this, name));
+    }
+}
+
+// 3. Define an event listener
+@Component
+public class ProductEventListener implements ApplicationListener<ProductCreatedEvent> {
+    @Override
+    public void onApplicationEvent(ProductCreatedEvent event) {
+        System.out.println("Event Received: Product '" + event.getProductName() + "' was created!");
+        // Perform additional actions, e.g., send notification, update cache
+    }
+}
+
+// Alternatively, using @EventListener annotation (more common now)
+// @Component
+// public class AnotherProductEventListener {
+//     @EventListener
+//     public void handleProductCreated(ProductCreatedEvent event) {
+//         System.out.println("Event (via @EventListener): Product '" + event.getProductName() + "' processed.");
+//     }
+// }
+V. Data Tr
+
+
+
+// import jakarta.validation.constraints.*; // or javax.validation.constraints.*
+// import jakarta.validation.Valid; // on the controller method parameter
+
+public class CreateProductRequest {
+    @NotBlank(message = "Product name cannot be empty")
+    @Size(min = 3, max = 50, message = "Product name must be between 3 and 50 characters")
+    private String name;
+
+    @NotNull(message = "Price cannot be null")
+    @DecimalMin(value = "0.01", message = "Price must be greater than 0")
+    private Double price;
+
+    @Pattern(regexp = "^(electronics|books|food)$", message = "Category must be electronics, books, or food")
+    private String category;
+
+    // Constructors, getters, setters
+    // ...
+}
+
+// In a controller method:
+// @PostMapping("/products")
+// public ResponseEntity<String> createProduct(@Valid @RequestBody CreateProductRequest request) {
+//     // If validation fails, MethodArgumentNotValidException is thrown,
+//     // which can be handled by @ControllerAdvice
+//     System.out.println("Received valid product request: " + request.getName());
+//     return ResponseEntity.ok("Product created successfully.");
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Synchronous Inter-service Communication (RestTemplate/WebClient):
+
+Scenario: Show how one Spring Boot service (e.g., OrderService) would call another Spring Boot service (e.g., ProductService) to get product details.
+
+Code:
+
+Java
+
+// import org.springframework.stereotype.Service;
+// import org.springframework.web.client.RestTemplate; // or import org.springframework.web.reactive.function.client.WebClient;
+
+@Service
+public class OrderService {
+
+    private final RestTemplate restTemplate; // Or WebClient webClient;
+    private final String productServiceBaseUrl = "http://localhost:8081/products"; // Hardcoded for example
+
+    public OrderService(RestTemplate restTemplate) { // Or WebClient.Builder builder
+        this.restTemplate = restTemplate; // Or webClient = builder.baseUrl(productServiceBaseUrl).build();
+    }
+
+    public Product getProductDetails(Long productId) {
+        // Using RestTemplate
+        String url = productServiceBaseUrl + "/" + productId;
+        try {
+            return restTemplate.getForObject(url, Product.class);
+        } catch (Exception e) {
+            System.err.println("Error fetching product: " + e.getMessage());
+            return null; // Or throw custom exception
+        }
+
+        // Using WebClient (reactive, preferred for modern apps)
+        // return webClient.get()
+        //         .uri("/{id}", productId)
+        //         .retrieve()
+        //         .bodyToMono(Product.class)
+        //         .block(); // Blocking for synchronous use; typically handle reactively
+    }
+}
+
+// Assume Product POJO exists:
+// public class Product {
+//     private Long id;
+//     private String name;
+//     private double price;
+//     // ... getters/setters
+/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Circuit Breaker Pattern (Resilience4j Concept):
+
+Scenario: Illustrate how you'd apply a circuit breaker to the inter-service call to handle failures gracefully.
+
+Code (conceptual, focus on annotation and fallback):
+
+Java
+
+// Assuming you have Resilience4j dependencies and configuration
+// import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+// import org.springframework.stereotype.Service;
+
+@Service
+public class ProductServiceClient {
+
+    private final RestTemplate restTemplate; // or WebClient
+
+    public ProductServiceClient(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
+    // Define a name for your circuit breaker instance
+    private static final String PRODUCT_SERVICE_CB = "productService";
+
+    @CircuitBreaker(name = PRODUCT_SERVICE_CB, fallbackMethod = "getProductFallback")
+    public Product getProductDetails(Long productId) {
+        System.out.println("Attempting to get product " + productId);
+        // Simulate a call that might fail
+        if (productId % 2 == 0) { // For demonstration, fail on even IDs
+            throw new RuntimeException("Simulated product service error for ID: " + productId);
+        }
+        // Actual RestTemplate call
+        // return restTemplate.getForObject("http://product-service/products/" + productId, Product.class);
+        return new Product(productId, "Real Product " + productId, 100.0);
+    }
+
+    // Fallback method must have the same signature as the original (or compatible)
+    public Product getProductFallback(Long productId, Throwable t) {
+        System.out.println("Fallback triggered for product " + productId + ". Error: " + t.getMessage());
+        // Return a default, cached, or error product
+        return new Product(productId, "Fallback Product", 0.0);
+    }
+
+    // Product POJO as before
+}
+
+
+
+
+
+
+
+
+
+
+
+// import org.springframework.cloud.client.discovery.DiscoveryClient;
+// import org.springframework.stereotype.Service;
+// import java.net.URI;
+// import java.util.List;
+
+@Service
+public class ProductDiscoveryService {
+    private final DiscoveryClient discoveryClient;
+
+    public ProductDiscoveryService(DiscoveryClient discoveryClient) {
+        this.discoveryClient = discoveryClient;
+    }
+
+    public URI getProductServiceUri() {
+        List<ServiceInstance> instances = discoveryClient.getInstances("PRODUCT-SERVICE"); // The registered service ID
+        if (!instances.isEmpty()) {
+            return instances.get(0).getUri(); // Get the URI of the first instance
+        }
+        throw new IllegalStateException("Product Service not found!");
+    }
+
+    // Then you'd use this URI with RestTemplate/WebClient
+}
+
+// Or, more commonly, with @LoadBalanced RestTemplate:
+// @Configuration
+// public class AppConfig {
+//     @Bean
+//     @LoadBalanced
+//     public RestTemplate loadBalancedRestTemplate() {
+//         return new RestTemplate();
+//     }
+// }
+
+// In the service:
+// @Service
+// public class OrderService {
+//     private final RestTemplate loadBalancedRestTemplate;
+//
+//     public OrderService(@LoadBalanced RestTemplate loadBalancedRestTemplate) {
+//         this.loadBalancedRestTemplate = loadBalancedRestTemplate;
+//     }
+//
+//     public Product getProductDetails(Long productId) {
+//         // Use the service ID directly, Eureka will resolve it
+//         return loadBalancedRestTemplate.getForObject("http://PRODUCT-SERVICE/products/" + productId, Product.class);
+//     }
+// }
+
+
+
+
+
+//unit test
+
+
+// import org.junit.jupiter.api.BeforeEach;
+// import org.junit.jupiter.api.Test;
+// import org.mockito.InjectMocks;
+// import org.mockito.Mock;
+// import org.mockito.MockitoAnnotations;
+// import static org.mockito.Mockito.*;
+// import static org.junit.jupiter.api.Assertions.*;
+
+public class ProductServiceTest {
+
+    @Mock // Marks this as a mock object
+    private ProductRepository productRepository; // Assume this exists
+
+    @InjectMocks // Injects the mocks into this object
+    private ProductService productService; // The service to be tested
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this); // Initializes mocks
+    }
+
+    @Test
+    void testFindById_Success() {
+        Long productId = 1L;
+        Product mockProduct = new Product(productId, "Test Product", 50.0);
+
+        // Define behavior of the mock
+        when(productRepository.findById(productId)).thenReturn(java.util.Optional.of(mockProduct));
+
+        // Call the service method
+        Product foundProduct = productService.findById(productId);
+
+        // Assertions
+        assertNotNull(foundProduct);
+        assertEquals(productId, foundProduct.getId());
+        assertEquals("Test Product", foundProduct.getName());
+
+        // Verify that the mock method was called
+        verify(productRepository, times(1)).findById(productId);
+    }
+
+    // Assume ProductService and ProductRepository exist
+    // public class ProductService {
+    //     private final ProductRepository repo;
+    //     public ProductService(ProductRepository repo) { this.repo = repo; }
+    //     public Product findById(Long id) { return repo.findById(id).orElse(null); }
+    // }
+    // public interface ProductRepository extends JpaRepository<Product, Long> {}
+}
+
+
+
+
+
+
+
+
+//integration tet
+
+// import org.springframework.beans.factory.annotation.Autowired;
+// import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest; // For slicing web layer
+// import org.springframework.boot.test.mock.mockito.MockBean;
+// import org.springframework.http.MediaType;
+// import org.springframework.test.web.servlet.MockMvc;
+// import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+// import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+// import static org.mockito.Mockito.*;
+// import org.junit.jupiter.api.Test;
+
+@WebMvcTest(ProductController.class) // Focuses only on ProductController and its dependencies
+public class ProductControllerIntegrationTest {
+
+    @Autowired
+    private MockMvc mockMvc; // Used to perform HTTP requests
+
+    @MockBean // Mocks the service layer (avoid full context load)
+    private ProductService productService;
+
+    @Test
+    void testGetProductById_Success() throws Exception {
+        Long productId = 1L;
+        Product mockProduct = new Product(productId, "Test Product", 50.0);
+
+        when(productService.findById(productId)).thenReturn(mockProduct);
+
+        mockMvc.perform(get("/products/{id}", productId)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(productId))
+                .andExpect(jsonPath("$.name").value("Test Product"));
+
+        verify(productService, times(1)).findById(productId);
+    }
+
+    @Test
+    void testGetProductById_NotFound() throws Exception {
+        Long productId = 99L;
+        when(productService.findById(productId)).thenReturn(null); // Or Optional.empty()
+
+        mockMvc.perform(get("/products/{id}", productId)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound()); // Or whatever your error handler returns
+
+        verify(productService, times(1)).findById(productId);
+    }
+}
+
+
+
+
+
+
+
+
+"Explain the Producer-Consumer problem and how this code solves it. Specifically, how do the wait() and notify() methods prevent race conditions and ensure proper synchronization between the producer and consumer threads?"
+
+
+
+
+
+import java.util.LinkedList;
+import java.util.List;
+
+class ProducerConsumerExample {
+    public static void main(String[] args) {
+        SharedBuffer buffer = new SharedBuffer(5); // Buffer size of 5
+        Thread producerThread = new Thread(new Producer(buffer));
+        Thread consumerThread = new Thread(new Consumer(buffer));
+        
+        producerThread.start();
+        consumerThread.start();
+    }
+}
+
+class SharedBuffer {
+    private List<Integer> buffer = new LinkedList<>();
+    private final int capacity;
+
+    public SharedBuffer(int capacity) {
+        this.capacity = capacity;
+    }
+
+    public void produce(int item) throws InterruptedException {
+        synchronized (this) {
+            while (buffer.size() == capacity) {
+                System.out.println("Buffer is full. Producer waiting...");
+                wait(); // Producer waits if buffer is full
+            }
+            buffer.add(item);
+            System.out.println("Produced: " + item);
+            notify(); // Notifies the waiting consumer
+        }
+    }
+
+    public int consume() throws InterruptedException {
+        synchronized (this) {
+            while (buffer.isEmpty()) {
+                System.out.println("Buffer is empty. Consumer waiting...");
+                wait(); // Consumer waits if buffer is empty
+            }
+            int item = buffer.remove(0);
+            System.out.println("Consumed: " + item);
+            notify(); // Notifies the waiting producer
+            return item;
+        }
+    }
+}
+
+class Producer implements Runnable {
+    private final SharedBuffer buffer;
+
+    public Producer(SharedBuffer buffer) {
+        this.buffer = buffer;
+    }
+
+    @Override
+    public void run() {
+        for (int i = 0; i < 10; i++) {
+            try {
+                buffer.produce(i);
+                Thread.sleep(100); // Simulating work
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+}
+
+class Consumer implements Runnable {
+    private final SharedBuffer buffer;
+
+    public Consumer(SharedBuffer buffer) {
+        this.buffer = buffer;
+    }
+
+    @Override
+    public void run() {
+        for (int i = 0; i < 10; i++) {
+            try {
+                buffer.consume();
+                Thread.sleep(200); // Simulating work
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+}
+
+
+
+
+
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ArrayBlockingQueue;
+
+public class ProducerConsumerSimple {
+
+    public static void main(String[] args) {
+        // Create a BlockingQueue with a capacity of 5
+        BlockingQueue<Integer> buffer = new ArrayBlockingQueue<>(5);
+
+        // Create and start the producer and consumer threads
+      Thread thread1 = new Thread(() -> {
+
+            for (int i = 0; i < 10; i++) {
+                try {
+                    // put() blocks if the queue is full
+                    buffer.put(i);
+                    System.out.println("Produced: " + i);
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        })
+
+        Thread thread2 = new Thread(() -> {
+
+            for (int i = 0; i < 10; i++) {
+                try {
+                    // take() blocks if the queue is empty
+                    int item = buffer.take();
+                    System.out.println("Consumed: " + item);
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        })
+    }
+thread1.start();
+thread2.start();
+
+
+}
+
+
+
+
+
+
+
+
+Explain the concept of a thread pool and the benefits of using ExecutorService. How would you create a fixed-size thread pool and submit a task that returns a value?"
+
+The Answer:
+Thread Pool: A thread pool is a managed collection of pre-initialized threads that can be reused to execute tasks. Instead of creating a new thread for every task, a thread pool reuses existing threads, which reduces the overhead of thread creation and destruction.
+
+Benefits of ExecutorService: It's a high-level API for managing thread pools and executing tasks. Its benefits include:
+
+Reduced Overhead: By reusing threads, it minimizes the performance cost of creating and destroying threads.
+
+Resource Management: It provides control over the number of threads, preventing the application from being overwhelmed by too many threads.
+
+Task Management: It decouples the task from its execution, simplifying code.
+
+Future and Callable: It allows you to submit tasks that can return a value or throw a checked exception, which is not possible with the Runnable interface.
+
+Implementation Example:
+
+Java
+
+import java.util.concurrent.*;
+
+public class ExecutorServiceExample {
+    public static void main(String[] args) {
+        // Create a fixed-size thread pool with 3 threads
+        ExecutorService executor = Executors.newFixedThreadPool(3);
+        
+        // Define a task that returns a value (using Callable)
+        Callable<Integer> task = () -> {
+            System.out.println("Executing task on thread: " + Thread.currentThread().getName());
+            Thread.sleep(1000); // Simulate some work
+            return 100; // Return an integer value
+        };
+
+        // Submit the task and get a Future object
+        Future<Integer> futureResult = executor.submit(task);
+
+        try {
+            // Get the result from the Future object.
+            // .get() is a blocking call.
+            Integer result = futureResult.get();
+            System.out.println("Task completed with result: " + result);
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        } finally {
+            // It's crucial to shut down the executor service
+            executor.shutdown();
+
+
+
+
+
+
+
+Write a program that creates two threads. Each thread should print a unique message 10 times.
+
+Simple Solution:
+class MyTask implements Runnable {
+    private String message;
+
+    public MyTask(String message) {
+        this.message = message;
+    }
+
+    @Override
+    public void run() {
+        for (int i = 0; i < 5; i++) {
+            System.out.println(Thread.currentThread().getName() + ": " + message);
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+
+public class SimpleThreadTask {
+    public static void main(String[] args) {
+        Thread thread1 = new Thread(new MyTask("Hello from Thread 1"));
+        Thread thread2 = new Thread(new MyTask("Hi from Thread 2"));
+
+        thread1.start();
+        thread2.start();
+    }
+}
+
+
+ The program creates two separate threads, thread1 and thread2, to perform the same task: incrementing a counter. This simulates a common scenario in concurrent programming where multiple parts of a program need to access and modify shared data.
+reate a class with a counter. Have two threads increment the counter 1000 times each. Print the final count. Explain why the result might not be 2000 and
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class SimpleAtomicCounter {
+    public static void main(String[] args) throws InterruptedException {
+        // AtomicInteger is a thread-safe counter
+        AtomicInteger count = new AtomicInteger(0);
+
+        // A single task to increment the counter
+        Runnable task = () -> {
+            for (int i = 0; i < 1000; i++) {
+                count.incrementAndGet();
+            }
+        };
+
+        Thread thread1 = new Thread(task);
+        Thread thread2 = new Thread(task);
+
+        thread1.start();
+        thread2.start();
+
+        thread1.join();
+        thread2.join();
+
+        System.out.println("Final count: " + count.get());
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+

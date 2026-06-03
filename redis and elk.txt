@@ -1,0 +1,233 @@
+Module,Purpose,Per-User Possibility,Why?
+Circuit Breaker,"Trips the ""fuse"" if one service has too many failures.",Possible,Isolates failure so one user's errors don't impact others.
+Retry,Automatically retries a failed call a few times.,Possible,Isolates retries so one user's request is retried without affecting the retry counter for another user.
+Bulkhead,Limits the total number of concurrent calls (threads/semaphore slots).,Possible,Isolates concurrency so one user cannot consume all available resources and starve other users.
+TimeLimiter,Enforces a maximum time limit for an operation to complete.,Possible,Isolates timeouts so one user can have a shorter or longer timeout limit based on their service tier.
+
+
+
+This is an excellent follow-up question, as the counting and storage mechanism is what allows the per-user isolation to work across all resilience patterns (Circuit Breaker, Retry, Bulkhead, TimeLimiter).The key is the Registry provided by the resilience library (like Resilience4j).How the Counting and Storage WorksWhen you implement user-specific resilience, the system doesn't manage a simple variable; it manages a dictionary or map of named configuration objects.1. Dynamic Naming (The "How")When a request comes in, your Spring Boot service extracts the user's unique ID (e.g., user_123).Your code generates a unique name for the resilience feature, for that specific user, such as:circuitbreaker_user_123retry_config_user_123bulkhead_user_1232. The Registry (The "Storage")The core library component, the Registry (e.g., CircuitBreakerRegistry), acts as the central storage:It's an in-memory map (like a key-value store).The key is the unique name you just generated (circuitbreaker_user_123).The value is the actual state object for that user's resilience feature.Key (Unique Name)Value (State Object)circuitbreaker_user_AState: OPEN, Failure Count: 5/10, Last Trip Time: 10:00 AMcircuitbreaker_user_BState: CLOSED, Failure Count: 0/10, Last Trip Time: N/A3. Isolated Counting (The "Count")When the service executes logic:For User A: If the external service fails, the system looks up the state for circuitbreaker_user_A and increments the failure count for that specific instance only. If the count hits the threshold, only circuitbreaker_user_A flips to OPEN.For Bulkhead (User A): When User A's request starts, the system looks up bulkhead_user_A and decrements the available semaphore/thread count for that specific instance only. User B's count is unaffected.In short: By using the user ID in the name, you force the Registry to create separate, independent memory structures to store the count and state for each user, achieving complete isolation.
+
+
+
+That's an excellent question that gets to the heart of the difference between in-process resilience (like Resilience4j) and distributed API Gateway rate limiting.
+
+The simple answer is: You cannot use a local, in-process Registry to store counts for a distributed API Gateway because the local memory is not shared across servers.
+
+
+
+Elasticsearch (Performance, Indexing, and Search)
+Question: Cluster Health is Yellow - What does this mean and how do you fix it?
+
+Answer: ⚠️ Yellow means all primary shards are allocated, but one or more replica shards are unallocated. The fix involves checking for sufficient data nodes (replicas can't be on the same node as their primary), and monitoring the available disk space and JVM heap memory on all nodes.
+
+Question: How do you handle the hot-warm-cold data lifecycle for logs?
+
+Answer: I use Index Lifecycle Management (ILM). New data is kept in Hot for fast indexing/search. After a defined period, indices are automatically moved to the Warm phase (read-only, cheaper disks) and then potentially to Cold/Frozen storage (e.g., S3) for long-term, cost-effective archival.
+
+Question: What is a "Split Brain" issue, and how do you prevent it?
+
+Answer: 💥 Split Brain occurs when network partitioning causes multiple master-eligible nodes to mistakenly elect themselves as the cluster master, leading to conflicting data writes. I prevent this by setting the configuration parameter discovery.zen.minimum_master_nodes to a quorum value of ⌊(Number of Master Eligible Nodes/2)⌋+1.
+
+Question: How do you manage high indexing load to prevent slow searches?
+
+Answer: To balance indexing and searching: 1. Use the Bulk API for efficient ingestion. 2. Temporarily increase the refresh_interval (e.g., to 30s) to reduce IO overhead. 3. Ensure JVM heap size is correctly set (under 50% of RAM). 4. Scale out the cluster horizontally with more data nodes.
+
+Question: Explain the difference between keyword and text fields. When would you use a keyword on a field like message?
+
+Answer: text fields are analyzed (tokenized, lowercased) for full-text search relevance. keyword fields are not analyzed and are used for exact matches, filtering, sorting, and aggregations. I'd use a message.keyword sub-field for exact searching or aggregation on a specific log message value (e.g., "Error: Access Denied").
+
+II. Logstash / Beats (Ingestion and Processing)
+Question: You notice Logstash is dropping events under heavy load. How do you ensure data reliability?
+
+Answer: 💾 I ensure data reliability by enabling Persistent Queues (PQ) in Logstash. This forces incoming events to be written to disk before processing, acting as an internal buffer to prevent data loss if Logstash fails or if the output (Elasticsearch) is unavailable.
+
+Question: A new log format breaks your Logstash pipeline. What step-by-step troubleshooting do you follow?
+
+Answer: 1. Check the Logstash logs (logstash-plain.log) for Grok parse failure exceptions. 2. Validate the config file using logstash -f config.conf --configtest. 3. Use the stdout { codec => rubydebug } output plugin to inspect the event just before the failure. 4. Use an external Grok Debugger to fix the pattern with the sample log line.
+
+Question: Why might you use Filebeat to send data directly to Elasticsearch instead of using Logstash?
+
+Answer: I use Filebeat directly when the data is already clean (e.g., JSON logs) or only needs minimal processing, as it is a lightweight shipper that consumes fewer resources. I use Logstash only when I need complex transformations (Grok, GeoIP, etc.) or need its Persistent Queue buffer.
+
+Question: How do you parse a multi-line stack trace from an application log?
+
+Answer: I use the multiline codec configured directly in the Filebeat input. This is generally more resource-efficient than the Logstash filter. I define a pattern (usually a regular expression matching the start of a log line, like a timestamp) to combine subsequent lines until the next new log entry begins.
+
+III. Kibana (Visualization and Analytics)
+Question: You need to find the top 5 users causing 4xx errors in the last 2 hours. How do you do this efficiently in Kibana?
+
+Answer: 📊 1. In the Discover tab, set the Time Range to "Last 2 hours." 2. Apply a filter: status_code: 4xx or a range filter 400 to 499. 3. Navigate to Visualize and create a chart (e.g., Data Table). 4. Use a Terms aggregation on the user_id.keyword field and set the size to 5.
+
+Question: A user complains their dashboard is loading too slowly. What are the first three things you check?
+
+Answer: 🐌 1. The Time Range: Is the user querying too much data (e.g., a year)? 2. Index Pattern: Are the queries hitting too many indices (check ILM). 3. Expensive Visualizations: Look for visualizations using large-cardinality aggregations (especially on non-keyword fields) or deep-dive searches.
+
+Question: What is the difference between Lucene Query Syntax and KQL (Kibana Query Language)?
+
+Answer: KQL is the modern, simpler default language, offering field auto-complete and awareness of field types. Lucene is the underlying, more complex syntax that requires more exactness and escaping. KQL is preferred for general exploration.
+
+IV. General ELK/System Design Scenarios
+Question: Design an ELK pipeline for a microservices architecture handling 50,000 events/second. What components would you use, and how would you handle backpressure?
+
+Answer: The robust pipeline is Beats → Kafka → Logstash → Elasticsearch. Kafka is the primary buffer, handling massive backpressure and decoupling Logstash from Beats. Logstash Persistent Queues act as a secondary buffer before ingestion to Elasticsearch.
+
+Question: How do you implement Role-Based Access Control (RBAC) to ensure different teams only see their respective application logs?
+
+Answer: 🛡️ I use the Elastic Stack Security features (formerly X-Pack). I define Roles that grant read-only access only to specific Index Patterns (e.g., a "Frontend Team" role can only see indices matching app-frontend-*). Then, I map users or LDAP groups to these specific roles.
+
+Question: You are tracking user session data. Would you use a single large index or time-based daily indices? What are the trade-offs?
+
+Answer: I would use Time-Based Daily/Weekly Indices managed by ILM. The trade-off is easier management, better delete performance (just drop an index), and efficient rollover—versus the complexity and large size of a single index, which is harder to maintain and delete from.
+
+
+
+
+
+
+
+
+
+What are Beats? Beats are lightweight, single-purpose data shippers (like Filebeat for logs or Metricbeat for metrics) installed on edge hosts or servers to collect and send data directly to Logstash or Elasticsearch, acting as the primary agents for data collection.
+
+How is Elasticsearch Near Real-Time (NRT)? Elasticsearch is considered Near Real-Time (NRT) because documents are typically available for searching within a few milliseconds (the default refresh interval is 1 second) after being indexed. It is not strictly instantaneous, hence the designation NRT.
+
+What is an Index in Elasticsearch? An Index is a logical namespace that functions much like a database in a relational system. It is used to store a collection of documents that are related and share similar characteristics, serving as the unit for searching and scaling.
+
+What is a Document? A Document is the basic unit of information in Elasticsearch. It is always represented as a JSON object and is the entity that is indexed, searched, and stored. It is analogous to a row in a database table.
+
+II. Elasticsearch (E) Core Concepts
+What are Shards and Replicas?Shards are horizontal partitions of an index, dividing the data into smaller, manageable pieces to distribute data across multiple nodes for scalability. Replicas are copies of these shards, providing fault tolerance (for high availability) and allowing the cluster to handle increased read performance by load balancing search requests.
+
+Cluster Health is Red. What does it mean? The cluster health status 🔴 Red indicates a critical state where at least one primary shard is unassigned. This means a portion of the data is unavailable and potentially lost. The cluster cannot fully recover or become green until the primary shard is restored or explicitly reallocated (often as an empty primary).
+
+What is Mapping?Mapping is essentially the schema definition for an index. It defines the data type (e.g., text, keyword, date, integer) for every field in a document, specifying how that field should be stored, indexed, and analyzed by the search engine.
+
+Why is the keyword field type important? The keyword field type is vital because its content is not analyzed or broken down into tokens. This makes it crucial for operations requiring exact matching, efficient filtering, sorting of string data, and, most importantly, for use in aggregations on fields like IDs, status codes, or tags.
+
+III. Logstash (L) and Ingestion
+Explain the Logstash Pipeline stages. The Logstash pipeline processes data sequentially through three main stages: Input (receiving data, e.g., from Beats), Filter (processing and enriching the data, e.g., using the Grok or GeoIP plugins), and Output (sending the final processed data to a destination, typically Elasticsearch).
+
+What is the Grok filter used for? The Grok filter is a powerful plugin used to parse unstructured log data (such as raw Apache access logs or Syslog messages) by matching them against predefined or custom patterns. Its goal is to transform the raw text into structured, named fields (like @timestamp, response_time, or clientip).
+
+What are Logstash Persistent Queues?Persistent Queues (PQ) are a Logstash feature that enhances data reliability. By enabling PQ, incoming events are written to disk before entering the processing pipeline. This acts as an internal buffer to prevent data loss if the Logstash process suddenly crashes or if the downstream output (Elasticsearch) is temporarily unavailable.
+
+IV. Kibana (K) and Visualization
+What is an Index Pattern? An Index Pattern is a string (e.g., logstash-* or app-2024*) defined in Kibana that serves as a search filter to identify and interact with one or more Elasticsearch indices. It is a necessary first step before data can be visualized, allowing Kibana to know which indices to query.
+
+What are Aggregations in Kibana/ES?Aggregations are the tools in Kibana and Elasticsearch used to perform advanced data analysis by summarizing data. They are the functional equivalent of the GROUP BY clause in SQL, allowing users to calculate metrics such as the average response time, counts of status codes, or the distribution of user events.
+
+How do you monitor Logstash/ES in Kibana? I monitor the health and performance of the entire ELK stack using the built-in Stack Monitoring feature (formerly known as X-Pack Monitoring) in Kibana. This provides a unified interface to visualize key metrics like node heap usage, cluster health status, document indexing rates, and search latency across all components.
+
+
+
+
+
+
+
+
+
+Question,Answer
+What is Redis?,"Redis (Remote Dictionary Service) is an open-source, in-memory data structure store. It's commonly used as a database, cache, and message broker."
+Why is Redis so fast?,"Primarily because it is an in-memory data store, meaning it keeps the entire dataset in RAM. This avoids disk I/O, which is orders of magnitude slower."
+What are two main use cases for Redis?,"1. Caching: Storing database query results, HTML fragments, or session data (using the TTL feature). 2. Session Management: Storing user session data for high-traffic applications."
+What is TTL in Redis?,Time To Live. It's a mechanism to automatically expire a key after a specified duration. This is essential for cache invalidation and keeping memory clean.
+Redis vs. Memcached (1 difference)?,"Redis supports rich data structures (Lists, Sets, Hashes, etc.), while Memcached only supports simple key-value pairs (strings)."
+
+
+
+: What is Redis and why is it so fast? A: Redis is an open-source, in-memory data structure store used as a database, cache, and message broker. It's fast because it keeps the entire dataset in RAM, avoiding slow disk I/O.
+
+Q: Name the 5 primary Redis data structures and their most common use cases. A: 1. Strings (Caching/Counters), 2. Lists (Queues/Stacks), 3. Sets (Unique items/Tagging), 4. Hashes (Object/Record storage), and 5. Sorted Sets (Leaderboards/Ranking).
+
+Q: How do you implement a simple rate limiter (e.g., 10 requests per minute)? A: Use a String key (e.g., rate:user_id). Use the INCR command to atomically increment the counter, and set an EXPIRE 60 (TTL of 60 seconds) on the key to reset the count after the time window.
+
+Q: What is TTL, and how is it used in caching? A: TTL (Time To Live) is a mechanism to automatically expire a key after a specified duration. It's crucial for cache invalidation, ensuring stale data is automatically deleted and freed from memory.
+
+Q: What is the purpose of Redis Sentinel? A: Redis Sentinel provides High Availability (HA). It continuously monitors the master and replica instances and automatically executes a failover process to elect a new master if the current one becomes unresponsive.
+
+Q: How does Redis achieve data persistence? A: It uses two methods: RDB (Snapshotting), which takes periodic point-in-time snapshots of the data, and AOF (Append Only File), which logs every write operation received by the server for high durability.
+
+Q: What is Pipelining, and why is it good for performance? A: Pipelining allows a client to send multiple commands to the server at once without waiting for the response to each command. This drastically reduces the impact of network latency and significantly improves command throughput.
+
+Q: When is Redis Cluster necessary over a Master-Replica setup? A: Redis Cluster is necessary when the dataset is too large to fit into the memory of a single node, requiring the data to be sharded (partitioned) across multiple instances for scalability.
+
+Q: How do you guarantee atomic execution of multiple Redis commands? A: The most reliable way is by using Lua Scripting (EVAL). Redis treats a Lua script as a single, atomic command, ensuring no other command can execute in between the script's operations, thereby preventing race conditions.
+
+Q: How does Redis handle high concurrency if it's mostly single-threaded? A: Redis's simple, single-threaded command processing model is incredibly fast because it avoids the overhead of locking and context switching inherent in multi-threaded systems. It processes commands sequentially but rapidly, making it efficient for I/O-bound tasks.
+
+
+
+
+
+Q: What is the primary difference between Ehcache and a distributed cache like Redis? A: Ehcache is primarily a fast, in-process (in-heap/on-heap) cache that runs within a single application's JVM. Redis is a standalone, distributed service that runs across a network, making it suitable for sharing cache data across multiple application servers.
+
+Q: Explain Ehcache's Tiers/Levels of caching. A: Ehcache utilizes a tiered approach for high performance:
+
+On-Heap (Memory Store): Fastest tier, storing objects in the JVM heap.
+
+Off-Heap (Memory Store): Stores serialized objects outside the JVM heap to avoid garbage collection overhead, offering better capacity.
+
+Disk Store (Persistence): Slowest but largest tier, persisting data to disk to survive application restarts.
+
+How do you configure a cache to prevent "out of memory" (OOM) errors in the JVM? A: You must configure the cache with resource constraints (size limits). The most common constraint is maxBytesLocalHeap or maxEntriesLocalHeap, which sets a hard limit on the cache's memory usage within the JVM, forcing the cache to use its eviction policy (like LRU) before hitting the JVM limit.
+
+
+
+
+High Latency/Slow Performance (I/O Bound)	Database Bottlenecks & Overload	Offloading: JVM Garbage Collection (GC) Pauses	Off-Heap Tiering:Loss of Volatile Data on Restart	Disk Persistence:
+Lack of Control over HashMap Size
+
+
+
+Query DSL stands for Domain Specific Language for Queries. It's a powerful, fluent, and comprehensive JSON-based language used by Elasticsearch (ES) to define and execute complex, high-level searches.
+
+Unlike basic REST search parameters (like q=field:value), Query DSL allows you to construct sophisticated queries using various clauses and logical operators, enabling full-text search, term matching, filtering, scoring, and aggregation.
+
+You want to find all logs where the status_code is exactly 500, but you want to prioritize (score higher) the logs that also contain the term "timeout" in the message field.
+
+
+
+
+
+
+
+
+
+
+Data Type Cached	Redis Structure & Command	Benefit
+Reference Data	Hash or String with TTL	Caching immutable data like loan types, interest rate schedules, fee structures, and regulatory codes.
+Underwriting Rules	String with TTL	Storing complex, evaluated policy outcomes or rulesets that don't change daily but are read hundreds of times per application.
+
+
+
+Application Throttling	String with INCR and EXPIRE	Limit the number of applications or submissions allowed from a single IP address or user ID within a specific time window (e.g., 5 submissions per hour).
+
+
+
+Storage	Stores the object fields (e.g., name, email, status) as fields within a single key.
+
+
+
+
+
+
+
+
+
+
+What is Redis Cluster?	
+Redis Cluster provides a way to automatically shard (partition) your data across multiple Redis nodes. This ensures the cluster can scale linearly and handles node failures by moving shards around.
+
+
+Explain a "Write-Through" vs. "Write-Back" caching strategy using Redis.
+Write-Through: Write data to Redis and the main database simultaneously. Write-Back: Write data only to Redis first, and delay writing to the database (good for high throughput, but riskier if Redis fails).
+
+
+How would you handle the "Cache Stampede" problem?
+Use Mutex Locks (e.g., set a temporary key with SETNX or use Lua scripting). If a lock exists, wait and retry. The first request recomputes the data and sets the cache, while others wait for the new value.
+
+
+
+How do you implement a simple user session store with auto-logout?
+	Use a simple String key (e.g., session:user_id) to store the session token/data. Crucially, set the session key with an EXPIRE (TTL) equal to the session timeout. Redis automatically deletes it for auto-logout.

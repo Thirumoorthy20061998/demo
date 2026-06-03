@@ -1,0 +1,5233 @@
+
+public class ArrayMergeExample {
+    public static void main(String[] args) {
+        int[] arr1 = {1, 7};
+        int[] arr2 = {2, 9, 11};
+        int[] arr3 = new int[arr1.length + arr2.length];
+
+        // --- 1. Copy arr1 into the beginning of arr3 ---
+        for (int i = 0; i < arr1.length; i++) {
+            arr3[i] = arr1[i];
+        }
+        
+        // --- 2. Copy arr2 into arr3, starting AFTER arr1's elements ---
+        // The index for arr3 must start where arr1 left off (at arr1.length).
+        for (int i = 0; i < arr2.length; i++) {
+            // arr3 index: i + arr1.length
+            // arr2 index: i
+            arr3[i + arr1.length] = arr2[i]; 
+        }
+
+        // --- 3. Print the merged array arr3 ---
+        System.out.println("Merged Array (arr3):");
+        for (int i : arr3) {
+            System.out.println(i);
+        }
+
+        // --- 4. Fix the final loop logic (to find the last value in the first half) ---
+        int d = 0;
+        
+        // The loop should iterate up to (but not including) arr3.length / 2
+        // If arr3.length is 5, loop is for i=0 and i=1. The last element assigned is arr3[1].
+        for (int i = 0; i < arr3.length / 2; i++) {
+            d = arr3[i]; 
+        }
+        
+        // This prints the value of the last element assigned to 'd' in the loop.
+        // arr3 = {1, 7, 2, 9, 11}. arr3.length/2 = 2.
+        // i=0: d = arr3[0] = 1
+        // i=1: d = arr3[1] = 7
+        // After loop, d = 7.
+        System.out.println("\nLast element in the first half of arr3 (value of d): " + d);
+    }
+}
+
+
+
+
+
+
+
+Optional<Double> secondHighestSalary = employees.stream()
+            // 1. Get all unique salary values.
+            .map(Employee::getSalary)
+            .distinct() 
+            // 2. Sort the unique salaries in descending order (highest first).
+            .sorted(Comparator.reverseOrder())
+            // 3. Skip the first salary (the absolute highest).
+            .skip(1) 
+            // 4. Find the remaining first element (the second highest unique salary).
+            .findFirst();
+
+        // ----------------------------------------------------------------------
+        // Step 2: Filter the Original List using the found Salary Value
+        // ----------------------------------------------------------------------
+        
+        List<Employee> secondHighestEmployees = secondHighestSalary.map(targetSalary -> 
+                // If a salary was found, stream the original list
+                employees.stream()
+                    // Filter to include only employees matching the target salary
+                    .filter(e -> e.getSalary() == targetSalary)
+                    // Collect all matching employees (including ties)
+                    .collect(Collectors.toList())
+            )
+            // If the Optional was empty (list too small), default to an empty list
+            .orElse(Collections.emptyList());
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.stream.Collectors;
+
+public class UniqueCharIndexer {
+
+    public static void main(String[] args) {
+        String fruit = "banana";
+
+        // 1. Calculate the frequency of each character, preserving order of first appearance
+        Map<Character, Long> count = fruit.chars()
+                .mapToObj(c -> (char) c)
+                .collect(Collectors.groupingBy(
+                    c -> c,
+                    LinkedHashMap::new, // LinkedHashMap ensures 'b' is first, then 'a', then 'n'
+                    Collectors.counting()
+                ));
+
+        // 2. Stream the map entries and use an external counter (array hack for final variables)
+        final int[] uniqueIndex = {1}; // Use an array to hold the mutable counter (1-based index)
+
+        System.out.println("Unique Character Indexing:");
+        
+        count.entrySet().stream()
+             .forEach(entry -> {
+                 System.out.println(
+                     "Unique Index: " + uniqueIndex[0] + // Print the current index
+                     ", Character: " + entry.getKey() + 
+                     ", Frequency: " + entry.getValue()
+                 );
+                 uniqueIndex[0]++; // Increment the counter for the next unique character
+             });
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+String s = "The Quick Brown Fox";
+
+// The regex [aeiouAEIOU] matches any vowel, regardless of case.
+// The replaceAll method substitutes all matches with an empty string.
+String result = s.replaceAll("[aeiouAEIOU]", "");
+
+System.out.println("String without Vowels: " + result);
+// Output: String without Vowels: Th Qck Brwn Fx
+
+
+
+String s = "Hello world of Java";
+
+String[] words = s.split(" ");
+StringBuilder result = new StringBuilder();
+
+for (int i = words.length - 1; i >= 0; i--) {
+    result.append(words[i]);
+    if (i > 0) {
+        result.append(" ");
+    }
+}
+
+System.out.println("Reversed Sentence: " + result.toString());
+// Output: Reversed Sentence: Java of world Hello
+
+
+
+
+
+
+
+
+Problem: Find the single character that appears most frequently in a given string.
+
+Input: s="programming interview question"
+
+Solution (Java 8 Streams):
+
+Java
+
+import java.util.Comparator;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+String s = "programming interview question";
+
+char mostRepeatedChar = s.chars()
+    .mapToObj(c -> (char) c)
+    .collect(Collectors.groupingBy(
+        Function.identity(), 
+        Collectors.counting()
+    )) // Map<Character, Long>
+    .entrySet().stream()
+    .max(Comparator.comparing(java.util.Map.Entry::getValue)) // Find the entry with max count
+    .map(java.util.Map.Entry::getKey) // Get the character (Key)
+    .orElse(' '); // Default if string is empty
+
+System.out.println("Most Repeated Character: " + mostRepeatedChar);
+// Output: Most Repeated Character: i (Note: 'i' and 'n' both appear 3 times, 'max' picks the first encountered in the iteration)
+
+
+
+
+
+
+Problem: Reverse each individual word in the string s="fhdjg bdb bcbd" using Java 8 Streams, keeping the words in their original order. The delimiter is a space.
+
+
+
+ import java.util.Arrays;
+import java.util.stream.Collectors;
+
+String s = "fhdjg bdb bcbd";
+
+String reversedWords = Arrays.stream(s.split(" "))
+    // Map each word to its reversed version
+    .map(word -> new StringBuilder(word).reverse().toString())
+    // Join the reversed words back together with a space delimiter
+    .collect(Collectors.joining(" "));
+
+System.out.println(reversedWords);
+// Output: gjdht bdb dbcb
+
+
+
+
+
+
+public static void main(String[] args) {
+        // Your string
+        String s = "java8 is powerful feature";
+        
+        // Use a Stream to process the words
+        String initials = Arrays.stream(s.split("\\s+")) // 1. Split the string into an array of words
+            .filter(word -> !word.isEmpty())           // 2. Remove any empty strings (in case of extra spaces)
+            .map(word -> word.substring(0, 1))         // 3. Map each word to its first letter (as a String)
+            .collect(Collectors.joining());            // 4. Combine the letters into a single String
+
+        System.out.println("Original String: " + s);
+        System.out.println("First Letters: " + initials);
+        
+        // If you want them separated by a space, use:
+        // .collect(Collectors.joining(" "))
+    }
+}
+
+\
+
+
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
+public class Main {
+    public static void main(String[] args) {
+        // Your string
+        String s = "java8 is powerful feature";
+        
+        // Use a Stream to process the words and get the first 3 letters of each
+        String firstThreeLetters = Arrays.stream(s.split("\\s+")) // 1. Split the string into an array of words
+            .filter(word -> word.length() >= 3)              // 2. Only consider words with at least 3 letters
+            .map(word -> word.substring(0, 3))               // 3. Map each word to its first 3 letters (as a String)
+            .collect(Collectors.joining(" "));              // 4. Combine the substrings into a single String, separated by a space
+
+        System.out.println("Original String: " + s);
+        System.out.println("First Three Letters of each word (3+ letters): " + firstThreeLetters);
+        
+        // Note: For words like "is" which have less than 3 letters, they are filtered out
+        // to avoid an IndexOutOfBoundsException in substring(0, 3).
+    }
+}
+
+
+
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
+public class Main {
+    public static void main(String[] args) {
+        // Your string
+        String s = "java8 is powerful feature";
+        
+        // Use a Stream to process the words and get the third character of each
+        String thirdCharacters = Arrays.stream(s.split("\\s+")) // 1. Split the string into an array of words
+            .filter(word -> word.length() >= 3)              // 2. Only consider words with at least 3 letters (to have a 3rd character)
+            .map(word -> String.valueOf(word.charAt(2)))     // 3. Map each word to its third character (at index 2)
+            .collect(Collectors.joining(" "));              // 4. Combine the characters into a single String, separated by a space
+
+        System.out.println("Original String: " + s);
+        System.out.println("Third Character of each word (3+ letters): " + thirdCharacters);
+        
+        // If you want them printed without spaces, use:
+        // .collect(Collectors.joining())
+    }
+}
+// Output will be:
+// Original String: java8 is powerful feature
+// Third Character of each word (3+ letters): v w t
+
+
+
+
+
+
+
+
+
+
+
+public class PalindromeChecker {
+
+    /**
+     * Checks if an integer is a palindrome.
+     * A number is a palindrome if it reads the same backward as forward.
+     *
+     * @param originalNumber The integer to check.
+     * @return true if the number is a palindrome, false otherwise.
+     */
+    public static boolean isPalindrome(int originalNumber) {
+        // Handle negative numbers (they are generally not considered palindromes)
+        if (originalNumber < 0) {
+            return false;
+        }
+
+        int number = originalNumber; // Use a working copy of the number
+        int reversedNumber = 0;
+
+        while (number != 0) {
+            // 1. Get the last digit
+            int lastDigit = number % 10; 
+            
+            // 2. Add the last digit to the reversed number
+            //    Multiply by 10 to shift existing digits to the left
+            reversedNumber = reversedNumber * 10 + lastDigit;
+            
+            // 3. Remove the last digit from the original number
+            number /= 10; 
+        }
+
+        // The original number is a palindrome if it equals the reversed number
+        return originalNumber == reversedNumber;
+    }
+
+    public static void main(String[] args) {
+        int numberToCheck = 82759825; // int numner = 82759825; from your query
+
+        if (isPalindrome(numberToCheck)) {
+            System.out.println(numberToCheck + " is a palindrome.");
+        } else {
+            System.out.println(numberToCheck + " is NOT a palindrome.");
+        }
+        
+        // Example of a palindrome
+        int palindromeExample = 12321;
+        if (isPalindrome(palindromeExample)) {
+            System.out.println(palindromeExample + " is a palindrome.");
+        }
+    }
+}
+
+
+
+
+
+
+
+
+public class ReverseLinkedList {
+    public ListNode reverseList(ListNode head) {
+        ListNode prev = null;
+        ListNode current = head;
+        while (current != null) {
+            ListNode nextTemp = current.next;
+            current.next = prev;
+            prev = current;
+            current = nextTemp;
+        }
+        return prev;
+    }
+}
+
+
+String data = "abcdab";
+
+	        
+
+	        Set<Character> charSet = new HashSet<>();
+
+	        
+
+	        String longestSubstring = "";
+
+	        int start = 0;
+
+
+
+	        for (int i = 0; i < data.length(); i++) {
+
+	            char currentChar = data.charAt(i);
+
+
+
+	            // While the current character is already in the set,
+
+	            // remove characters from the start of the window.
+
+	            while (charSet.contains(currentChar)) {
+
+	                charSet.remove(data.charAt(start));
+
+	                start++;
+
+	            }
+
+	            
+
+	            // Add the new character to the set and update the longest substring
+
+	            charSet.add(currentChar);
+
+	            
+
+	            // Check if the current window is longer than the longest found so far
+
+	            String currentSubstring = data.substring(start, i + 1);
+
+	            if (currentSubstring.length() > longestSubstring.length()) {
+
+	                longestSubstring = currentSubstring;
+
+	            }
+
+	        }
+
+	        System.out.println(longestSubstring);
+
+
+
+
+
+
+
+
+
+
+
+
+top 2 frequent words
+
+public static void main(String[] args) {
+        int[] nums = {1,1,1,2,2,3,3,3,3,4,5,5};
+        int k = 2;
+
+        // Step 1: Build frequency map
+        Map<Integer, Long> freqMap = Arrays.stream(nums)
+                .boxed()
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+        // Step 2: Sort by frequency & collect top k
+        List<Integer> result = freqMap.entrySet()
+                .stream()
+                .sorted(Map.Entry.<Integer, Long>comparingByValue().reversed())
+                .limit(k)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+
+        System.out.println(result); // [3, 1]
+
+
+
+
+
+
+
+mport java.util.*;
+
+class Node {
+    int data;
+    Node next;
+    Node(int d) { data = d; }
+}
+
+class LinkedList {
+    Node head;
+
+    // Detect and remove loop using HashSet
+    void detectAndRemoveLoop() {
+        Set<Node> visited = new HashSet<>();
+        Node prev = null, curr = head;
+
+        while (curr != null) {
+            if (visited.contains(curr)) {  
+                prev.next = null; // break the loop
+                return;
+            }
+            visited.add(curr);
+            prev = curr;
+            curr = curr.next;
+        }
+    }
+}
+
+
+
+
+Count Frequency of Each Word in a large text file using Java Streams.
+  Detect and Remove Loop in a Linked List.
+When the file is very large (GBs), you can take advantage of parallel streams to utilize multiple CPU cores.   
+
+public static void main(String[] args) throws IOException {
+        // Read file line by line as Stream
+        Map<String, Long> wordCount = Files.lines(Paths.get("large_text.txt"))
+            .flatMap(line -> Arrays.stream(line.toLowerCase().split("\\W+"))) // split by non-word chars
+            .filter(word -> !word.isEmpty()) // remove empty
+            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+        // Print result
+        wordCount.forEach((word, count) ->
+            System.out.println(word + " : " + count));
+    }
+}
+
+
+
+
+ Map<String, Long> wordCount = Files.lines(path)
+            .parallel() // enable parallel processing
+            .flatMap(line -> Arrays.stream(line.toLowerCase().split("\\W+")))
+            .filter(word -> !word.isEmpty())
+            .collect(Collectors.groupingByConcurrent(
+                    Function.identity(), // key = word
+                    Collectors.counting() // value = frequency
+            ));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+public class Singleton {
+    private Singleton() {
+        // Private constructor to prevent instantiation
+    }
+
+    private static class SingletonHelper {
+        private static final Singleton INSTANCE = new Singleton();
+    }
+
+    public static Singleton getInstance() {
+        return SingletonHelper.INSTANCE;
+    }
+}
+
+import java.io.FileInputStream;
+import java.io.IOException;
+
+public class LargeBinaryFileReader {
+    public void readFile(String filePath) {
+        try (FileInputStream fis = new FileInputStream(filePath)) {
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = fis.read(buffer)) != -1) {
+                // Process each chunk
+                System.out.println("Read " + bytesRead + " bytes");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+
+
+
+
+import java.util.ArrayList;
+import java.util.List;
+
+class TreeNode {
+    int val;
+    TreeNode left;
+    TreeNode right;
+}
+
+public class TreeTraversals {
+    public List<Integer> preorderTraversal(TreeNode root) {
+        List<Integer> result = new ArrayList<>();
+        preorder(root, result);
+        return result;
+    }
+
+    private void preorder(TreeNode node, List<Integer> result) {
+        if (node == null) return;
+        result.add(node.val);
+        preorder(node.left, result);
+        preorder(node.right, result);
+    }
+
+    // In-order and post-order methods would follow a similar recursive pattern.
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+ask Description: Compute a list of products whose prices have changed over time.
+ You are given an SQL table containing price changes for articles in a shop with the following structure:
+
+price_updates: This table logs every price change for a product.
+
+product: The product's name (varchar).
+
+date: The date of the price update (date).
+
+price: The new price of the product (int).
+
+PRODUCT: This table contains general product information.
+
+ProductId: A unique identifier.
+
+ProductName: The product's name.
+
+SELECT
+    product
+FROM
+    price_updates
+GROUP BY
+    product
+HAVING
+    COUNT(DISTINCT price) > 1;
+
+
+
+The problem describes two tables:
+
+phones:
+
+name
+
+phone_number (Primary Key, PK)
+
+calls:
+
+id (Primary Key)
+
+caller_id (Foreign Key, FK, to phones.phone_number)
+
+callee_id (FK to phones.phone_number)
+
+duration (in seconds)
+
+
+
+
+
+SELECT
+    T1.name
+FROM
+    phones AS T1
+JOIN (
+    SELECT
+        caller_id AS phone_number,
+        SUM(duration) AS total_duration
+    FROM
+        calls
+    GROUP BY
+        caller_id
+    UNION ALL
+    SELECT
+        callee_id AS phone_number,
+        SUM(duration) AS total_duration
+    FROM
+        calls
+    GROUP BY
+        callee_id
+) AS T2 ON T1.phone_number = T2.phone_number
+GROUP BY
+    T1.name
+HAVING
+    SUM(T2.total_duration) >= 600;
+
+
+10 minutes is equal to 600 seconds.
+
+Here is the calculation:
+
+10 minutes×60 
+minute
+seconds
+​
+ =600 seconds
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class Solution {
+    /**
+     * Checks if a string is a palindrome, ignoring case, spaces, and punctuation.
+     * * @param s The input string.
+     * @return true if the string is a palindrome, false otherwise.
+     */
+    public boolean solution(String s) {
+        // Step 1: Preprocess the string
+        // Use a StringBuilder to efficiently build the cleaned string
+        StringBuilder cleaned = new StringBuilder();
+        
+        // Iterate through each character of the input string
+        for (char ch : s.toCharArray()) {
+            // Check if the character is a letter or a digit
+            if (Character.isLetterOrDigit(ch)) {
+                // Convert to lowercase and append to the StringBuilder
+                cleaned.append(Character.toLowerCase(ch));
+            }
+        }
+        
+        // Convert the StringBuilder to a String for comparison
+        String cleanedString = cleaned.toString();
+        
+        // Step 2: Check for a palindrome using the two-pointer method
+        int left = 0;
+        int right = cleanedString.length() - 1;
+        
+        while (left < right) {
+            if (cleanedString.charAt(left) != cleanedString.charAt(right)) {
+                return false;
+            }
+            left++;
+            right--;
+        }
+        
+        // If the loop completes, the string is a palindrome
+        return true;
+    }
+}
+
+
+
+
+
+
+Problem: Given the root of a binary tree, invert the tree, and return its root.
+
+class TreeNode {
+    int val;
+    TreeNode left;
+    TreeNode right;
+    TreeNode(int x) { val = x; }
+}
+
+public class InvertBinaryTree {
+    public TreeNode invertTree(TreeNode root) {
+        if (root == null) {
+            return null;
+        }
+        TreeNode left = invertTree(root.left);
+        TreeNode right = invertTree(root.right);
+        root.left = right;
+        root.right = left;
+        return root;
+    }
+}
+
+
+
+
+Problem: Given the root of a binary tree, return the level order traversal of its nodes. This means visiting nodes level by level, from left to right.
+
+import java.util.*;
+
+class TreeNode {
+    int val;
+    TreeNode left;
+    TreeNode right;
+    TreeNode(int x) { val = x; }
+}
+
+public class LevelOrderTraversal {
+    public List<List<Integer>> levelOrder(TreeNode root) {
+        List<List<Integer>> result = new ArrayList<>();
+        if (root == null) {
+            return result;
+        }
+
+        Queue<TreeNode> queue = new LinkedList<>();
+        queue.add(root);
+
+        while (!queue.isEmpty()) {
+            int levelSize = queue.size();
+            List<Integer> currentLevel = new ArrayList<>();
+            for (int i = 0; i < levelSize; i++) {
+                TreeNode currentNode = queue.poll();
+                currentLevel.add(currentNode.val);
+
+                if (currentNode.left != null) {
+                    queue.add(currentNode.left);
+                }
+                if (currentNode.right != null) {
+                    queue.add(currentNode.right);
+                }
+            }
+            result.add(currentLevel);
+        }
+        return result;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class FindDuplicates {
+    public static List<Integer> findDuplicates(int[] nums) {
+        List<Integer> duplicates = new ArrayList<>();
+        if (nums == null || nums.length == 0) {
+            return duplicates;
+        }
+
+        for (int i = 0; i < nums.length; i++) {
+            int index = Math.abs(nums[i]) - 1;
+            if (nums[index] < 0) {
+                duplicates.add(Math.abs(nums[i]));
+            } else {
+                nums[index] = -nums[index];
+            }
+        }
+        return duplicates;
+    }
+
+    public static void main(String[] args) {
+        int[] nums = {4, 3, 2, 7, 8, 2, 3, 1};
+        System.out.println("Duplicates in the array: " + findDuplicates(nums)); // Output: [2, 3]
+    }
+}
+
+
+
+
+
+
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class SubarraySum {
+    public static boolean hasSubarrayWithSum(int[] nums, int target) {
+        Map<Integer, Integer> sumMap = new HashMap<>();
+        int currentSum = 0;
+        sumMap.put(0, -1); // Handle case where subarray starts from index 0
+
+        for (int i = 0; i < nums.length; i++) {
+            currentSum += nums[i];
+
+            if (sumMap.containsKey(currentSum - target)) {
+                return true;
+            }
+            sumMap.put(currentSum, i);
+        }
+        return false;
+    }
+
+    public static void main(String[] args) {
+        int[] nums1 = {4, 2, 7, 1, 9, 5};
+        int target1 = 17;
+        System.out.println("Has subarray with sum 17: " + hasSubarrayWithSum(nums1, target1)); // Output: true (7 + 1 + 9)
+
+        int[] nums2 = {1, 2, 3, 4, 5};
+        int target2 = 15;
+        System.out.println("Has subarray with sum 15: " + hasSubarrayWithSum(nums2, target2)); // Output: true (1 + 2 + 3 + 4 + 5)
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import java.util.*;
+
+public class AnagramGrouper {
+    public static void main(String[] args) {
+        String[] strs = {"eat", "tea", "tan", "ate", "nat", "bat"};
+        
+        if (strs == null || strs.length == 0) {
+            System.out.println(new ArrayList<>());
+            return;
+        }
+
+        Map<String, List<String>> anagramMap = new HashMap<>();
+        for (String s : strs) {
+            char[] charArray = s.toCharArray();
+            Arrays.sort(charArray);
+            String sortedString = new String(charArray);
+
+            if (!anagramMap.containsKey(sortedString)) {
+                anagramMap.put(sortedString, new ArrayList<>());
+            }
+            anagramMap.get(sortedString).add(s);
+        }
+
+        List<List<String>> grouped = new ArrayList<>(anagramMap.values());
+        System.out.println(grouped); 
+    }
+}
+
+
+
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+public class TwoStringAnagramCheckerJava8 {
+
+    /**
+     * Checks if two strings are anagrams using Java 8 Streams.
+     * It handles case and spaces by normalizing the string before sorting.
+     *
+     * @param s1 The first string.
+     * @param s2 The second string.
+     * @return true if they are anagrams, false otherwise.
+     */
+    public static boolean areAnagrams(String s1, String s2) {
+        if (s1 == null || s2 == null) {
+            return false;
+        }
+
+        // Helper function (Method Reference) to normalize and create the sorted key
+        // 1. Convert to lowercase
+        // 2. Remove all whitespace
+        // 3. Convert to a character stream (IntStream)
+        // 4. Sort the characters
+        // 5. Collect the sorted characters back into a single String (the canonical key)
+        var createCanonicalKey = (String s) -> s.toLowerCase()
+                .replaceAll("\\s", "") // Remove all whitespace
+                .chars()               // IntStream of character codes
+                .sorted()              // Sorts the character codes (A < B < C...)
+                .collect(StringBuilder::new, // Collector starts a new StringBuilder
+                         StringBuilder::appendCodePoint, // Accumulator appends the character code
+                         StringBuilder::append) // Combiner for parallel streams
+                .toString();
+
+        // Generate the canonical key for both strings
+        String key1 = createCanonicalKey.apply(s1);
+        String key2 = createCanonicalKey.apply(s2);
+
+        // Anagrams will have identical canonical keys
+        return key1.equals(key2);
+    }
+
+    public static void main(String[] args) {
+        String s1 = "Debit Card";
+        String s2 = "Bad Credit";
+        
+        System.out.println("String 1: \"" + s1 + "\"");
+        System.out.println("String 2: \"" + s2 + "\"");
+
+        // Test with your input
+        boolean result1 = areAnagrams(s1, s2);
+        System.out.println("\nResult 1 (Debit Card & Bad Credit): " + result1);
+        
+        // Test with a non-anagram pair
+        boolean result2 = areAnagrams("hello", "world");
+        System.out.println("Result 2 (hello & world): " + result2);
+    }
+}
+
+
+
+
+
+
+
+
+
+Two Sum"
+Question: Given an array of integers nums and a target integer target, return the indices of the two numbers that add up to the target. Assume that each input has exactly one solution, and you may not use the same element twice.
+
+Answer:
+The most efficient way to solve this is using a HashMap. Iterate through the array once. For each number, calculate its complement (the value needed to reach the target). Check if this complement already exists in the HashMap. If it does, you've found the pair and can return the indices. If not, add the current number and its index to the map.
+
+Java Code:
+
+Java
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class TwoSum {
+    public int[] findTwoSum(int[] nums, int target) {
+        Map<Integer, Integer> numMap = new HashMap<>();
+        for (int i = 0; i < nums.length; i++) {
+            int complement = target - nums[i];
+            if (numMap.containsKey(complement)) {
+                return new int[] { numMap.get(complement), i };
+            }
+            numMap.put(nums[i], i);
+        }
+        throw new IllegalArgumentException("No two sum solution");
+    }
+}
+
+
+class ListNode {
+    int val;
+    ListNode next;
+    ListNode(int x) { val = x; }
+}
+
+public class MergeLists {
+    public ListNode mergeTwoLists(ListNode list1, ListNode list2) {
+        ListNode dummy = new ListNode(0); // Dummy node to simplify head creation
+        ListNode current = dummy;
+
+        while (list1 != null && list2 != null) {
+            if (list1.val <= list2.val) {
+                current.next = list1;
+                list1 = list1.next;
+            } else {
+                current.next = list2;
+                list2 = list2.next;
+            }
+            current = current.next;
+        }
+
+        // Append remaining nodes from either list
+        if (list1 != null) {
+            current.next = list1;
+        } else if (list2 != null) {
+            current.next = list2;
+        }
+
+        return dummy.next;
+    }
+}
+
+
+class TreeNode {
+    int val;
+    TreeNode left;
+    TreeNode right;
+    TreeNode(int val) { this.val = val; }
+}
+
+public class MaxTreeDepth {
+    public int maxDepth(TreeNode root) {
+        if (root == null) {
+            return 0;
+        }
+        int leftDepth = maxDepth(root.left);
+        int rightDepth = maxDepth(root.right);
+        return 1 + Math.max(leftDepth, rightDepth);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+public class BinarySearchExample {
+
+    public static int binarySearch(int[] arr, int target) {
+        int low = 0;
+        int high = arr.length - 1;
+
+        while (low <= high) {
+            int mid = low + (high - low) / 2;
+
+            if (arr[mid] == target) {
+                return mid; // Target found, return its index
+            } else if (arr[mid] < target) {
+                low = mid + 1; // Target is in the right half
+            } else {
+                high = mid - 1; // Target is in the left half
+            }
+        }
+        return -1; // Target not found
+    }
+
+    public static void main(String[] args) {
+        // Input: A sorted array is required for binary search
+        int[] sortedArray = {2, 5, 8, 12, 16, 23, 38, 56, 72, 91};
+        int target = 23;
+
+        // Find the target
+        int resultIndex = binarySearch(sortedArray, target);
+
+        // Output
+        if (resultIndex != -1) {
+            System.out.println("Input array: ");
+            for (int num : sortedArray) {
+                System.out.print(num + " ");
+            }
+            System.out.println("\n");
+            System.out.println("Target value " + target + " found at index: " + resultIndex);
+        } else {
+            System.out.println("Target value not found in the array.");
+        }
+    }
+}
+
+
+
+
+
+public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+		int a[] = {5,6,4,3,6,4,5};
+		
+		
+		int temp=0;
+		
+		for(int i=0;i<a.length;i++) {
+			
+			for(int j=1;j<a.length-i;j++) {
+				
+			if(a[j-1]>a[j]) {
+				temp=a[j-1];
+				a[j-1]=a[j];
+				a[j]=temp;
+			}
+				
+				
+				
+			
+		}
+		
+		
+		
+		}
+		for(int s:a) {
+			
+			System.out.println(s);
+		}
+				
+		
+	}
+public static void main(String[] args) {
+        
+        int a[] = {5, 6, 4, 3, 6, 4, 5};
+        
+        int temp = 0;
+        
+        for (int i = 0; i < a.length; i++) {
+            for (int j = 1; j < a.length - i; j++) {
+                
+                // Change the comparison to sort in descending order
+                if (a[j-1] < a[j]) {
+                    temp = a[j-1];
+                    a[j-1] = a[j];
+                    a[j] = temp;
+                }
+            }
+        }
+        
+        System.out.println("Array sorted in descending order:");
+        for (int s : a) {
+            System.out.print(s + " ");
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+Remove Nulls from a List Using the Stream API
+
+java
+List<String> list = Arrays.asList("a", null, "b", null, "c");
+List<String> result = list.stream()
+    .filter(Objects::nonNull)
+    .collect(Collectors.toList());
+
+
+class TreeNode {
+    int val;
+    TreeNode left;
+    TreeNode right;
+    
+    TreeNode(int val) {
+        this.val = val;
+    }
+}
+
+public class BinaryTreeHeight {
+    
+    // Recursive approach to find the height of a binary tree
+    public static int heightOfBinaryTree(TreeNode root) {
+        if (root == null) {
+            return -1; // Return -1 if counting edges
+        }
+        
+        return 1 + Math.max(heightOfBinaryTree(root.left), heightOfBinaryTree(root.right));
+    }
+
+    public static void main(String[] args) {
+        // Example tree:
+        //         1
+        //        / \
+        //       2   3
+        //      /
+        //     4
+        
+        TreeNode root = new TreeNode(1);
+        root.left = new TreeNode(2);
+        root.right = new TreeNode(3);
+        root.left.left = new TreeNode(4);
+        
+        System.out.println("Height of the tree: " + heightOfBinaryTree(root)); // Output: 2
+    }
+}
+
+
+
+
+
+
+Write a program to Find all those student/course pairs in HashMap where Course=Course_1 using java8. Ex – [Sagar: Course1, Sameer: Course1, Sumit: Course2, Amit: Course3,
+
+
+
+Sagar: Course1, Sameer: Course1, Sumit: Course2, Amit: Course3,
+
+public static void main(String[] args) {
+        // 1. Create a HashMap to store student and course pairs.
+        // We'll use the example data provided, ensuring some entries
+        // match the filtering criteria "Course_1".
+        Map<String, String> studentCourses = new HashMap<>();
+        studentCourses.put("Sagar", "Course_1");
+        studentCourses.put("Sameer", "Course_1");
+        studentCourses.put("Sumit", "Course_2");
+        studentCourses.put("Amit", "Course_3");
+        studentCourses.put("Priya", "Course_1");
+
+        System.out.println("All student-course pairs:");
+        studentCourses.forEach((student, course) -> System.out.println(student + ": " + course));
+        System.out.println("----------------------------------------");
+
+        // 2. Use a Java 8 Stream to filter the map entries.
+        // The process involves three main steps:
+        // a) Get the entry set of the map.
+        // b) Create a stream from the entry set.
+        // c) Use the filter() method to keep only entries where the value (course) is "Course_1".
+        // d) Use forEach() to print the student and course for each matching entry.
+        System.out.println("Student-course pairs where the course is 'Course_1':");
+        studentCourses.entrySet().stream()
+                .filter(entry -> "Course_1".equals(entry.getValue()))
+                .forEach(entry -> System.out.println(entry.getKey() + ": " + entry.getValue()));
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   public static void main(String[] args) {
+	        int[] originalArray = {1, 2, 3, 4, 5};
+	        System.out.println("Original Array: " + Arrays.toString(originalArray));
+
+	        // Step 1: Calculate the sum of all elements in the array using Java 8 Stream
+	        int sum = Arrays.stream(originalArray).sum(); // Optimized for int[] -> IntStream.sum()
+	        // Alternative sum (for List<Integer>):
+
+
+	        System.out.println("Sum of elements: " + sum);
+
+	        // Step 2a: Create a NEW List<Integer> with sum added to each element
+	        List<Integer> newList = Arrays.stream(originalArray) // Stream of int (IntStream)
+	                                    .mapToObj(element -> element + sum) // Transform each int to (int + sum), box to Integer
+	                                    .collect(Collectors.toList()); // Collect into a new List<Integer>
+
+
+
+List<Integer> newList = Arrays.stream(originalArray)
+    .mapToInt(element -> element + sum) // Returns IntStream
+    .boxed() // Converts IntStream to Stream<Integer>
+    .collect(Collectors.toList());
+
+
+	String str1="djjf";
+			
+	String str2="znhsx";
+			
+			str1=str1+str2;
+			str2=str1.substring(0, str1.length()-str2.length());
+			
+			str1=str1.substring(str2.length());
+			
+			
+			
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	String st="sandeep";
+	
+	HashMap<Character, Integer> d=new HashMap<>();
+	
+	for(int i=0;i<st.length();i++) {
+		
+		if(d.get(st.charAt(i)) != null) {
+			
+			d.put(st.charAt(i), d.get(st.charAt(i))+1);
+			
+		}else {
+			d.put(st.charAt(i),1);
+			
+			
+		}
+		
+	}
+		
+StringBuilder dd=new StringBuilder();		
+		
+		for(Entry<Character,Integer> h:d.entrySet()) {
+			dd.append(h.getKey());
+			dd.append(h.getValue());
+			
+		}
+		
+		System.out.println(dd.toString());
+		
+
+
+
+public static void main(String[] args) {
+        List<String> myStrings = new ArrayList<>();
+        myStrings.add("apple");
+        myStrings.add("123banana");
+        myStrings.add("orange");
+        myStrings.add("456grape");
+        myStrings.add("kiwi");
+        myStrings.add("7up");
+        myStrings.add(""); // Empty string
+        myStrings.add(null); // Null string
+
+        // The code you asked for, directly in main:
+        List<String> stringsStartingWithNumber;
+
+        if (myStrings == null) {
+            stringsStartingWithNumber = new ArrayList<>(); // Return an empty list for null input
+        } else {
+            stringsStartingWithNumber = myStrings.stream()
+                    .filter(s -> !s.isEmpty() && Character.isDigit(s.charAt(0)))
+                    .collect(Collectors.toList());
+        }
+
+
+
+
+
+
+
+
+
+
+public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		System.out.println("HELLO");
+
+		String data = "abcdab";
+
+		HashSet<Character> set = new HashSet<>();
+
+		String longesttilln = "";
+		String overall = "";
+		for (int i = 0; i < data.length(); i++) {
+
+			char c = data.charAt(i);
+			if (set.contains(c)) {
+				longesttilln = "";
+				set.clear();
+
+			} else {
+
+				set.add(c);
+
+				longesttilln += c;
+				if (longesttilln.length() > overall.length()) {
+
+					overall = longesttilln;
+
+				}
+
+			}
+
+		}
+
+		System.out.println(overall);
+
+	}
+}
+
+
+
+
+
+List<Integer> h= Arrays.asList(44,12,33,44,55);
+	
+	h.stream().map(s->s+"").filter(p->p.startsWith("1")).forEach(System.out::println);
+	
+
+
+
+
+
+
+public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+		  String[] names = {"Charlie", "Alice", "David", "Bob", "Eve"};
+
+		
+		int n= names.length;
+		
+		for(int i=0;i<n-1; i++){
+		
+			for(int j=0;j<n-i-1; j++){
+				
+		if(names[j].compareTo(names[j+1])>0) {
+		
+		String temp=names[j];
+		
+		names[j]=names[j+1];
+		names[j + 1] = temp;
+		
+		}
+		}
+		
+		}
+		System.out.println("Sorted Names (using for loops): " + Arrays.toString(names));
+		
+	}
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+public class removeduplicatesinarrayinplace {
+
+	   public static int removeDuplicates(int[] arr) {
+	        if (arr == null || arr.length == 0) {
+	            return 0; // No elements, so no duplicates. New length is 0.
+	        }
+
+	        // Step 1: Sort the array (if not already sorted)
+	        // This is crucial for the two-pointer approach below.
+	        Arrays.sort(arr);
+	        System.out.println("Array after sorting: " + Arrays.toString(arr));
+
+	        // Step 2: Two-pointer approach
+	        int i = 0; // Pointer for the last unique element found (or next position for a unique element)
+
+	        // Iterate with 'j' starting from the second element
+	        for (int j = 1; j < arr.length; j++) {
+	            // If the current element (arr[j]) is different from the last unique element (arr[i])
+	            if (arr[j] != arr[i]) {
+	                i++; // Move 'i' to the next position
+	                arr[i] = arr[j]; // Place the new unique element at arr[i]
+	            }
+	            // If arr[j] == arr[i], it's a duplicate. We simply increment j and skip it.
+	        }
+
+	        // The number of unique elements is (i + 1)
+	        return i + 1;
+	    }
+
+  
+
+public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	String s="sandeep";
+	
+	
+	HashSet<Character> set=new HashSet<>();
+	
+	StringBuffer b=new StringBuffer();
+	
+	 
+	
+	for(int i=0;i<s.length();i++) {
+	char u=	s.charAt(i);
+		if(!set.contains(u) ) {
+			set.add(u);
+			b.append(u);
+			
+			
+		}
+		
+		
+	}
+	
+	
+	System.out.println(b.toString());
+	}
+
+}
+
+
+
+
+int[] arr = {1, 2, 3, 4, 2, 5, 6, 1, 7, 8, 3};
+	
+		Set<Integer> seenElements = new HashSet<>();
+        Set<Integer> repeatingElements = new HashSet<>(); // Use a set to store distinct repeating elements
+
+        for (int element : arr) {
+            if (!seenElements.add(element)) { // If add returns false, it means the element was already in the set
+                repeatingElements.add(element);
+            }
+        }
+        //return new ArrayList<>(repeatingElements); // Return as a List
+        for (int fruit : repeatingElements) {
+            System.out.println(fruit);
+        }
+	
+	
+	//bruteforce first duplicate
+	
+        for(int i=0;i<arr.length;i++) {
+        	   for(int j=i+1;j<arr.length;j++) {
+        	if(arr[i] == arr[j]) {
+        	
+        	System.out.println(arr[i]);
+        	
+        	}
+        	
+        	
+        	
+        }
+
+
+
+
+
+public static void main(String[] args) {
+		String s = "sandy";
+		String f = recur(s);
+		System.out.println(f); // Output: ydnas
+	}
+
+	public static String recur(String s) {
+		// Base case: if the string has 0 or 1 character, it's already reversed.
+		if (s.length() <= 1) {
+			return s;
+		}
+		
+		// Recursive step:
+		// 1. Take the last character of the string.
+		// 2. Recursively reverse the rest of the string (all but the last character).
+		// 3. Concatenate them.
+		
+		return s.charAt(s.length() - 1) + recur(s.substring(0, s.length() - 1));
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+public class reversearrayinplace {
+	  public static void reverse(int[] arr) {
+	        // Handle null or empty arrays
+	        if (arr == null || arr.length <= 1) {
+	            return; // No need to reverse if array is null or has 0/1 element
+	        }
+
+	        int start = 0;
+	        int end = arr.length - 1;
+
+	        // Continue swapping until the pointers meet or cross
+	        while (start < end) {
+	            // Swap elements at start and end
+	            int temp = arr[start]; // Store the value at 'start'
+	            arr[start] = arr[end]; // Overwrite 'start' with 'end' value
+	            arr[end] = temp;       // Overwrite 'end' with the stored 'start' value
+
+	            // Move pointers towards the center
+	            start++;
+	            end--;
+	        }
+	    }
+
+
+
+
+public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	
+	
+	int n=64673;
+	
+	int g =0;
+	while(n !=0) {
+		
+	int d=n%10;
+	System.out.println(d);
+	
+	
+	g=g*10+d;
+		
+	System.out.println(g);
+	
+	n=n/10;
+	
+	System.out.println(n);
+	}
+	System.out.println(g);
+	
+	}
+
+}
+
+
+
+
+
+
+
+
+
+
+String h="@fhss&";
+	
+	
+	String d=h.replaceAll("[^a-zA-Z0-9]","");
+	
+	System.out.println(d);
+
+
+
+
+
+
+
+
+
+  public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+		 String[] strings1 = {"apple", "banana", "kiwi", "grapefruit", "orange", "pineapple"};
+	        String[] strings2 = {"a", "bb", "ccc", "dddd"};
+		
+		
+		
+		
+
+	        Optional<String> longestString = Arrays.stream(strings1) // 1. Create a stream from the array
+	                                               .filter(s -> s != null) // 2. Filter out any null strings
+	                                               .max(Comparator.comparingInt(String::length)); // 3. Find the max based on length
+
+	        // 4. Handle the Optional result
+	        if (longestString.isPresent()) {
+	            System.out.println("Longest String: \"" + longestString.get() + "\" (Length: " + longestString.get().length() + ")");
+	        } else {
+	            System.out.println("No non-null strings found in the array to determine the longest.");
+	        }
+
+
+
+
+	List <Integer> h=Arrays.asList(1,1,1,1,0,0,0,0);
+	
+int u=	h.stream().reduce(0,Integer::sum);
+	System.out.println("no of 1 is"+u);
+	System.out.println("no of o is"+(h.size()-(u)));
+	
+	
+	}
+
+
+
+String o=String.valueOf(nu);
+		palindrome
+	
+
+		String rever = IntStream.rangeClosed(1, o.length())
+		                         .mapToObj(i -> o.charAt(o.length() - i))
+		                         .collect(StringBuilder::new, StringBuilder::append, StringBuilder::append)
+		                         .toString();
+				return o.equals(rever);
+		
+		
+		
+	}
+
+
+
+
+
+
+
+
+int f=87687686;
+	
+	for(int i=2;i<=f/2;i++) {
+		if(f%i ==0) {
+			
+			System.out.println("prime");
+			
+		}
+		
+	}
+	
+
+
+	String f="abcds";
+	System.out.println();
+	for(int i=0;i<f.length();i++) {
+	for(int j=i+1;j<f.length();j++) {
+		
+		System.out.println(f.substring(i, j));
+		
+		
+	}
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	 public static void main(String[] args) {
+	
+		 int a[]= {1,2,3,3,3,3,5,6,7};
+	
+		 int size=a.length;
+		 
+		 Map<Integer,Integer> map1=new HashMap<>();
+		 
+		 for(int i:a) {
+			 
+			 map1.put(i, map1.containsKey(i)?map1.get(i)+1: 1);
+			 
+		
+		
+		
+		 
+		 
+		 }
+		
+		 
+		 for(Entry<Integer, Integer> m2 :map1.entrySet()  ) {
+			 
+			 if(m2.getValue()>=size/2) {
+				
+				System.out.println( m2.getKey()); 
+				 
+			 }
+			 
+
+
+
+
+
+ List<String> list1 = new ArrayList<>(Arrays.asList("Apple", "Banana", "Cherry"));
+        List<String> list2 = new ArrayList<>(Arrays.asList("Date", "Elderberry", "Fig"));
+      
+    	//using java  8
+        
+        List<String> g= Stream.concat(list1.stream(), list2.stream()).toList();;
+
+      g.forEach(System.out::println);
+        
+
+
+	 List<Integer> list2 = new ArrayList<>(Arrays.asList(1,4,3,5,4,8));
+	 List<Integer> list1 = new ArrayList<>(Arrays.asList(6,2,0,5,5,8));
+     
+ 	//using java  8
+     
+     List<Integer> g= Stream.concat(list1.stream(), list2.stream()).sorted().toList();
+
+   g.forEach(System.out::println);
+     
+	
+	
+	largestnumber: smallest number
+	/////System.out.println("\n--- Min/Max in ArrayList Example ---");
+    List<Integer> numbersList = new ArrayList<>();
+    numbersList.add(10);
+    numbersList.add(5);
+    numbersList.add(15);
+    numbersList.add(2);
+    numbersList.add(8);
+	
+    Optional<Integer> uu = numbersList.stream().sorted().limit(1);
+	
+	 Optional<Integer> uu = numbersList.stream().sorted(Comparator.reverseorder()).limit(1);
+
+
+
+int[] a = {10, 5, 15, 2, 8};
+
+
+OptionalInt minBySort = Arrays.stream(a)
+                                      .sorted()
+                                      .findFirst();
+
+        // Find maximum by sorting (Requires .boxed() to use Comparator)
+        Optional<Integer> maxBySort = Arrays.stream(a)
+                                            .boxed() // Converts IntStream to Stream<Integer>
+                                            .sorted(Collections.reverseOrder())
+                                            .findFirst();
+    }
+
+
+
+missing number:
+int a[]= {1,3,4,5,6,7,9,0};	
+	
+	
+	Set <Integer> ff= new HashSet<>();
+	for(int i:a) {
+	ff.add(i);
+	
+	}
+	
+	int v=a.length+1;
+	for(int i=0;i<v;i++) {
+		
+		if(!ff.contains(i)) {
+			System.out.println(i);
+		}
+		
+	}
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+ public static void main(String[] args) {
+	        // The list you provided
+	        List<Integer> numbersToCheck = Arrays.asList(3, 4, 6, 7, 8, 2, 3, 4, 8);
+
+	        List<Integer> primeNumbersFound = new ArrayList<>();
+	        List<Integer> nonPrimeNumbersFound = new ArrayList<>();
+
+	        System.out.println("Checking numbers in the list: " + numbersToCheck);
+
+	        for (int number : numbersToCheck) {
+	            if (isPrime(number)) {
+	                primeNumbersFound.add(number);
+	            } else {
+	                nonPrimeNumbersFound.add(number);
+	            }
+	        }
+
+	        System.out.println("\nPrime numbers in the list: " + primeNumbersFound);
+	        System.out.println("Non-prime numbers in the list: " + nonPrimeNumbersFound);
+
+	        // Optional: Print details for each number
+	        System.out.println("\nDetailed check:");
+	        for (int number : numbersToCheck) {
+	            if (isPrime(number)) {
+	                System.out.println(number + " is a prime number.");
+	            } else
+	                System.out.println(number + " is NOT a prime number.");
+	            } {
+	        }
+	    }
+
+	    /**
+	     * Checks if a given number is prime.
+	     * This method implements a common optimization: checking divisibility only up to the square root of the number.
+	     *
+	     * @param number The number to check for primality.
+	     * @return true if the number is prime, false otherwise.
+	     */
+	    public static boolean isPrime(int number) {
+	        if (number <= 1) { // Numbers less than or equal to 1 are not prime
+	            return false;
+	        }
+	        // Check for divisibility from 2 up to the square root of the number
+	        // If a number has a divisor greater than its square root, it must also have a divisor
+	        // smaller than its square root.
+	        for (int i = 2; i * i <= number; i++) {
+	            if (number % i == 0) { // If the number is divisible by i, it's not prime
+	                return false;
+	            }
+	        }
+	        return true; // If no divisors are found, the number is prime
+	    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// 1. Get details of the highest paid employee
+        // Use max() with a Comparator to find the employee with the maximum salary
+        Optional<Employee> highestPaidEmployee = employees. Stream()
+                .max(Comparator.comparingDouble(Employee::getSalary));
+
+        System.out.println("--- Highest Paid Employee ---");
+        highestPaidEmployee.ifPresentOrElse(
+                emp -> System.out.println("Details: " + emp), // If present
+                () -> System.out.println("No employees found in the list.") // If not present
+        );
+        System.out.println("\n" + "=".repeat(50) + "\n");
+
+        // 2. Get a list of all employees who joined after 2014
+        // Filter based on the joining date year
+        List<Employee> employeesJoinedAfter2014 = employees.stream()
+                .filter(emp -> emp.getJoiningDate().getYear() > 2014) // Check if year is greater than 2014
+                .collect(Collectors.toList());
+
+
+
+
+
+	int r[] = {7,6,3,7,6,4};
+	int smal=Integer.MAX_VALUE;
+			int larg=Integer.MIN_VALUE;
+	for(int i :r) {
+		
+		
+		if(i>larg) {
+			larg=i;
+			
+		}
+			
+		
+	
+	}
+	System.out.println(larg);
+for(int i :r) {
+		
+		
+		if(i<smal) {
+			
+			smal=i;
+			//System.out.println(i);
+		}
+		//System.out.println(i);
+	
+	}
+	
+System.out.println(smal);
+	
+	
+	
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+maximum profit
+
+public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+		
+		int []f= {2,4,6,7,55};
+		
+		int max=f[0];
+		int min=f[0];
+		
+		for(int i=0;i<f.length;i++) {
+			
+			if(f[i]>max) {
+				
+				max=f[i];
+				
+			}else {
+				if(f[i]<min) {
+					
+					min=f[i];
+				
+				
+				
+			}
+			
+		
+		
+		
+		}
+		
+		
+		
+		
+		
+		}
+	
+		System.out.println(min);
+	System.out.println(max);
+	int ff=max-min;
+	System.out.println(ff);
+	}
+
+
+
+	Random g= new Random();
+	
+	
+	
+	g.ints(1,100).distinct().limit(10).sorted().forEach(System.out::println);
+
+
+
+ public static boolean containsOnlyDigits(String str) {
+	        // Handle null or empty string cases
+	        if (str == null || str.isEmpty()) {
+	            return false; // An empty string or null string doesn't contain *only* digits.
+	                          // Adjust this behavior if an empty string should be considered true (e.g., for parsing an empty number).
+	        }
+	        // The regex "\\d+" matches one or more digits.
+	        // String.matches() implicitly adds ^ and $ anchors, so the whole string must match.
+	        return str.matches("\\d+");
+	    }
+
+
+
+
+
+
+
+  public static void main(String[] args) {
+	        // Sample employee data
+	        List<Employee> employees = Arrays.asList(
+	            new Employee("Alice", "New York", 30),
+	            new Employee("Bob", "London", 25),
+	            new Employee("Charlie", "New York", 35),
+	            new Employee("David", "Paris", 28),
+	            new Employee("Eve", "London", 32),
+	            new Employee("Frank", "New York", 40),
+	            new Employee("Grace", "Paris", 29)
+	        );
+
+	        // --- Grouping by City ---
+
+	        // Scenario 1: Grouping by city, resulting in a Map<String, List<Employee>>
+	      
+
+	        // Scenario 2: Grouping by city, and for each city, getting a list of employee names
+	        Map<String, List<String>> employeeNamesByCity =
+	            employees.stream()
+	                     .collect(Collectors.groupingBy(
+	                         Employee::getCity, // The key for the map (the city)
+	                         Collectors.mapping(Employee::getName, Collectors.toList()) // How to transform values for each key
+	                     ));
+
+	        System.out.println("--- Employees Grouped by City (List of Employee Names) ---");
+	        employeeNamesByCity.forEach((city, names) -> {
+	            System.out.println("City: " + city);
+	            System.out.println("  - " + String.join(", ", names));
+	            System.out.println("  Total employees: " + names.size());
+	        });
+
+	        System.out.println("\n" + "-".repeat(50) + "\n");
+
+	        // Scenario 3: Grouping by city, and for each city, counting the number of employees
+	        Map<String, Long> employeeCountByCity =
+	            employees.stream()
+	                     .collect(Collectors.groupingBy(
+	                         Employee::getCity, // The key for the map (the city)
+	                         Collectors.counting() // The downstream collector to count elements in each group
+	                     ));
+
+	        System.out.println("--- Employee Count by City ---");
+	        employeeCountByCity.forEach((city, count) -> {
+	            System.out.println("City: " + city + ", Employees: " + count);
+	        });
+
+	        System.out.println("\n" + "-".repeat(50) + "\n");
+
+	        // Scenario 4: Grouping by city, and for each city, getting the average age
+	        Map<String, Double> averageAgeByCity =
+	            employees.stream()
+	                     .collect(Collectors.groupingBy(
+	                         Employee::getCity,
+	                         Collectors.averagingInt(Employee::getAge) // Calculate average age for each group
+	                     ));
+
+	        System.out.println("--- Average Age by City ---");
+	        averageAgeByCity.forEach((city, avgAge) -> {
+	            System.out.printf("City: %s, Average Age: %.2f%n", city, avgAge);
+	        });
+	    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+most frequented word:
+
+  String filePath = "sample.txt"; // Make sure this file exists in your project directory
+                                       // or provide an absolute path.
+
+        // --- Start of Word Frequency Logic (formerly getWordFrequencies method) ---
+        Map<String, Integer> wordFrequencies = new HashMap<>();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                // Process each line:
+                // 1. Convert to lowercase to treat "Java" and "java" as the same word.
+                // 2. Remove punctuation (e.g., periods, commas, exclamation marks).
+                //    "[^a-zA-Z\\s]" regex means "any character that is NOT a letter and NOT a whitespace".
+                // 3. Split the line into words using whitespace as a delimiter.
+                //    "\\s+" regex means "one or more whitespace characters".
+                String cleanedLine = line.toLowerCase().replaceAll("[^a-z\\s]", "");
+                String[] words = cleanedLine.split("\\s+");
+
+                for (String word : words) {
+                    if (!word.trim().isEmpty()) { // Ensure the word is not just empty or whitespace
+                        wordFrequencies.put(word, wordFrequencies.getOrDefault(word, 0) + 1);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading the file: " + e.getMessage());
+            e.printStackTrace();
+            return; // Exit if file reading fails
+        }
+        // --- End of Word Frequency Logic ---
+
+  for (Entry<String, Integer> entry : wordFrequencies.entrySet()) {
+            if (entry.getValue() > maxCount) {
+                maxCount = entry.getValue();
+                mostFrequentWord = entry.getKey();
+            }
+        }
+
+
+public static int findFirstRepeating(int[] arr) {
+        if (arr == null || arr.length == 0) {
+            // Or throw an IllegalArgumentException
+            return -1; // Indicate no repeating element found
+        }
+
+        Set<Integer> seenElements = new HashSet<>();
+
+        // Iterate from left to right
+        for (int num : arr) {
+            if (seenElements.contains(num)) { // If we've seen this element before
+                return num; // This is the first repeating element
+            } else {
+                seenElements.add(num); // Add it to the set of seen elements
+            }
+        }
+
+
+	public static void main(String[] args) {
+		String s="banana";
+		HashMap<Character,Integer> f=new HashMap<>();
+		
+		for(int i=0;i<s.length();i++) {
+			
+			if(f.get(s.charAt(i)) !=null) {
+				
+				f.put(s.charAt(i), f.get(s.charAt(i))+1);
+				
+			}else {
+				
+				f.put(s.charAt(i), 1);
+				
+			}
+			
+		
+		}
+		// Get the entry set from the map
+		Set<Map.Entry<Character, Integer>> entrySet = f.entrySet();
+
+		// Convert the set to a list
+		List<Map.Entry<Character, Integer>> entryList = new ArrayList<>(entrySet);
+
+		// Sort the list in descending order of values using a lambda expression
+		entryList.sort((o1, o2) -> o2.getValue().compareTo(o1.getValue()));
+
+		// Print the sorted entries
+		for (Entry<Character, Integer> entry : entryList) {
+		    System.out.println(entry.getValue() + "" + entry.getKey());
+		}
+		
+		
+		
+		
+	}
+	
+	
+
+
+
+
+
+
+public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	int[] d= {6,3,6,7,6,4};
+	
+	
+	
+	for(int i=0;i<d.length;i++) {
+		
+		for(int j=i+1;j<d.length;j++) {
+		if(d[j]==d[i]) {
+			
+		
+		System.out.println(d[i]);
+		return;
+		}
+		}
+		
+		
+		
+		
+	}
+	
+	
+
+
+
+
+
+
+
+
+public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	String s2="aabbdee";
+	
+	Map<Character, Integer> s3= new LinkedHashMap<>();
+	
+	for(char c:s2.toCharArray()) {
+		
+		s3.put(c,s3.containsKey(c)?s3.get(c)+1:1);
+		
+		
+	}
+	for(Entry<Character, Integer> count:s3.entrySet()) {
+		if(count.getValue()==1) {
+			
+			System.out.println(count.getKey());
+			
+		}
+		
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import java.util.stream.Collectors;
+import java.util.Map;
+
+public class CharacterCounter {
+    public static void main(String[] args) {
+        String name = "Thirumoorthy";
+
+        Map<Character, Long> charOccurrences = name.chars()
+                .mapToObj(c -> (char) c)
+                .collect(Collectors.groupingBy(c -> c, Collectors.counting()));
+
+        System.out.println(charOccurrences);
+    }
+}
+
+
+
+
+
+
+	String []h= {"ffuaf","uahud","fiff","uyyu"};
+	List hd= Arrays.asList(h);
+	
+	
+	Set d= new HashSet<>(hd);
+	
+	if(hd.size()!=d.size()) {
+		
+		
+		System.out.println("duplicates present");
+	}
+	
+	
+
+Set<String> duplicates = Arrays.stream(h)
+                // Group by the string itself and count occurrences
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+                .entrySet().stream()
+                // Keep only those with a count > 1
+                .filter(entry -> entry.getValue() > 1)
+                // Extract the keys (the duplicate strings)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
+
+        System.out.println("Duplicates: " + duplicates);
+
+
+
+
+
+
+
+
+
+	    public static void main(String[] args) {
+	        List<String> words = Arrays.asList(
+	            "madam", "level", "apple", "racecar", "hello",
+	            "a", "", null, "Kayak", "Refer", "Deed", "rotor",
+	            "banana", "AbcA", "Noon", "open", "top"
+	        );
+
+	        System.out.println("Original words: " + words);
+
+	        // Find words that start and end with the same character (case-insensitive)
+	        List<String> matchingWords = words.stream()
+	            .filter(word -> word != null && !word.isEmpty()) // 1. Filter out nulls and empty strings
+	            .filter(word -> {                                // 2. Apply the main logic filter
+	                char firstChar = Character.toLowerCase(word.charAt(0));
+	                char lastChar = Character.toLowerCase(word.charAt(word.length() - 1));
+	                return firstChar == lastChar;
+	            })
+	            .collect(Collectors.toList());                   // 3. Collect the results into a new List
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	    // 4. Fetch top 3 salaried employees
+        List<Employee> top3SalariedEmployees = employees.stream()
+                .sorted(Comparator.comparingDouble(Employee::getSalary).reversed()) // Sort highest to lowest
+                .limit(3) // Take the first 3
+                .collect(Collectors.toList());
+
+        System.out.println("--- Top 3 Salaried Employees ---");
+        top3SalariedEmployees.forEach(System.out::println);
+        System.out.println("\n" + "=".repeat(50) + "\n");
+
+        // 5. Fetch all employees having salary less than the 3rd highest unique salary
+        Optional<Double> thirdHighestUniqueSalaryOptional = employees.stream()
+                .map(Employee::getSalary)          // Get only salaries
+                .distinct()                        // Consider only unique salary values
+                .sorted(Comparator.reverseOrder()) // Sort unique salaries in descending order
+                .skip(2)                           // Skip the 1st and 2nd unique highest
+                .findFirst();                      // Get the 3rd unique highest
+
+        if (thirdHighestUniqueSalaryOptional.isPresent()) {
+            double thirdHighestSalary = thirdHighestUniqueSalaryOptional.get();
+            System.out.println("--- Employees with Salary Less Than 3rd Highest Unique Salary (" + thirdHighestSalary + ") ---");
+
+            List<Employee> employeesLessThanThirdHighest = employees.stream()
+                    .filter(emp -> emp.getSalary() < thirdHighestSalary)
+                    .sorted(Comparator.comparingDouble(Employee::getSalary).reversed()) // Optional: sort for display
+                    .collect(Collectors.toList());
+
+            employeesLessThanThirdHighest.forEach(System.out::println);
+        } else {
+            System.out.println("--- Cannot determine 3rd highest unique salary (less than 3 unique salaries exist) ---");
+        }
+        System.out.println("\n" + "=".repeat(50) + "\n");
+
+	    
+	    
+	    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ List<String> countryNames = Arrays.asList(
+	            "india",
+	            "united states",
+	            "canada",
+	            "australia",
+	            "germany",
+	            "france",
+	            "japan",
+	            "brazil"
+	        );
+
+	        System.out.println("Original Country Names: " + countryNames);
+
+	        // Convert all country names to upper case and separate them by a comma and space
+	        String uppercaseAndSeparatedNames = countryNames.stream()
+	                                                      .map(String::toUpperCase) // Convert each country name to uppercase
+	                                                      .collect(Collectors.joining(", ")); // Join them with ", " as delimiter
+
+	        System.out.println("Uppercase and Separated Names: " + uppercaseAndSeparatedNames);
+
+	        // --- Another example with different delimiters ---
+	        List<String> cities = Arrays.asList("Chennai", "Bangalore", "Mumbai", "Delhi");
+	        String citiesJoinedByHyphen = cities.stream()
+	                                            .map(String::toUpperCase)
+	                                            .collect(Collectors.joining(" - "));
+	        System.out.println("\nOriginal Cities: " + cities);
+	        System.out.println("Cities joined by hyphen: " + citiesJoinedByHyphen);
+
+
+
+	
+	List<String> j=Arrays.asList("kj","ygab","krwy");
+	
+	
+	
+	
+	
+	
+	System.out.println(j.stream().filter(e->e.length()>3).count());
+	
+
+
+
+
+ public static void main(String[] args) {
+	        // --- 1. Create a list of Employees ---
+	        List<Employee> employees = new ArrayList<>();
+	        employees.add(new Employee("Alice", 28, 70000.0, "HR"));
+	        employees.add(new Employee("Bob", 24, 60000.0, "Engineering")); // Age <= 25, no increase
+	        employees.add(new Employee("Charlie", 35, 85000.0, "Marketing"));
+	        employees.add(new Employee("David", 26, 95000.0, "Engineering"));
+	        employees.add(new Employee("Eve", 25, 72000.0, "HR")); // Age <= 25, no increase
+	        employees.add(new Employee("Frank", 40, 110000.0, "Sales"));
+
+	        System.out.println("--- Original Employee List ---");
+	        employees.forEach(System.out::println);
+	        System.out.println("\n" + "=".repeat(60) + "\n");
+
+	        // --- 2. Create a list of Candidates (as requested for completeness) ---
+	        List<Candidate> candidates = new ArrayList<>();
+	        candidates.add(new Candidate("Grace", 22, 55000.0, Arrays.asList("Java", "SQL")));
+	        candidates.add(new Candidate("Harry", 30, 90000.0, Arrays.asList("Python", "Machine Learning")));
+	        candidates.add(new Candidate("Ivy", 25, 65000.0, Arrays.asList("JavaScript", "React")));
+
+	        System.out.println("--- Candidate List ---");
+	        candidates.forEach(System.out::println);
+	        System.out.println("\n" + "=".repeat(60) + "\n");
+
+
+	        // --- 3. Increase salary for employees whose age > 25 by 10% ---
+	        System.out.println("--- Applying Salary Increase ---");
+
+	        employees.stream()
+	                 .filter(emp -> emp.getAge() > 25) // Filter employees older than 25
+	                 .forEach(emp -> emp.setSalary(emp.getSalary() * 1.10)); // Increase salary by 10%
+
+	        System.out.println("Salaries updated for employees older than 25.");
+	        System.out.println("\n" + "=".repeat(60) + "\n");
+
+	        // --- 4. Print the updated Employee List ---
+	        System.out.println("--- Updated Employee List ---");
+	        employees.forEach(System.out::println);
+	        System.out.println("\n" + "=".repeat(60) + "\n");
+	    }
+	}
+}
+
+
+
+
+
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+public class MaxValueOptionalDirectMain {
+
+    public static void main(String[] args) {
+        System.out.println("--- Finding the Maximum Value using Optional (Direct in main) ---");
+
+        List<Integer> list1 = Arrays.asList(1, 5, 2, 8, 3);
+        List<Integer> list2 = Arrays.asList(-10, -5, -1);
+        List<Integer> emptyList = Arrays.asList();
+
+        // Direct logic for list1
+        Optional<Integer> maxOptional1 = list1.stream().max(Integer::compare);  or(a,b)->a.compareTo(b);
+        int max1 = maxOptional1.orElse(-1);
+        System.out.println("Max in " + list1 + ": " + max1); // Expected: 8
+
+        // Direct logic for list2
+        Optional<Integer> maxOptional2 = list2.stream().max(Integer::compare);
+        int max2 = maxOptional2.orElse(-1);
+        System.out.println("Max in " + list2 + ": " + max2); // Expected: -1
+
+        // Direct logic for emptyList
+        Optional<Integer> maxOptionalEmpty = emptyList.stream().max(Integer::compare);
+        int maxEmpty = maxOptionalEmpty.orElse(-1);
+        System.out.println("Max in " + emptyList + ": " + maxEmpty); // Expected: -1
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+Question 1: Filtering and Transforming a List of Objects
+
+You have a List<Product> where each Product has name, category, and price.
+Write Java 8 code to:
+
+Filter out products that belong to the "Electronics" category.
+
+Then, transform the remaining products into a List<String> containing only their names.
+
+Ensure the names are sorted alphabetically.
+List<String> nonElectronicsNames = allProducts.stream()
+                                                    .filter(product -> !product.getCategory().equals("Electronics"))
+                                                    .map(Product::getName)
+                                                    .sorted()
+                                                    .collect(Collectors.toList());
+
+        System.out.println("Non-Electronics Product Names (Sorted): " + nonElectronicsNames);
+        // Expected Output: [Book, Jeans, T-Shirt]
+
+
+
+
+
+Question 3: Grouping and Counting Elements
+
+You have a List<String> representing a collection of items (e.g., fruits).
+Write Java 8 code to:
+
+Group the items by their name.
+
+Count the occurrences of each item.
+
+Return the result as a Map<String, Long>.
+
+Answer 3:
+
+Java
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+public class GroupAndCount {
+
+    public static Map<String, Long> countItemOccurrences(List<String> items) {
+        return items.stream()
+                    .collect(Collectors.groupingBy(
+                        item -> item, // Classifier: Group by the item itself
+                        Collectors.counting() // Downstream Collector: Count occurrences for each group
+                    ));
+    }
+
+    public static void main(String[] args) {
+        List<String> fruits = Arrays.asList(
+            "Apple", "Banana", "Apple", "Orange", "Banana", "Apple", "Grape"
+        );
+
+        Map<String, Long> fruitCounts = countItemOccurrences(fruits);
+        System.out.println("Fruit Counts: " + fruitCounts);
+        // Expected Output: {Apple=3, Orange=1, Banana=2, Grape=1}
+    }
+
+
+
+
+
+
+Question 4: FlatMapping and Removing Duplicates
+
+You have a List<List<String>> where each inner list represents a set of tags for a product.
+Write Java 8 code to:
+
+Combine all tags from all products into a single stream of tags.
+
+Remove any duplicate tags.
+
+Collect the unique tags into a Set<String>.
+
+Answer 4:
+
+Java
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+public class FlatMapAndDistinct {
+
+    public static Set<String> getAllUniqueTags(List<List<String>> listOfTagLists) {
+        return listOfTagLists.stream()
+                             .flatMap(List::stream) // Flatten the stream of lists into a single stream of tags
+                             .distinct()             // Remove duplicate tags
+                             .collect(Collectors.toSet()); // Collect into a Set (automatically handles uniqueness)
+    }
+
+    public static void main(String[] args) {
+        List<List<String>> productTags = Arrays.asList(
+            Arrays.asList("electronics", "gadget", "tech"),
+            Arrays.asList("apparel", "fashion"),
+            Arrays.asList("tech", "mobile", "electronics"),
+            Arrays.asList("book", "fiction")
+        );
+
+        Set<String> uniqueTags = getAllUniqueTags(productTags);
+        System.out.println("All Unique Tags: " + uniqueTags);
+        // Expected Output (order may vary for Set): [gadget, fiction, electronics, tech, mobile, apparel, fashion, book]
+    }
+
+
+
+
+
+
+
+Question 5: Using forEach with Indices (Practical Scenario)
+
+While forEach in streams doesn't directly support an index, sometimes you need to process elements in a list and know their position.
+How would you achieve a forEach with an index using Java 8 streams for a List<String>? (e.g., to print "Item 0: Apple", "Item 1: Banana", etc.)
+
+Answer 5:
+
+Java
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
+
+public class ForEachWithIndex {
+
+    public static void processListWithIndex(List<String> items) {
+        // Method 1: Using IntStream and get(index) - generally preferred for lists
+    
+List<String> itemsWithIndex = Arrays.asList("Apple", "Banana", "Orange", "Grape");
+
+
+
+
+    IntStream.range(0, items.size())
+                 .forEach(index -> System.out.println("Item " + index + ": " + items.get(index)));
+
+        System.out.println("\n--- Alternative using AtomicInteger (less idiomatic for lists) ---");
+
+
+
+
+Excellent\! Let's continue with **Day 2** of your Java 8 interview coding questions.
+
+For someone with 4 years of experience, these questions will delve into more nuanced aspects of streams, custom collectors, and functional interfaces.
+
+-----
+
+**Daily Java 8 Interview Coding Questions & Answers (4 Years Experience)**
+
+-----
+
+### **Day 2**
+
+**Question 1: Summing and Averaging with `reducing()` and `averagingDouble()`**
+
+You have a `List<Order>` where each `Order` has an `orderId` and a `double amount`.
+Write Java 8 code to:
+
+1.  Calculate the **total sum** of all order amounts.
+2.  Calculate the **average** order amount.
+
+**Order Class:**
+
+```java
+public class Order {
+    private String orderId;
+    private double amount;
+
+    public Order(String orderId, double amount) {
+        this.orderId = orderId;
+        this.amount = amount;
+    }
+
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    @Override
+    public String toString() {
+        return "Order{orderId='" + orderId + "', amount=" + amount + '}';
+    }
+}
+```
+
+**Answer 1 (Direct in main):**
+
+```java
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+public class OrderStatisticsDirectMain {
+
+    public static class Order {
+        private String orderId;
+        private double amount;
+
+        public Order(String orderId, double amount) {
+            this.orderId = orderId;
+            this.amount = amount;
+        }
+
+        public String getOrderId() { return orderId; }
+        public double getAmount() { return amount; }
+
+        @Override
+        public String toString() { return "Order{orderId='" + orderId + "', amount=" + amount + '}'; }
+    }
+
+    public static void main(String[] args) {
+        System.out.println("--- Question 1: Summing and Averaging Order Amounts ---");
+
+        List<Order> orders = Arrays.asList(
+            new Order("A101", 150.75),
+            new Order("A102", 200.50),
+            new Order("A103", 50.25),
+            new Order("A104", 100.00),
+            new Order("A105", 200.50)
+        );
+
+        // Calculate total sum of amounts using reduce
+        double totalSum = orders.stream()
+                                .mapToDouble(Order::getAmount) // Use mapToDouble for primitive double stream
+                                .sum(); // sum() is available on DoubleStream, IntStream, LongStream
+
+        System.out.println("Total Order Amount (using mapToDouble.sum()): " + String.format("%.2f", totalSum));
+        // Expected: 702.00
+
+        // Alternative for sum using reducing (more generic)
+        Optional<Double> totalSumReducing = orders.stream()
+                                                  .map(Order::getAmount)
+                                                  .reduce(Double::sum); // BinaryOperator for sum
+        System.out.println("Total Order Amount (using reduce): " + String.format("%.2f", totalSumReducing.orElse(0.0)));
+
+
+        // Calculate average amount using Collectors.averagingDouble
+        Double averageAmount = orders.stream()
+                                     .collect(Collectors.averagingDouble(Order::getAmount));
+
+        System.out.println("Average Order Amount: " + String.format("%.2f", averageAmount));
+        // Expected: 140.40 (702.00 / 5)
+
+        // Using summary statistics (provides sum, average, min, max, count in one go)
+        System.out.println("\n--- Using DoubleSummaryStatistics ---");
+        Collectors.DoubleSummaryStatistics stats = orders.stream()
+                                                        .collect(Collectors.summarizingDouble(Order::getAmount));
+        System.out.println("Total Sum: " + String.format("%.2f", stats.getSum()));
+        System.out.println("Average: " + String.format("%.2f", stats.getAverage()));
+        System.out.println("Count: " + stats.getCount());
+        System.out.println("Min: " + stats.getMin());
+        System.out.println("Max: " + stats.getMax());
+
+        System.out.println("\n");
+    }
+}
+```
+
+**Explanation:**
+
+  * **`mapToDouble(Order::getAmount).sum()`**: For calculating sums, `mapToDouble()` creates a `DoubleStream` (a specialized stream for primitive `double` values). `DoubleStream` conveniently has a `sum()` terminal operation. This is generally more efficient for sums than `reduce(Double::sum)` on a `Stream<Double>` because it avoids auto-boxing/unboxing.
+  * **`reduce(Double::sum)`**: A more general-purpose terminal operation that combines elements of a stream into a single result. `Double::sum` is a method reference to the `static` `sum` method in the `Double` class, which acts as a `BinaryOperator` for summing. It returns an `Optional` because the stream might be empty.
+  * **`Collectors.averagingDouble(Order::getAmount)`**: A `Collector` specifically designed to compute the arithmetic mean (average) of a `double`-valued function applied to input elements. It handles the division and returns `Double` (which will be `0.0` for an empty stream).
+  * **`Collectors.summarizingDouble(Order::getAmount)`**: This is highly efficient if you need multiple statistics (count, sum, min, max, average). It returns a `DoubleSummaryStatistics` object that holds all these values, performing only one pass over the data.
+
+-----
+
+**Question 2: Partitioning a List**
+
+You have a `List<Integer>`.
+Write Java 8 code to partition this list into two groups:
+
+1.  Numbers that are even.
+2.  Numbers that are odd.
+    Return the result as a `Map<Boolean, List<Integer>>`.
+
+**Answer 2 (Direct in main):**
+
+```java
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+public class ListPartitioningDirectMain {
+
+    public static void main(String[] args) {
+        System.out.println("--- Question 2: Partitioning a List into Even/Odd ---");
+
+        List<Integer> numbers = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+
+        Map<Boolean, List<Integer>> partitionedNumbers = numbers.stream()
+                                                                .collect(Collectors.partitioningBy(number -> number % 2 == 0));
+
+        System.out.println("Even numbers (true): " + partitionedNumbers.get(true));
+        System.out.println("Odd numbers (false): " + partitionedNumbers.get(false));
+        // Expected: Even numbers (true): [2, 4, 6, 8, 10]
+        //           Odd numbers (false): [1, 3, 5, 7, 9]
+
+        System.out.println("\n");
+    }
+}
+```
+
+**Explanation:**
+
+  * **`Collectors.partitioningBy(Predicate)`**: This is a specialized `Collector` that takes a `Predicate` (a function that returns a `boolean`). It partitions the input elements into two groups based on whether the `Predicate` evaluates to `true` or `false` for each element.
+  * The result is always a `Map<Boolean, List<T>>` where `true` maps to the list of elements for which the predicate was true, and `false` maps to the list of elements for which it was false.
+
+-----
+
+**Question 3: Custom Sorting with `Comparator.comparing()`**
+
+You have a `List<Employee>` where each `Employee` has `name`, `age`, and `salary`.
+Write Java 8 code to:
+
+1.  Sort the employees by `salary` in descending order.
+2.  If salaries are equal, then sort by `age` in ascending order.
+
+**Employee Class:**
+
+```java
+public class Employee {
+    private String name;
+    private int age;
+    private double salary;
+
+    public Employee(String name, int age, double salary) {
+        this.name = name;
+        this.age = age;
+        this.salary = salary;
+    }
+
+    public String getName() { return name; }
+    public int getAge() { return age; }
+    public double getSalary() { return salary; }
+
+    @Override
+    public String toString() {
+        return "Employee{name='" + name + "', age=" + age + ", salary=" + salary + '}';
+    }
+}
+```
+
+**Answer 3 (Direct in main):**
+
+```java
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class CustomSortingDirectMain {
+
+    public static class Employee {
+        private String name;
+        private int age;
+        private double salary;
+
+        public Employee(String name, int age, double salary) {
+            this.name = name;
+            this.age = age;
+            this.salary = salary;
+        }
+
+        public String getName() { return name; }
+        public int getAge() { return age; }
+        public double getSalary() { return salary; }
+
+        @Override
+        public String toString() {
+            return "Employee{name='" + name + "', age=" + age + ", salary=" + salary + '}';
+        }
+    }
+
+    public static void main(String[] args) {
+        System.out.println("--- Question 3: Custom Sorting with Comparator.comparing() ---");
+
+        List<Employee> employees = Arrays.asList(
+            new Employee("Alice", 30, 60000.00),
+            new Employee("Bob", 25, 75000.00),
+            new Employee("Charlie", 35, 60000.00),
+            new Employee("David", 40, 80000.00),
+            new Employee("Eve", 28, 75000.00)
+        );
+
+        List<Employee> sortedEmployees = employees.stream()
+            .sorted(Comparator.comparing(Employee::getSalary).reversed() // Sort by salary descending
+                    .thenComparing(Employee::getAge))                   // Then by age ascending
+            .collect(Collectors.toList());
+
+        sortedEmployees.forEach(System.out::println);
+        // Expected Output:
+        // Employee{name='David', age=40, salary=80000.0}
+        // Employee{name='Bob', age=25, salary=75000.0}
+        // Employee{name='Eve', age=28, salary=75000.0}
+        // Employee{name='Alice', age=30, salary=60000.0}
+        // Employee{name='Charlie', age=35, salary=60000.0}
+
+        System.out.println("\n");
+    }
+}
+```
+
+**Explanation:**
+
+  * **`Comparator.comparing(Function)`**: This static method in the `Comparator` interface creates a `Comparator` that extracts a `Comparable` sort key from an object. `Employee::getSalary` provides the salary as the primary sort key.
+  * **`.reversed()`**: Applied to the first `Comparator`, it reverses the natural order, making the salary sort in descending order.
+  * **`.thenComparing(Function)`**: This method allows for chaining comparators. If the primary sort keys (salaries) are equal, the `thenComparing(Employee::getAge)` comparator is used to sort by age in ascending order (natural order for `int`). This creates a compound sorting logic.
+
+-----
+
+**Question 4: Mapping to a Map with `Collectors.toMap()`**
+
+You have a `List<Book>` where each `Book` has an `id`, `title`, and `author`.
+Write Java 8 code to convert this list into a `Map<Integer, String>` where the key is the `book ID` and the value is the `book title`. Handle potential duplicate IDs by selecting the first encountered title.
+
+**Book Class:**
+
+```java
+public class Book {
+    private int id;
+    private String title;
+    private String author;
+
+    public Book(int id, String title, String author) {
+        this.id = id;
+        this.title = title;
+        this.author = author;
+    }
+
+    public int getId() { return id; }
+    public String getTitle() { return title; }
+    public String getAuthor() { return author; }
+
+    @Override
+    public String toString() {
+        return "Book{id=" + id + ", title='" + title + "', author='" + author + "'}";
+    }
+}
+```
+
+**Answer 4 (Direct in main):**
+
+```java
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+public class ListToMapDirectMain {
+
+    public static class Book {
+        private int id;
+        private String title;
+        private String author;
+
+        public Book(int id, String title, String author) {
+            this.id = id;
+            this.title = title;
+            this.author = author;
+        }
+
+        public int getId() { return id; }
+        public String getTitle() { return title; }
+        public String getAuthor() { return author; }
+
+        @Override
+        public String toString() { return "Book{id=" + id + ", title='" + title + "', author='" + author + "'}"; }
+    }
+
+    public static void main(String[] args) {
+        System.out.println("--- Question 4: Mapping to a Map with Collectors.toMap() ---");
+
+        List<Book> books = Arrays.asList(
+            new Book(1, "The Great Gatsby", "F. Scott Fitzgerald"),
+            new Book(2, "1984", "George Orwell"),
+            new Book(3, "To Kill a Mockingbird", "Harper Lee"),
+            new Book(2, "Animal Farm", "George Orwell") // Duplicate ID for demonstration
+        );
+
+        Map<Integer, String> bookIdToTitleMap = books.stream()
+            .collect(Collectors.toMap(
+                Book::getId,         // Key Mapper: Function to extract the key (Book ID)
+                Book::getTitle,      // Value Mapper: Function to extract the value (Book Title)
+                (existing, replacement) -> existing // Merge Function: How to handle duplicate keys. Here, keep existing.
+            ));
+
+        System.out.println("Book ID to Title Map: " + bookIdToTitleMap);
+        // Expected Output (order may vary): {1=The Great Gatsby, 2=1984, 3=To Kill a Mockingbird}
+        // Note: "Animal Farm" (ID 2) is ignored due to the merge function.
+
+        System.out.println("\n--- Handling Duplicates with 'replacement' (latest) ---");
+        Map<Integer, String> bookIdToTitleMapKeepReplacement = books.stream()
+            .collect(Collectors.toMap(
+                Book::getId,
+                Book::getTitle,
+                (existing, replacement) -> replacement // Keep the replacement value
+            ));
+        System.out.println("Book ID to Title Map (keeping replacement): " + bookIdToTitleMapKeepReplacement);
+        // Expected Output (order may vary): {1=The Great Gatsby, 2=Animal Farm, 3=To Kill a Mockingbird}
+
+
+        // If there are no duplicate keys, you can omit the merge function:
+        System.out.println("\n--- Example without duplicates ---");
+        List<Book> uniqueBooks = Arrays.asList(
+            new Book(10, "The Lord of the Rings", "J.R.R. Tolkien"),
+            new Book(11, "Pride and Prejudice", "Jane Austen")
+        );
+        Map<Integer, String> uniqueBookMap = uniqueBooks.stream()
+            .collect(Collectors.toMap(Book::getId, Book::getTitle));
+        System.out.println("Unique Book Map: " + uniqueBookMap);
+
+        System.out.println("\n");
+    }
+}
+```
+
+**Explanation:**
+
+  * **`Collectors.toMap(keyMapper, valueMapper, mergeFunction)`**: This `Collector` is used to accumulate elements into a `Map`.
+      * **`keyMapper` (`Book::getId`)**: A `Function` that extracts the key from each element.
+      * **`valueMapper` (`Book::getTitle`)**: A `Function` that extracts the value from each element.
+      * **`mergeFunction` (`(existing, replacement) -> existing`)**: This is crucial for handling duplicate keys. If two elements map to the same key, this `BinaryOperator` determines which value to keep. Here, `(existing, replacement) -> existing` means "if a duplicate key is found, keep the value that was already in the map (the existing one), discarding the new one." If you wanted to keep the *new* one, you'd use `(existing, replacement) -> replacement`. **If you don't provide a merge function and duplicate keys exist, `IllegalStateException` will be thrown.**
+
+-----
+
+**Question 5: Filtering a Map and Transforming Values**
+
+You have a `Map<String, Integer>` representing product names and their stock quantities.
+Write Java 8 code to:
+
+1.  Filter the map to include only products with stock quantity greater than 50.
+2.  Transform the remaining entries into a `Map<String, String>` where the value is a formatted string like "Available: [Quantity]".
+
+**Answer 5 (Direct in main):**
+
+```java
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+public class MapFilterTransformDirectMain {
+
+    public static void main(String[] args) {
+        System.out.println("--- Question 5: Filtering a Map and Transforming Values ---");
+
+        Map<String, Integer> productStock = new HashMap<>();
+        productStock.put("Laptop", 75);
+        productStock.put("Mouse", 30);
+        productStock.put("Monitor", 60);
+        productStock.put("Keyboard", 45);
+        productStock.put("Headphones", 90);
+
+        Map<String, String> highStockProducts = productStock.entrySet().stream() // Get a stream of Map.Entry<String, Integer>
+            .filter(entry -> entry.getValue() > 50)                              // Filter entries where quantity > 50
+            .collect(Collectors.toMap(
+                Map.Entry::getKey,                                             // Key is the original entry's key (product name)
+                entry -> "Available: " + entry.getValue()                      // Value is a formatted string
+            ));
+
+        System.out.println("High Stock Products (Formatted): " + highStockProducts);
+        // Expected Output (order may vary): {Laptop=Available: 75, Monitor=Available: 60, Headphones=Available: 90}
+
+        System.out.println("\n");
+    }
+}
+```
+
+**Explanation:**
+
+  * **`productStock.entrySet().stream()`**: To work with a `Map` in streams, you typically get a `Set` of its entries using `entrySet()` and then create a stream from that `Set`. Each element in this stream is a `Map.Entry<String, Integer>`.
+  * **`.filter(entry -> entry.getValue() > 50)`**: This `Predicate` filters the stream of entries, keeping only those where the stock quantity (the `value` of the entry) is greater than 50.
+  * **`.collect(Collectors.toMap(Map.Entry::getKey, entry -> "Available: " + entry.getValue()))`**:
+      * **`Map.Entry::getKey`**: This `Function` extracts the key (product name) from each filtered `Map.Entry` to be the key of the new map.
+      * **`entry -> "Available: " + entry.getValue()`**: This `Function` transforms the original `Integer` stock quantity into the desired formatted `String` value for the new map.
+      * Note: We don't need a `mergeFunction` here, as filtering ensures no duplicate keys will arise from the *filtered* entries.
+
+-----
+
+
+
+
+
+
+
+
+Calculating the Sum of Squares for Even Numbers
+
+Given a List<Integer>, calculate the sum of the squares of all even numbers.
+
+Answer 1 (Direct in main):
+
+Java
+
+import java.util.Arrays;
+import java.util.List;
+
+public class SumOfSquaresOfEvensDirectMain {
+
+    public static void main(String[] args) {
+        System.out.println("--- Question 1: Sum of Squares for Even Numbers ---");
+
+        List<Integer> numbers = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+
+        int sumOfSquares = numbers.stream()
+                                  .filter(n -> n % 2 == 0) // Filter for even numbers
+                                  .mapToInt(n -> n * n)   // Map to their squares (as primitive int)
+                                  .sum();                  // Sum the squares
+
+        System.out.println("Numbers: " + numbers);
+        System.out.println("Sum of squares of even numbers: " + sumOfSquares);
+        // Expected: (2*2) + (4*4) + (6*6) + (8*8) + (10*10) = 4 + 16 + 36 + 64 + 100 = 220
+
+        List<Integer> emptyList = Arrays.asList();
+        int sumOfSquaresEmpty = emptyList.stream()
+                                         .filter(n -> n % 2 == 0)
+                                         .mapToInt(n -> n * n)
+                                         .sum();
+        System.out.println("Sum of squares for empty list: " + sumOfSquaresEmpty); // Expected: 0
+
+        System.out.println("\n");
+    }
+}
+
+
+
+
+
+Question 2: Finding the First Non-Repeating Character in a String
+
+Given a String, find the first non-repeating character in it. Return it as an Optional<Character>. If no such character exists, the Optional should be empty.
+
+
+public class FirstNonRepeatingCharDirectMain {
+
+    public static void main(String[] args) {
+        System.out.println("--- Question 2: Finding the First Non-Repeating Character ---");
+
+        String str1 = "programming"; // p
+        String str2 = "aabbccddeeff"; // Optional.empty
+        String str3 = "swiss";      // w
+        String str4 = "level";      // v
+        String str5 = "";           // Optional.empty
+
+        // Logic for str1
+        Optional<Character> firstNonRepeating1 = str1.chars() // Get an IntStream of character ASCII values
+            .mapToObj(c -> (char) c) // Convert IntStream to Stream<Character>
+            .collect(Collectors.groupingBy(
+                Function.identity(), // Group by the character itself
+                LinkedHashMap::new,  // Crucial: Use LinkedHashMap to preserve insertion order
+                Collectors.counting() // Count occurrences
+            ))
+            .entrySet().stream()     // Stream of Map.Entry<Character, Long>
+            .filter(entry -> entry.getValue() == 1) // Filter for entries with count 1
+            .map(entry -> entry.getkey()  )  // Get the character (key)
+             
+
+
+.findFirst();            // Find the first such character
+
+
+
+
+
+
+Question 3: Summarizing Data for a Class of Students
+
+You have a List<Student> where each Student has name, grade (integer), and age.
+Write Java 8 code to generate a Map<String, List<String>> where the key is the grade level (e.g., "Grade A", "Grade B", "Grade C") and the value is a list of student names belonging to that grade range.
+Assume grading ranges:
+
+Grade A: 90-100
+
+Grade B: 80-89
+
+Grade C: 70-79
+
+Grade D: 60-69
+
+Grade F: Below 60
+
+List<Student> students = Arrays.asList(
+            new Student("Alice", 95, 20),
+            new Student("Bob", 82, 21),
+            new Student("Charlie", 78, 20),
+            new Student("David", 55, 22),
+            new Student("Eve", 90, 21),
+            new Student("Frank", 68, 20),
+            new Student("Grace", 89, 22)
+        );
+
+        Map<String, List<String>> gradedStudents = students.stream()
+            .collect(Collectors.groupingBy(
+                student -> { // Classifier function to determine the grade level string
+                    if (student.getGrade() >= 90) return "Grade A";
+                    else if (student.getGrade() >= 80) return "Grade B";
+                    else if (student.getGrade() >= 70) return "Grade C";
+                    else if (student.getGrade() >= 60) return "Grade D";
+                    else return "Grade F";
+                },
+                Collectors.mapping(Student::getName, Collectors.toList()) // Downstream collector: map to name, then collect to list
+            ));
+
+        gradedStudents.forEach((gradeLevel, names) ->
+            System.out.println(gradeLevel + ": " + names)
+        );
+
+
+Question 4: Joining Strings with a Custom Delimiter and Prefix/Suffix
+
+You have a List<String> of programming languages.
+Write Java 8 code to join them into a single string, separated by a comma and space (", "), with a prefix "Languages: [" and a suffix "]".
+
+public class StringJoiningDirectMain {
+
+    public static void main(String[] args) {
+        System.out.println("--- Question 4: Joining Strings with Custom Delimiter/Prefix/Suffix ---");
+
+        List<String> languages = Arrays.asList("Java", "Python", "JavaScript", "C++", "Kotlin");
+        List<String> singleLanguage = Arrays.asList("Swift");
+        List<String> emptyList = Arrays.asList();
+
+        String joinedLanguages = languages.stream()
+                                          .collect(Collectors.joining(", ", "Languages: [", "]"));
+
+        System.out.println("Joined Languages: " + joinedLanguages);
+        // Expected: Languages: [Java, Python, JavaScript, C++, Kotlin]
+
+
+
+Question 5: Performing a Complex Aggregation (Max by Group)
+
+You have a List<Transaction> where each Transaction has id, type (e.g., "SALE", "REFUND"), and amount.
+Write Java 8 code to find the transaction with the maximum amount for each transaction type.
+Return a Map<String, Optional<Transaction>> where the key is the transaction type and the value is an Optional containing the Transaction object with the highest amount for that type.
+
+Trans
+
+
+List<Transaction> transactions = Arrays.asList(
+            new Transaction("T1", "SALE", 100.00),
+            new Transaction("T2", "REFUND", 50.00),
+            new Transaction("T3", "SALE", 150.00),
+            new Transaction("T4", "SALE", 75.00),
+            new Transaction("T5", "REFUND", 60.00),
+            new Transaction("T6", "PURCHASE", 200.00),
+            new Transaction("T7", "REFUND", 50.00) // Duplicate amount for REFUND type
+        );
+
+        Map<String, Optional<Transaction>> maxTransactionByType = transactions.stream()
+            .collect(Collectors.groupingBy(
+                Transaction::getType,                                         // Group by transaction type
+                Collectors.maxBy(Comparator.comparingDouble(Transaction::getAmount)) // Downstream: find max by amount
+            ));
+
+        maxTransactionByType.forEach((type, transactionOptional) -> {
+            System.out.println("Type '" + type + "': Max Transaction: " +
+                               transactionOptional.map(Transaction::toString).orElse("No transactions"));
+        });
+
+
+
+Question 1: Custom Collector to Join Strings with Index
+
+Given a List<String>, write a custom Collector (or use a combination of existing collectors) to produce a single string where each element is prefixed with its 1-based index, separated by a comma and space.
+Example: ["Apple", "Banana", "Cherry"] should become "1. Apple, 2. Banana, 3. Cherry".
+
+Answer 1 (Direct in main):
+
+Java
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.StringJoiner;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
+public class CustomIndexedJoinerDirectMain {
+
+    public static void main(String[] args) {
+        System.out.println("--- Question 1: Custom Collector to Join Strings with Index ---");
+
+        List<String> fruits = Arrays.asList("Apple", "Banana", "Cherry", "Date");
+        List<String> singleFruit = Arrays.asList("Mango");
+        List<String> emptyFruits = Arrays.asList();
+
+        // Method 1: Using IntStream and map (most common and readable for ordered lists)
+        String indexedJoinedString1 = IntStream.range(0, fruits.size())
+                                              .mapToObj(i -> (i + 1) + ". " + fruits.get(i))
+                                              .collect(Collectors.joining(", "));
+        System.out.println("Indexed Fruits (Method 1): " + indexedJoinedString1);
+        // Expected: 1. Apple, 2. Banana, 3. Cherry, 4. Date
+
+        String indexedJoinedStringSingle = IntStream.range(0, singleFruit.size())
+                                                    .mapToObj(i -> (i + 1) + ". " + singleFruit.get(i))
+                                                    .collect(Collectors.joining(", "));
+        System.out.println("Indexed Single Fruit: " + indexedJoinedStringSingle);
+        // Expected: 1. Mango
+
+        String indexedJoinedStringEmpty = IntStream.range(0, emptyFruits.size())
+                                                   .mapToObj(i -> (i + 1) + ". " + emptyFruits.get(i))
+                                                   .collect(Collectors.joining(", "));
+        System.out.println("Indexed Empty Fruits: " + indexedJoinedStringEmpty);
+        // Expected: ""
+
+
+        // Method 2: Using AtomicInteger with forEach (less stream-idiomatic for lists, but demonstrates technique)
+        System.out.println("\n--- Alternative: Using AtomicInteger with forEach ---");
+        AtomicInteger counter = new AtomicInteger(0);
+        StringJoiner joiner = new StringJoiner(", ");
+        fruits.forEach(s -> joiner.add(counter.incrementAndGet() + ". " + s));
+        System.out.println("Indexed Fruits (Method 2 - StringJoiner + AtomicInteger): " + joiner.toString());
+        // Expected: 1. Apple, 2. Banana, 3. Cherry, 4. Date
+
+        System.out.println("\n");
+    }
+}
+Explanation:
+
+Method 1 (Recommended for ordered lists): This is the most idiomatic and straightforward way to achieve indexing with Lists.
+
+IntStream.range(0, fruits.size()): Generates a stream of integers from 0 to size-1, serving as our 0-based indices.
+
+.mapToObj(i -> (i + 1) + ". " + fruits.get(i)): For each index i, it creates a new string "(i+1). [fruitName]". This effectively transforms the IntStream into a Stream<String>.
+
+.collect(Collectors.joining(", ")): Collects these newly formatted strings into a single string, using ", " as the delimiter.
+
+Method 2 (Alternative using AtomicInteger with forEach): While not a pure Collector in the Stream.collect() sense, it's a common pattern to handle stateful operations during stream processing or with forEach.
+
+AtomicInteger counter: A thread-safe mutable integer used to maintain the index. incrementAndGet() gives you the incremented value.
+
+StringJoiner joiner: A utility class in Java 8 specifically designed for efficient string concatenation with a delimiter, prefix, and suffix (though here we only use a delimiter). It avoids the overhead of repeated string concatenation with +.
+
+fruits.forEach(s -> joiner.add(...)): Iterates over each fruit, builds the indexed string, and adds it to the StringJoiner.
+
+Question 2: Finding the Kth Smallest Element in a List
+
+Given a List<Integer> and an integer k, find the Kth smallest element. If k is out of bounds (e.g., k > list.size() or k <= 0), return an empty Optional<Integer>.
+
+Answer 2 (Direct in main):
+
+Java
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.stream.Collectors;
+
+public class KthSmallestElementDirectMain {
+
+    public static void main(String[] args) {
+        System.out.println("--- Question 2: Finding the Kth Smallest Element in a List ---");
+
+        List<Integer> numbers = Arrays.asList(7, 2, 8, 1, 5, 4, 9, 3, 6);
+
+        // Test cases
+        int k1 = 1; // 1st smallest (min)
+        int k2 = 5; // 5th smallest
+        int k3 = 9; // 9th smallest (max)
+        int k4 = 10; // Out of bounds (too large)
+        int k5 = 0; // Out of bounds (too small)
+        int k6 = -1; // Out of bounds (negative)
+
+        System.out.println("Numbers: " + numbers);
+
+        // Logic for k1
+        Optional<Integer> kthSmallest1 = numbers.stream()
+                                                .sorted() // Sorts in natural ascending order
+                                                .skip(k1 - 1) // Skip (k-1) elements to get to the Kth
+                                                .findFirst(); // Get the first element (which is now the Kth smallest)
+        System.out.println(k1 + "th smallest: " + kthSmallest1.orElse(null)); // Expected: 1
+
+        // Logic for k2
+        Optional<Integer> kthSmallest2 = numbers.stream()
+                                                .sorted()
+                                                .skip(k2 - 1)
+                                                .findFirst();
+        System.out.println(k2 + "th smallest: " + kthSmallest2.orElse(null)); // Expected: 5
+
+        // Logic for k3
+        Optional<Integer> kthSmallest3 = numbers.stream()
+                                                .sorted()
+                                                .skip(k3 - 1)
+                                                .findFirst();
+        System.out.println(k3 + "th smallest: " + kthSmallest3.orElse(null)); // Expected: 9
+
+        // Logic for k4 (out of bounds)
+        Optional<Integer> kthSmallest4 = numbers.stream()
+                                                .sorted()
+                                                .skip(k4 - 1)
+                                                .findFirst();
+        System.out.println(k4 + "th smallest (out of bounds): " + kthSmallest4.orElse(null)); // Expected: null (Optional.empty)
+
+        // Logic for k5, k6 (invalid k values - handle explicitly or let stream handle empty)
+        // Explicit check for invalid k values is good practice for clarity.
+        Optional<Integer> kthSmallest5 = (k5 <= 0 || k5 > numbers.size()) ?
+                                         Optional.empty() :
+                                         numbers.stream().sorted().skip(k5 - 1).findFirst();
+        System.out.println(k5 + "th smallest (invalid k): " + kthSmallest5.orElse(null)); // Expected: null
+
+        Optional<Integer> kthSmallest6 = (k6 <= 0 || k6 > numbers.size()) ?
+                                         Optional.empty() :
+                                         numbers.stream().sorted().skip(k6 - 1).findFirst();
+        System.out.println(k6 + "th smallest (invalid k): " + kthSmallest6.orElse(null)); // Expected: null
+
+
+        List<Integer> emptyList = Arrays.asList();
+        Optional<Integer> kthSmallestEmpty = emptyList.stream()
+                                                       .sorted()
+                                                       .skip(1 - 1) // k=1 for empty list
+                                                       .findFirst();
+        System.out.println("1st smallest in empty list: " + kthSmallestEmpty.orElse(null)); // Expected: null
+
+        System.out.println("\n");
+    }
+}
+Explanation:
+
+stream().sorted(): This is the most straightforward way to find the Kth smallest. It sorts the entire stream of numbers in ascending order.
+
+.skip(k - 1): After sorting, to get the Kth smallest element, we need to skip the first k - 1 elements. For example, for the 1st smallest, we skip 0 elements; for the 5th smallest, we skip 4 elements.
+
+.findFirst(): After skipping, the element at the "new" beginning of the stream is our Kth smallest. findFirst() returns an Optional to safely handle cases where the stream might become empty after skipping (e.g., if k is larger than the list size).
+
+Edge Case Handling: The (k <= 0 || k > numbers.size()) ? Optional.empty() : ... is crucial for explicitly handling invalid k values. While skip() and findFirst() would result in Optional.empty() for k > size(), it's good to be explicit about k <= 0.
+
+Question 3: Calculating Factorial using reduce
+
+Write Java 8 code to calculate the factorial of a given positive integer n using the Stream.reduce() operation.
+(Factorial of n, denoted as n!, is the product of all positive integers less than or equal to n. 0! = 1.)
+
+Answer 3 (Direct in main):
+
+Java
+
+import java.util.Optional;
+import java.util.stream.LongStream; // Use LongStream for factorials to avoid overflow
+
+public class FactorialReduceDirectMain {
+
+    public static void main(String[] args) {
+        System.out.println("--- Question 3: Calculating Factorial using reduce ---");
+
+        int n1 = 5; // 5! = 120
+        int n2 = 0; // 0! = 1
+        int n3 = 1; // 1! = 1
+        int n4 = 10; // 10! = 3628800
+        int n5 = 20; // 20! is very large, may overflow long even
+
+        // Logic for n1
+        long factorial1 = LongStream.rangeClosed(1, n1) // Stream of 1, 2, 3, 4, 5
+                                   .reduce(1L, (acc, x) -> acc * x); // Initial value 1, accumulate by multiplying
+        System.out.println(n1 + "! = " + factorial1); // Expected: 120
+
+        // Logic for n2
+        long factorial2 = LongStream.rangeClosed(1, n2) // Range is empty if n2 < 1
+                                   .reduce(1L, (acc, x) -> acc * x);
+        System.out.println(n2 + "! = " + factorial2); // Expected: 1 (initial value is returned for empty stream)
+
+        // Logic for n3
+        long factorial3 = LongStream.rangeClosed(1, n3)
+                                   .reduce(1L, (acc, x) -> acc * x);
+        System.out.println(n3 + "! = " + factorial3); // Expected: 1
+
+        // Logic for n4
+        long factorial4 = LongStream.rangeClosed(1, n4)
+                                   .reduce(1L, (acc, x) -> acc * x);
+        System.out.println(n4 + "! = " + factorial4); // Expected: 3628800
+
+        // Logic for n5 - Demonstrating potential overflow with long (max long ~ 9.22e18)
+        long factorial5 = LongStream.rangeClosed(1, n5)
+                                   .reduce(1L, (acc, x) -> acc * x);
+        System.out.println(n5 + "! = " + factorial5); // Expected: 2432902008176640000 (still fits long)
+
+        // For very large numbers, you'd use BigInteger:
+        // java.math.BigInteger bigFactorial = LongStream.rangeClosed(1, 50)
+        //                                            .mapToObj(java.math.BigInteger::valueOf)
+        //                                            .reduce(java.math.BigInteger.ONE, java.math.BigInteger::multiply);
+        // System.out.println("50! = " + bigFactorial);
+
+        System.out.println("\n");
+    }
+}
+Explanation:
+
+LongStream.rangeClosed(1, n): Creates a LongStream of numbers from 1 to n (inclusive). We use LongStream because factorials grow very rapidly and can quickly exceed the capacity of an int.
+
+.reduce(identity, accumulator): This is the version of reduce that takes an identity and an accumulator function.
+
+identity (1L): This is the initial value for the reduction. For multiplication, the identity is 1 (multiplying by 1 doesn't change the value). It's also the result if the stream is empty (e.g., for 0! or negative n).
+
+accumulator ((acc, x) -> acc * x): This is a LongBinaryOperator. It takes the current accumulated result (acc) and the next element from the stream (x), and combines them (here, by multiplying). The result becomes the new acc.
+
+Question 4: Reversing a String without Using StringBuilder.reverse()
+
+Write Java 8 code to reverse a given string. You are not allowed to use StringBuilder.reverse() or any other direct reverse methods.
+
+Answer 4 (Direct in main):
+
+Java
+
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+public class StringReverseDirectMain {
+
+    public static void main(String[] args) {
+        System.out.println("--- Question 4: Reversing a String without StringBuilder.reverse() ---");
+
+        String original1 = "Hello";
+        String original2 = "Java";
+        String original3 = "a";
+        String original4 = "";
+        String original5 = "madam"; // Palindrome
+
+        // Logic for original1
+        String reversed1 = original1.chars() // Get an IntStream of character ASCII values
+                                    .mapToObj(c -> String.valueOf((char) c)) // Convert to Stream<String>
+                                    .reduce("", (reversedStr, character) -> character + reversedStr); // Prepend each char
+        System.out.println("Original: '" + original1 + "', Reversed: '" + reversed1 + "'"); // Expected: olleH
+
+        // Logic for original2
+        String reversed2 = original2.chars().mapToObj(c -> String.valueOf((char)c))
+                                    .reduce("", (reversedStr, character) -> character + reversedStr);
+        System.out.println("Original: '" + original2 + "', Reversed: '" + reversed2 + "'"); // Expected: avaJ
+
+        // Logic for original3
+        String reversed3 = original3.chars().mapToObj(c -> String.valueOf((char)c))
+                                    .reduce("", (reversedStr, character) -> character + reversedStr);
+        System.out.println("Original: '" + original3 + "', Reversed: '" + reversed3 + "'"); // Expected: a
+
+        // Logic for original4
+        String reversed4 = original4.chars().mapToObj(c -> String.valueOf((char)c))
+                                    .reduce("", (reversedStr, character) -> character + reversedStr);
+        System.out.println("Original: '" + original4 + "', Reversed: '" + reversed4 + "'"); // Expected: ""
+
+        // Logic for original5
+        String reversed5 = original5.chars().mapToObj(c -> String.valueOf((char)c))
+                                    .reduce("", (reversedStr, character) -> character + reversedStr);
+        System.out.println("Original: '" + original5 + "', Reversed: '" + reversed5 + "'"); // Expected: madam
+
+        System.out.println("\n--- Alternative using indices (more efficient for very long strings) ---");
+        String original6 = "HelloWorld";
+        String reversed6 = IntStream.range(0, original6.length())
+                                    .mapToObj(i -> original6.charAt(original6.length() - 1 - i))
+                                    .map(String::valueOf)
+                                    .collect(Collectors.joining());
+        System.out.println("Original: '" + original6 + "', Reversed: '" + reversed6 + "'"); // Expected: dlroWolleH
+
+        System.out.println("\n");
+    }
+}
+Explanation:
+
+Method 1 (chars().mapToObj().reduce()):
+
+original1.chars(): Gets an IntStream of character ASCII values.
+
+mapToObj(c -> String.valueOf((char) c)): Converts each character's ASCII value to a String (e.g., H becomes "H"). Now we have a Stream<String>.
+
+reduce("", (reversedStr, character) -> character + reversedStr): This is the core reduce operation.
+
+"": The identity (initial value for reversedStr).
+
+(reversedStr, character) -> character + reversedStr: The accumulator. For each character from the stream, it is prepended to the reversedStr accumulated so far. This effectively builds the reversed string.
+
+Performance Note: While this is a functional way to reverse, repeatedly concatenating strings using + in a reduce operation (especially with character + reversedStr where a new string object is created in each step) can be inefficient for very long strings.
+
+Method 2 (Alternative using IntStream.range and charAt): This approach is often more efficient for string reversal using streams because it directly accesses characters by index and builds the string once using joining.
+
+IntStream.range(0, original6.length()): Generates indices from 0 to length-1.
+
+mapToObj(i -> original6.charAt(original6.length() - 1 - i)): For each index i, it calculates the index from the end of the string (length - 1 - i) and retrieves that character. This effectively streams characters in reverse order.
+
+map(String::valueOf): Converts char to String.
+
+collect(Collectors.joining()): Joins all the characters into a single string.
+
+Question 5: Grouping by Multiple Fields and then Counting (Compound Key)
+
+You have a List<OrderLineItem> where each item has a productId, itemName, and quantity.
+Write Java 8 code to group the OrderLineItems by both productId and itemName, and then count the total quantity for each unique combination.
+Return the result as a Map<String, Map<String, Long>> where the outer key is productId, the inner key is itemName, and the value is the total quantity (Long).
+
+OrderLineItem Class:
+
+Java
+
+import java.util.Objects; // For equals and hashCode
+
+public class OrderLineItem {
+    private String productId;
+    private String itemName;
+    private int quantity;
+
+    public OrderLineItem(String productId, String itemName, int quantity) {
+        this.productId = productId;
+        this.itemName = itemName;
+        this.quantity = quantity;
+    }
+
+    public String getProductId() { return productId; }
+    public String getItemName() { return itemName; }
+    public int getQuantity() { return quantity; }
+
+    @Override
+    public String toString() {
+        return "OrderLineItem{productId='" + productId + "', itemName='" + itemName + "', quantity=" + quantity + '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        OrderLineItem that = (OrderLineItem) o;
+        return quantity == that.quantity &&
+               Objects.equals(productId, that.productId) &&
+               Objects.equals(itemName, that.itemName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(productId, itemName, quantity);
+    }
+}
+Answer 5 (Direct in main):
+
+Java
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+public class GroupByMultipleFieldsDirectMain {
+
+    public static class OrderLineItem {
+        private String productId;
+        private String itemName;
+        private int quantity;
+
+        public OrderLineItem(String productId, String itemName, int quantity) {
+            this.productId = productId;
+            this.itemName = itemName;
+            this.quantity = quantity;
+        }
+
+        public String getProductId() { return productId; }
+        public String getItemName() { return itemName; }
+        public int getQuantity() { return quantity; }
+
+        @Override
+        public String toString() {
+            return "OrderLineItem{productId='" + productId + "', itemName='" + itemName + "', quantity=" + quantity + '}';
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            OrderLineItem that = (OrderLineItem) o;
+            return quantity == that.quantity &&
+                   Objects.equals(productId, that.productId) &&
+                   Objects.equals(itemName, that.itemName);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(productId, itemName, quantity);
+        }
+    }
+
+    public static void main(String[] args) {
+        System.out.println("--- Question 5: Grouping by Multiple Fields and then Counting ---");
+
+        List<OrderLineItem> items = Arrays.asList(
+            new OrderLineItem("P001", "Laptop", 2),
+            new OrderLineItem("P002", "Mouse", 3),
+            new OrderLineItem("P001", "Laptop", 1), // Same product, same item name
+            new OrderLineItem("P003", "Keyboard", 5),
+            new OrderLineItem("P002", "Mouse", 1), // Same product, same item name
+            new OrderLineItem("P001", "Charger", 4) // Same product, different item name
+        );
+
+        Map<String, Map<String, Integer>> groupedQuantities = items.stream()
+            .collect(Collectors.groupingBy(
+                OrderLineItem::getProductId, // First level grouping: by productId
+                Collectors.groupingBy(       // Second level grouping (downstream collector): by itemName
+                    OrderLineItem::getItemName,
+                    Collectors.summingInt(OrderLineItem::getQuantity) // Innermost: sum quantities
+                )
+            ));
+
+        // Print the result for clarity
+        groupedQuantities.forEach((productId, innerMap) -> {
+            System.out.println("Product ID: " + productId);
+            innerMap.forEach((itemName, totalQuantity) ->
+                System.out.println("  - Item: " + itemName + ", Total Quantity: " + totalQuantity)
+            );
+        });
+        /* Expected Output (order may vary):
+        Product ID: P003
+          - Item: Keyboard, Total Quantity: 5
+        Product ID: P002
+          - Item: Mouse, Total Quantity: 4
+        Product ID: P001
+          - Item: Laptop, Total Quantity: 3
+          - Item: Charger, Total Quantity: 4
+        */
+
+        System.out.println("\n");
+    }
+}
+Explanation:
+
+Nested groupingBy Collectors: This is the key to multi-level grouping.
+
+The outer groupingBy (Collectors.groupingBy(OrderLineItem::getProductId, ...)): This groups the initial stream of OrderLineItem objects by their productId. The result of this first step is implicitly a Map<String, List<OrderLineItem>> (where the list contains all items for a given productId).
+
+The inner groupingBy (Collectors.groupingBy(OrderLineItem::getItemName, ...)): This is the downstream collector for the outer groupingBy. For each List<OrderLineItem> generated by the outer grouping, this inner collector is applied. It takes that list and further groups its elements by itemName. The result of this step for each outer group is a Map<String, List<OrderLineItem>> (where the inner list contains items for a specific productId AND itemName).
+
+The innermost summingInt(OrderLineItem::getQuantity): This is the downstream collector for the inner groupingBy. For each List<OrderLineItem> generated by the inner grouping, it applies OrderLineItem::getQuantity to each item and sums up the quantities. This final result is an int (which Java auto-boxes to Integer for the map value).
+
+The final return type Map<String, Map<String, Integer>> perfectly reflects this two-level grouping and aggregation.
+
+That concludes Day 5, covering some advanced scenarios often encountered when working with Java 8 streams for complex data manipulations and aggregations. You now have a comprehensive set of 25 questions across various difficulty levels.
+
+Good luck with your interview preparations!
+
+
+
+----
+
+### **Day 6 (Advanced Level)**
+
+**Question 1: Calculating the Average of Filtered and Mapped Values with `OptionalDouble`**
+
+You have a `List<SaleItem>` where each `SaleItem` has a `name`, `price`, and `quantity`.
+Write Java 8 code to calculate the **average price per unit** for all items whose `quantity` is greater than 10.
+Return the result as an `OptionalDouble` to handle cases where no such items exist.
+
+**SaleItem Class:**
+
+```java
+public class SaleItem {
+    private String name;
+    private double price;
+    private int quantity;
+
+    public SaleItem(String name, double price, int quantity) {
+        this.name = name;
+        this.price = price;
+        this.quantity = quantity;
+    }
+
+    public String getName() { return name; }
+    public double getPrice() { return price; }
+    public int getQuantity() { return quantity; }
+
+    @Override
+    public String toString() {
+        return "SaleItem{name='" + name + "', price=" + price + ", quantity=" + quantity + '}';
+    }
+}
+```
+
+**Answer 1 (Direct in main):**
+
+```java
+import java.util.Arrays;
+import java.util.List;
+import java.util.OptionalDouble;
+import java.util.stream.Collectors; // Not strictly needed for this solution, but common import
+
+public class AvgPriceFilteredDirectMain {
+
+    public static class SaleItem {
+        private String name;
+        private double price;
+        private int quantity;
+
+        public SaleItem(String name, double price, int quantity) {
+            this.name = name;
+            this.price = price;
+            this.quantity = quantity;
+        }
+
+        public String getName() { return name; }
+        public double getPrice() { return price; }
+        public int getQuantity() { return quantity; }
+
+        @Override
+        public String toString() { return "SaleItem{name='" + name + "', price=" + price + ", quantity=" + quantity + '}'; }
+    }
+
+    public static void main(String[] args) {
+        System.out.println("--- Question 1: Average Price of Filtered Items (OptionalDouble) ---");
+
+        List<SaleItem> saleItems = Arrays.asList(
+            new SaleItem("Laptop", 1200.00, 15),
+            new SaleItem("Mouse", 25.00, 5),    // Quantity <= 10, ignored
+            new SaleItem("Monitor", 300.00, 20),
+            new SaleItem("Keyboard", 75.00, 8), // Quantity <= 10, ignored
+            new SaleItem("Headphones", 150.00, 12)
+        );
+
+        List<SaleItem> noHighQuantityItems = Arrays.asList(
+            new SaleItem("Mouse", 25.00, 5),
+            new SaleItem("Keyboard", 75.00, 8)
+        );
+
+        List<SaleItem> emptyList = Arrays.asList();
+
+
+        // Logic for saleItems
+        OptionalDouble averagePrice1 = saleItems.stream()
+            .filter(item -> item.getQuantity() > 10) // Filter for items with quantity > 10
+            .mapToDouble(SaleItem::getPrice)         // Map to a DoubleStream of prices
+            .average();                              // Calculate the average, returns OptionalDouble
+
+        System.out.println("Sale Items: " + saleItems);
+        System.out.println("Average price for quantity > 10: " + averagePrice1.orElse(0.0)); // Using orElse for display
+        // Expected average: (1200 + 300 + 150) / 3 = 1650 / 3 = 550.0
+
+
+        // Logic for noHighQuantityItems
+        OptionalDouble averagePrice2 = noHighQuantityItems.stream()
+            .filter(item -> item.getQuantity() > 10)
+            .mapToDouble(SaleItem::getPrice)
+            .average();
+
+        System.out.println("No high quantity items: " + noHighQuantityItems);
+        System.out.println("Average price for quantity > 10 (no items): " + averagePrice2.orElse(0.0));
+        // Expected: 0.0 (or check with isPresent)
+
+
+        // Logic for emptyList
+        OptionalDouble averagePrice3 = emptyList.stream()
+            .filter(item -> item.getQuantity() > 10)
+            .mapToDouble(SaleItem::getPrice)
+            .average();
+
+        System.out.println("Empty list: " + emptyList);
+        System.out.println("Average price for empty list: " + averagePrice3.orElse(0.0));
+        // Expected: 0.0
+
+        System.out.println("\n");
+    }
+}
+```
+
+**Explanation:**
+
+  * **`filter(item -> item.getQuantity() > 10)`**: This step processes each `SaleItem` and only keeps those where the `quantity` field is greater than 10.
+  * **`.mapToDouble(SaleItem::getPrice)`**: This is crucial for numerical calculations. It transforms the `Stream<SaleItem>` into a `DoubleStream` (a specialized stream for primitive `double` values). Using `mapToDouble` is more efficient than `map` followed by operations on `Stream<Double>` because it avoids auto-boxing/unboxing overhead.
+  * **`.average()`**: This is a terminal operation available on `DoubleStream` (and `IntStream`, `LongStream`). It computes the average of the elements in the stream and returns an `OptionalDouble`.
+  * **`OptionalDouble`**: Similar to `Optional<T>`, `OptionalDouble` is a container for a `double` value that may or may not be present. This is vital because if the stream is empty after filtering (e.g., no items have quantity \> 10), there's no average to compute, and `average()` correctly returns an empty `OptionalDouble`. You can then use `orElse(0.0)` or `isPresent()`/`getAsDouble()` to handle its presence.
+
+-----
+
+**Question 2: Checking for Duplicate Elements in a List**
+
+Given a `List<String>`, determine if it contains any duplicate elements. Return `true` if duplicates exist, `false` otherwise.
+
+**Answer 2 (Direct in main):**
+
+```java
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors; // Not strictly needed for the efficient solution, but common import
+
+public class CheckDuplicatesDirectMain {
+
+    public static void main(String[] args) {
+        System.out.println("--- Question 2: Checking for Duplicate Elements in a List ---");
+
+        List<String> listWithDuplicates = Arrays.asList("apple", "banana", "apple", "cherry", "banana");
+        List<String> listWithoutDuplicates = Arrays.asList("apple", "banana", "cherry", "date");
+        List<String> emptyList = Arrays.asList();
+        List<String> singleElementList = Arrays.asList("single");
+
+        // Efficient approach using Set and `anyMatch`
+        boolean hasDuplicates1 = checkDuplicatesEfficient(listWithDuplicates);
+        System.out.println("'" + listWithDuplicates + "' has duplicates: " + hasDuplicates1); // Expected: true
+
+        boolean hasDuplicates2 = checkDuplicatesEfficient(listWithoutDuplicates);
+        System.out.println("'" + listWithoutDuplicates + "' has duplicates: " + hasDuplicates2); // Expected: false
+
+        boolean hasDuplicates3 = checkDuplicatesEfficient(emptyList);
+        System.out.println("'" + emptyList + "' has duplicates: " + hasDuplicates3); // Expected: false
+
+        boolean hasDuplicates4 = checkDuplicatesEfficient(singleElementList);
+        System.out.println("'" + singleElementList + "' has duplicates: " + hasDuplicates4); // Expected: false
+
+
+        // Alternative: Compare list size to distinct count (less efficient for large lists)
+        System.out.println("\n--- Alternative: Comparing list size to distinct count ---");
+        boolean hasDuplicatesAlt1 = listWithDuplicates.size() != listWithDuplicates.stream().distinct().count();
+        System.out.println("'" + listWithDuplicates + "' has duplicates (Alt): " + hasDuplicatesAlt1); // Expected: true
+
+        boolean hasDuplicatesAlt2 = listWithoutDuplicates.size() != listWithoutDuplicates.stream().distinct().count();
+        System.out.println("'" + listWithoutDuplicates + "' has duplicates (Alt): " + hasDuplicatesAlt2); // Expected: false
+
+        System.out.println("\n");
+    }
+
+    // Helper method for the efficient duplicate check
+    private static boolean checkDuplicatesEfficient(List<String> list) {
+        Set<String> seen = new HashSet<>();
+        // anyMatch returns true as soon as a duplicate is found, short-circuiting the stream
+        return list.stream().anyMatch(e -> !seen.add(e));
+    }
+}
+```
+
+**Explanation:**
+
+  * **Efficient Approach (`anyMatch` with `HashSet`):** This is generally the most efficient stream-based way to detect duplicates because of short-circuiting.
+      * `Set<String> seen = new HashSet<>();`: A `HashSet` is used to keep track of elements encountered so far. `Set.add(element)` returns `true` if the element was successfully added (i.e., it was not already present) and `false` if the element was already in the set (i.e., it's a duplicate).
+      * `list.stream().anyMatch(e -> !seen.add(e))`:
+          * `anyMatch(Predicate)`: A terminal short-circuiting operation that returns `true` if *any* element matches the given `Predicate`. It stops processing as soon as a `true` is found.
+          * `e -> !seen.add(e)`: The `Predicate`. For each element `e`:
+              * `seen.add(e)`: Attempts to add `e` to the `seen` set.
+              * `!seen.add(e)`: If `add()` returns `false` (meaning `e` was already in `seen`), then `!false` is `true`. This `true` is what `anyMatch` looks for. So, `anyMatch` will return `true` immediately when the first duplicate is encountered.
+  * **Alternative (`distinct().count()`):**
+      * `list.stream().distinct().count()`: Counts the number of unique elements.
+      * `list.size() != uniqueCount`: If the original list's size is different from the count of unique elements, then duplicates must exist.
+      * **Performance Note:** This approach processes the *entire* list to create the distinct set and count it, even if a duplicate is found very early. For very large lists with early duplicates, the `anyMatch` approach is significantly faster due to short-circuiting.
+
+-----
+
+**Question 3: Transforming a Map to a List of Custom Objects**
+
+You have a `Map<String, String>` where keys are `item codes` and values are `item descriptions`.
+Write Java 8 code to convert this map into a `List<Item>` objects.
+
+**Item Class:**
+
+```java
+public class Item {
+    private String code;
+    private String description;
+
+    public Item(String code, String description) {
+        this.code = code;
+        this.description = description;
+    }
+
+    public String getCode() { return code; }
+    public String getDescription() { return description; }
+
+    @Override
+    public String toString() {
+        return "Item{code='" + code + "', description='" + description + "'}";
+    }
+}
+```
+
+**Answer 3 (Direct in main):**
+
+```java
+import java.util.Arrays; // Not strictly needed, but helpful for example lists
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+public class MapToListObjectDirectMain {
+
+    public static class Item {
+        private String code;
+        private String description;
+
+        public Item(String code, String description) {
+            this.code = code;
+            this.description = description;
+        }
+
+        public String getCode() { return code; }
+        public String getDescription() { return description; }
+
+        @Override
+        public String toString() { return "Item{code='" + code + "', description='" + description + "'}"; }
+    }
+
+    public static void main(String[] args) {
+        System.out.println("--- Question 3: Transforming a Map to a List of Custom Objects ---");
+
+        Map<String, String> itemMap = new HashMap<>();
+        itemMap.put("ITEM001", "Laptop 15-inch");
+        itemMap.put("ITEM002", "External Mouse");
+        itemMap.put("ITEM003", "USB-C Hub");
+        itemMap.put("ITEM004", "Wireless Keyboard");
+
+        // Logic to transform map to list of Item objects
+        List<Item> itemList = itemMap.entrySet().stream() // Stream of Map.Entry<String, String>
+            .map(entry -> new Item(entry.getKey(), entry.getValue())) // Map each entry to a new Item object
+            .collect(Collectors.toList()); // Collect into a List<Item>
+
+        System.out.println("Original Map: " + itemMap);
+        System.out.println("Converted List of Items: " + itemList);
+        // Expected output will list Item objects, order may vary:
+        // [Item{code='ITEM001', description='Laptop 15-inch'}, ...]
+
+        Map<String, String> emptyMap = new HashMap<>();
+        List<Item> emptyItemList = emptyMap.entrySet().stream()
+                                            .map(entry -> new Item(entry.getKey(), entry.getValue()))
+                                            .collect(Collectors.toList());
+        System.out.println("Empty map converted to list: " + emptyItemList); // Expected: []
+
+        System.out.println("\n");
+    }
+}
+```
+
+**Explanation:**
+
+  * **`itemMap.entrySet().stream()`**: To iterate over both keys and values of a `Map` using streams, you typically get a `Stream` of `Map.Entry` objects. Each `Map.Entry` holds a key and its corresponding value.
+  * **`.map(entry -> new Item(entry.getKey(), entry.getValue()))`**: This is the core transformation. For each `Map.Entry` in the stream, a new `Item` object is created. The `getKey()` method of the `Map.Entry` provides the `code` for the `Item`, and `getValue()` provides the `description`. This transforms the `Stream<Map.Entry>` into a `Stream<Item>`.
+  * **`.collect(Collectors.toList())`**: Gathers all the newly created `Item` objects into a `List`.
+
+-----
+
+**Question 4: Finding the Second Largest Element in a List**
+
+Given a `List<Integer>`, find the second largest element. If there are fewer than two unique elements, return an empty `Optional<Integer>`.
+
+**Answer 4 (Direct in main):**
+
+```java
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+
+public class SecondLargestElementDirectMain {
+
+    public static void main(String[] args) {
+        System.out.println("--- Question 4: Finding the Second Largest Element in a List ---");
+
+        List<Integer> numbers1 = Arrays.asList(1, 5, 2, 8, 3, 9, 4); // Second largest: 8
+        List<Integer> numbers2 = Arrays.asList(10, 10, 10, 5);       // Second largest: 5
+        List<Integer> numbers3 = Arrays.asList(7);                  // Less than 2 unique, empty Optional
+        List<Integer> numbers4 = Arrays.asList(5, 5);               // Less than 2 unique, empty Optional
+        List<Integer> numbers5 = Arrays.asList();                   // Empty, empty Optional
+        List<Integer> numbers6 = Arrays.asList(1, 2);               // Second largest: 1
+
+        // Logic for numbers1
+        Optional<Integer> secondLargest1 = numbers1.stream()
+                                                  .distinct() // Ensure unique elements
+                                                  .sorted(Comparator.reverseOrder()) // Sort in descending order
+                                                  .skip(1) // Skip the largest element
+                                                  .findFirst(); // Get the next element (second largest)
+
+        System.out.println("List: " + numbers1 + ", Second Largest: " + secondLargest1.orElse(null)); // Expected: 8
+
+        // Logic for numbers2
+        Optional<Integer> secondLargest2 = numbers2.stream()
+                                                  .distinct()
+                                                  .sorted(Comparator.reverseOrder())
+                                                  .skip(1)
+                                                  .findFirst();
+        System.out.println("List: " + numbers2 + ", Second Largest: " + secondLargest2.orElse(null)); // Expected: 5
+
+        // Logic for numbers3
+        Optional<Integer> secondLargest3 = numbers3.stream()
+                                                  .distinct()
+                                                  .sorted(Comparator.reverseOrder())
+                                                  .skip(1)
+                                                  .findFirst();
+        System.out.println("List: " + numbers3 + ", Second Largest: " + secondLargest3.orElse(null)); // Expected: null
+
+        // Logic for numbers4
+        Optional<Integer> secondLargest4 = numbers4.stream()
+                                                  .distinct()
+                                                  .sorted(Comparator.reverseOrder())
+                                                  .skip(1)
+                                                  .findFirst();
+        System.out.println("List: " + numbers4 + ", Second Largest: " + secondLargest4.orElse(null)); // Expected: null
+
+        // Logic for numbers5
+        Optional<Integer> secondLargest5 = numbers5.stream()
+                                                  .distinct()
+                                                  .sorted(Comparator.reverseOrder())
+                                                  .skip(1)
+                                                  .findFirst();
+        System.out.println("List: " + numbers5 + ", Second Largest: " + secondLargest5.orElse(null)); // Expected: null
+
+        // Logic for numbers6
+        Optional<Integer> secondLargest6 = numbers6.stream()
+                                                  .distinct()
+                                                  .sorted(Comparator.reverseOrder())
+                                                  .skip(1)
+                                                  .findFirst();
+        System.out.println("List: " + numbers6 + ", Second Largest: " + secondLargest6.orElse(null)); // Expected: 1
+
+        System.out.println("\n");
+    }
+}
+```
+
+**Explanation:**
+
+  * **`.distinct()`**: This is crucial. It ensures that if the largest element appears multiple times (e.g., `[10, 10, 5]`), we only consider it once. Without `distinct()`, `skip(1)` would skip one of the `10`s and return the *other* `10` as the "second largest," which isn't what's typically intended.
+  * **`.sorted(Comparator.reverseOrder())`**: Sorts the unique elements in descending order (largest to smallest).
+  * **`.skip(1)`**: Skips the first element, which is now the largest unique element.
+  * **`.findFirst()`**: Retrieves the first element from the remaining stream, which will be the second largest (or empty `Optional` if there are not enough elements after skipping).
+  * **`Optional<Integer>`**: Returns an `Optional` to handle cases where there might not be a second largest element (e.g., list is empty, has only one unique element).
+
+-----
+
+**Question 5: Performing a Side-Effect Operation with `peek` (Debugging/Logging Example)**
+
+You have a `List<String>`. Filter out strings shorter than 5 characters, convert the remaining to uppercase, and then print each intermediate string before final collection using `peek`.
+
+**Answer 5 (Direct in main):**
+
+```java
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class PeekSideEffectDirectMain {
+
+    public static void main(String[] args) {
+        System.out.println("--- Question 5: Performing a Side-Effect Operation with 'peek' ---");
+
+        List<String> words = Arrays.asList("apple", "banana", "cat", "dog", "elephant", "fish", "grape");
+
+        System.out.println("Original words: " + words);
+        System.out.println("Processing with peek:");
+
+        List<String> processedWords = words.stream()
+            .peek(s -> System.out.println("Initial: " + s)) // Peek at original string
+            .filter(s -> s.length() >= 5) // Filter: keep only words with length >= 5
+            .peek(s -> System.out.println("After filter (length >= 5): " + s)) // Peek after filter
+            .map(String::toUpperCase) // Transform: convert to uppercase
+            .peek(s -> System.out.println("After map (uppercase): " + s)) // Peek after map
+            .collect(Collectors.toList());
+
+        System.out.println("\nFinal processed words: " + processedWords);
+        // Expected output for processedWords: [APPLE, BANANA, ELEPHANT, GRAPE]
+
+        /*
+        Example Console Output for peek (interleaved due to stream execution):
+        Initial: apple
+        After filter (length >= 5): apple
+        After map (uppercase): APPLE
+        Initial: banana
+        After filter (length >= 5): banana
+        After map (uppercase): BANANA
+        Initial: cat
+        Initial: dog
+        Initial: elephant
+        After filter (length >= 5): elephant
+        After map (uppercase): ELEPHANT
+        Initial: fish
+        Initial: grape
+        After filter (length >= 5): grape
+        After map (uppercase): GRAPE
+
+        Final processed words: [APPLE, BANANA, ELEPHANT, GRAPE]
+        */
+
+        System.out.println("\n");
+    }
+}
+```
+
+**Explanation:**
+
+  * **`peek(Consumer action)`**: This is an **intermediate operation** that allows you to perform an action on each element as it passes through the stream pipeline, *without modifying the elements themselves*.
+      * It's primarily intended for debugging, logging, or performing side-effects that don't affect the stream's elements or its result.
+      * It's named "peek" because you're just taking a quick look at the elements as they go by.
+  * **`filter(s -> s.length() >= 5)`**: Removes "cat", "dog", "fish".
+  * **`map(String::toUpperCase)`**: Converts "apple" to "APPLE", "banana" to "BANANA", etc.
+  * By strategically placing `peek` operations, you can visualize the state of elements at different stages of the stream pipeline, which is incredibly useful for understanding complex stream logic or debugging unexpected results.
+  * **Important Note:** `peek` is for side-effects and debugging. It should *not* be used to modify the elements of the stream or perform the core logic. For actual transformation, use `map`; for filtering, use `filter`.
+
+
+
+
+
+
+
+
+
+
+
+
+Question: Write a Java 8 program to find the top 3 most frequent words in a given list of strings, ignoring case, and print them along with their counts.
+
+Answer:
+
+Java
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+public class TopFrequentWords {
+
+    public static void main(String[] args) {
+        List<String> words = Arrays.asList(
+            "apple", "banana", "Apple", "orange", "banana",
+            "grape", "apple", "Orange", "kiwi", "banana"
+        );
+
+        // Map to store word -> count
+        Map<String, Long> wordCounts = words.stream()
+                .map(String::toLowerCase) // Ignore case
+                .collect(Collectors.groupingBy(
+                    Function.identity(), // Group by the word itself
+                    Collectors.counting() // Count occurrences
+                ));
+
+        // Find top 3 most frequent words
+        wordCounts.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed()) // Sort by count descending
+                .limit(3) // Take top 3
+                .forEach(entry ->
+                    System.out.println(entry.getKey() + ": " + entry.getValue())
+                );
+    }
+}
+Key for 4-year exp:
+
+Chaining Streams: Demonstrates fluent API usage.
+
+Collectors.groupingBy() and Collectors.counting(): Correctly using Collectors for aggregation.
+
+Function.identity(): Showing awareness of common functional interface instances.
+
+Map.Entry.comparingByValue().reversed(): Correct sorting of map entries.
+
+limit(): Efficiently getting top N elements.
+
+Handling Case: Correctly applying toLowerCase() early in the stream.
+
+16. Question: You have a list of Person objects with name, age, and city. Write a Java 8 program to group them by city and then, for each city, find the average age of people in that city. Print the results.
+
+Answer:
+
+Java
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+class Person {
+    String name;
+    int age;
+    String city;
+
+    public Person(String name, int age, String city) {
+        this.name = name;
+        this.age = age;
+        this.city = city;
+    }
+
+    public String getCity() { return city; }
+    public int getAge() { return age; }
+    public String getName() { return name; } // Good practice to have all getters
+
+    @Override
+    public String toString() {
+        return "Person{" + "name='" + name + '\'' + ", age=" + age + ", city='" + city + '\'' + '}';
+    }
+}
+
+public class AverageAgeByCity {
+
+    public static void main(String[] args) {
+        List<Person> people = Arrays.asList(
+            new Person("Alice", 30, "New York"),
+            new Person("Bob", 25, "London"),
+            new Person("Charlie", 35, "New York"),
+            new Person("David", 40, "London"),
+            new Person("Eve", 28, "Paris")
+        );
+
+        Map<String, Double> averageAgeByCity = people.stream()
+            .collect(Collectors.groupingBy(
+                Person::getCity, // Group by city
+                Collectors.averagingInt(Person::getAge) // Calculate average age for each group
+            ));
+
+        averageAgeByCity.forEach((city, avgAge) ->
+            System.out.printf("City: %s, Average Age: %.2f%n", city, avgAge)
+        );
+    }
+}
+Key for 4-year exp:
+
+Collectors.groupingBy() with Collectors.averagingInt(): Demonstrates advanced Collectors usage for multi-level aggregation.
+
+Method References: Efficiently using Person::getCity and Person::getAge.
+
+Readability: The stream pipeline is concise and expresses intent clearly.
+
+Formatting Output: Using printf for formatted numerical output.
+
+17. Question: Given a List<LocalDateTime>, write a Java 8 program to filter out dates that are in the past and then sort the remaining dates in ascending order. Print the sorted future dates.
+
+Answer:
+
+Java
+
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class FilterAndSortDates {
+
+    public static void main(String[] args) {
+        List<LocalDateTime> dates = Arrays.asList(
+            LocalDateTime.of(2024, 1, 15, 10, 0),    // Past
+            LocalDateTime.now().plusHours(2),        // Future
+            LocalDateTime.now().minusDays(5),        // Past
+            LocalDateTime.of(2025, 12, 25, 18, 30),  // Future (absolute past based on today 2025-07-31)
+            LocalDateTime.now().plusDays(1)          // Future
+        );
+
+        // Adjusting the "past" based on current context (July 2025)
+        LocalDateTime now = LocalDateTime.now();
+
+        List<LocalDateTime> futureSortedDates = dates.stream()
+            .filter(date -> date.isAfter(now)) // Filter for future dates
+            .sorted()                          // Sort in natural (ascending) order
+            .collect(Collectors.toList());
+
+        System.out.println("Current Date/Time: " + now);
+        System.out.println("Future Sorted Dates:");
+        futureSortedDates.forEach(System.out::println);
+    }
+}
+Key for 4-year exp:
+
+java.time.LocalDateTime: Correct usage of the modern Date and Time API.
+
+isAfter(): Using appropriate methods for date comparison.
+
+sorted() (natural order): Understanding that LocalDateTime implements Comparable naturally.
+
+Clear Filtering and Sorting: Demonstrates basic but essential stream operations.
+
+18. Question: You have a Map<String, Integer> representing item names and their quantities. Write a Java 8 program to remove all items with a quantity of 0 and then increment the quantity of all remaining items by 1. Use the new Map methods introduced in Java 8.
+
+Answer:
+
+Java
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class MapOperations {
+
+    public static void main(String[] args) {
+        Map<String, Integer> itemQuantities = new HashMap<>();
+        itemQuantities.put("Laptop", 5);
+        itemQuantities.put("Mouse", 0);
+        itemQuantities.put("Keyboard", 3);
+        itemQuantities.put("Monitor", 0);
+        itemQuantities.put("Webcam", 1);
+
+        System.out.println("Original Map: " + itemQuantities);
+
+        // 1. Remove all items with quantity 0
+        // removeIf is for Collections, not Map. Use entrySet().removeIf() or Map.values().removeIf() for specific cases.
+        // For Map, a common pattern is to iterate or use replaceAll/compute
+        itemQuantities.entrySet().removeIf(entry -> entry.getValue() == 0);
+        System.out.println("After removing 0 quantity items: " + itemQuantities);
+
+        // 2. Increment quantity of all remaining items by 1
+        itemQuantities.replaceAll((item, quantity) -> quantity + 1);
+        // OR using forEach and put, but replaceAll is more concise for this operation
+        // itemQuantities.forEach((item, quantity) -> itemQuantities.put(item, quantity + 1));
+
+
+        System.out.println("After incrementing quantities: " + itemQuantities);
+
+        // Example using computeIfPresent (alternative for incrementing specific items)
+        Map<String, Integer> itemQuantities2 = new HashMap<>();
+        itemQuantities2.put("A", 1);
+        itemQuantities2.put("B", 2);
+        itemQuantities2.put("C", 3);
+        System.out.println("\nOriginal Map 2: " + itemQuantities2);
+
+        // Increment 'B' by 5 if present
+        itemQuantities2.computeIfPresent("B", (key, val) -> val + 5);
+        // Add 'D' with value 1 if not present
+        itemQuantities2.computeIfAbsent("D", key -> 1);
+        // Merge operation (e.g., combining quantities from another map)
+        itemQuantities2.merge("A", 10, (oldVal, newVal) -> oldVal + newVal); // Add 10 to 'A'
+        System.out.println("After compute/merge operations: " + itemQuantities2);
+    }
+}
+Key for 4-year exp:
+
+entrySet().removeIf(): Correctly removing elements from a map based on a condition using a stream-like approach on the entry set.
+
+replaceAll(): Effectively updating all values in a map using a BiFunction.
+
+Awareness of other new Map methods: Briefly mentioning computeIfAbsent, computeIfPresent, merge shows a broader understanding.
+
+19. Question: Design a small class OrderProcessor that uses CompletableFuture to simulate fetching product details from one external service and customer details from another concurrently, then combining them to create an OrderSummary object. Handle potential errors in the asynchronous calls.
+
+Answer:
+
+Java
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+// --- DTOs (Data Transfer Objects) ---
+class Product {
+    String productId;
+    String name;
+    double price;
+
+    public Product(String productId, String name, double price) {
+        this.productId = productId;
+        this.name = name;
+        this.price = price;
+    }
+    @Override public String toString() { return "Product{" + "productId='" + productId + '\'' + ", name='" + name + '\'' + ", price=" + price + '}'; }
+}
+
+class Customer {
+    String customerId;
+    String name;
+    String email;
+
+    public Customer(String customerId, String name, String email) {
+        this.customerId = customerId;
+        this.name = name;
+        this.email = email;
+    }
+    @Override public String toString() { return "Customer{" + "customerId='" + customerId + '\'' + ", name='" + name + '\'' + ", email='" + email + '}'; }
+}
+
+class OrderSummary {
+    String orderId;
+    Product product;
+    Customer customer;
+    // ... other fields
+
+    public OrderSummary(String orderId, Product product, Customer customer) {
+        this.orderId = orderId;
+        this.product = product;
+        this.customer = customer;
+    }
+    @Override public String toString() { return "OrderSummary{" + "orderId='" + orderId + '\'' + ", product=" + product + ", customer=" + customer + '}'; }
+}
+
+// --- Service Simulators ---
+class ProductService {
+    public CompletableFuture<Product> getProductDetails(String productId) {
+        // Simulate network delay and potential error
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                TimeUnit.SECONDS.sleep(1); // Simulate network latency
+                if ("prod-error".equals(productId)) {
+                    throw new RuntimeException("Product service error for: " + productId);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return new Product(productId, "Product " + productId, 99.99);
+        });
+    }
+}
+
+class CustomerService {
+    public CompletableFuture<Customer> getCustomerDetails(String customerId) {
+        // Simulate network delay and potential error
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                TimeUnit.SECONDS.sleep(1); // Simulate network latency
+                if ("cust-error".equals(customerId)) {
+                    throw new RuntimeException("Customer service error for: " + customerId);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return new Customer(customerId, "Customer " + customerId, customerId + "@example.com");
+        });
+    }
+}
+
+// --- Order Processor ---
+public class OrderProcessor {
+    private final ProductService productService = new ProductService();
+    private final CustomerService customerService = new CustomerService();
+    // It's good practice to provide a custom Execeutor for CompletableFuture if not using the ForkJoinPool.commonPool()
+    private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
+    public CompletableFuture<OrderSummary> createOrderSummary(String orderId, String productId, String customerId) {
+
+        // 1. Fetch product details asynchronously
+        CompletableFuture<Product> productFuture = productService.getProductDetails(productId);
+
+        // 2. Fetch customer details asynchronously
+        CompletableFuture<Customer> customerFuture = customerService.getCustomerDetails(customerId);
+
+        // 3. Combine both results when both futures complete
+        return productFuture.thenCombine(customerFuture, (product, customer) -> {
+            // This block executes only when BOTH productFuture and customerFuture are complete and successful
+            System.out.println("Combining product and customer details for order " + orderId);
+            return new OrderSummary(orderId, product, customer);
+        })
+        .exceptionally(ex -> {
+            // Handle any exception that occurred in productFuture, customerFuture, or the thenCombine block
+            System.err.println("Error creating order summary for order " + orderId + ": " + ex.getMessage());
+            // You might return a default/empty summary, or rethrow a specific exception, or log and return null
+            throw new RuntimeException("Failed to create order summary due to: " + ex.getMessage(), ex);
+        });
+    }
+
+    public void shutdown() {
+        executor.shutdown();
+    }
+
+    public static void main(String[] args) throws Exception {
+        OrderProcessor processor = new OrderProcessor();
+
+        // --- Successful Scenario ---
+        System.out.println("--- Scenario 1: Successful Order ---");
+        long start = System.currentTimeMillis();
+        CompletableFuture<OrderSummary> successfulOrderFuture = processor.createOrderSummary("ORD001", "PROD123", "CUST456");
+
+        successfulOrderFuture.thenAccept(summary -> System.out.println("Order Summary (Success): " + summary))
+            .join(); // Block and wait for completion
+        System.out.println("Time taken (success): " + (System.currentTimeMillis() - start) + "ms\n");
+
+
+        // --- Error Scenario (Product Service Fails) ---
+        System.out.println("--- Scenario 2: Product Service Error ---");
+        start = System.currentTimeMillis();
+        CompletableFuture<OrderSummary> productErrorOrderFuture = processor.createOrderSummary("ORD002", "prod-error", "CUST789");
+
+        productErrorOrderFuture.exceptionally(ex -> {
+            System.err.println("Caught exception for ORD002: " + ex.getMessage());
+            return null; // Return null or a fallback value
+        }).join();
+        System.out.println("Time taken (product error): " + (System.currentTimeMillis() - start) + "ms\n");
+
+
+        // --- Error Scenario (Customer Service Fails) ---
+        System.out.println("--- Scenario 3: Customer Service Error ---");
+        start = System.currentTimeMillis();
+        CompletableFuture<OrderSummary> customerErrorOrderFuture = processor.createOrderSummary("ORD003", "PROD456", "cust-error");
+
+        customerErrorOrderFuture.exceptionally(ex -> {
+            System.err.println("Caught exception for ORD003: " + ex.getMessage());
+            return null; // Return null or a fallback value
+        }).join();
+        System.out.println("Time taken (customer error): " + (System.currentTimeMillis() - start) + "ms\n");
+
+        processor.shutdown();
+    }
+}
+
+
+
+import java.util.Arrays;
+import java.util.List;
+
+public class AverageOfNumbers {
+    public static void main(String[] args) {
+        List<Integer> numbers = Arrays.asList(1, 2, 3, 4, 5);
+
+        double average = numbers.stream()
+                .mapToInt(Integer::intValue)
+                .average()
+                .orElse(0.0); // Handle the case of an empty list
+
+        System.out.println(average);
+        // Output: 3.0
+    }
+}
+
+
+ou have a list of Order objects. Each Order has an orderId, a status (e.g., "COMPLETED", "PENDING"), and a list of Product objects. Each Product has a name, category, and price. Your task is to generate a sales report:
+
+Filter out all orders that are not in the "COMPLETED" state.
+
+For the completed orders, group the products by their category.
+
+For each category, calculate the total revenue (sum of all product prices).
+
+Return a Map<String, Double> where the key is the category and the value is the total revenue, sorted in descending order of revenue.
+
+Why it's hard:
+
+It requires chaining multiple operations (filter, flatMap, groupingBy).
+
+flatMap is crucial for handling the nested List<Product> within each Order.
+
+You need to understand how to use a Collector (groupingBy) with a downstream collector (summingDouble).
+
+Sorting the final map requires a special collector like LinkedHashMap or a two-step process of collecting to a map and then streaming the entries to sort and collect again.
+
+High-Level Solution:
+
+Java
+
+
+List<Order> orders = Arrays.asList(
+            new Order("101", "COMPLETED", Arrays.asList(
+                new Product("Laptop", "Electronics", 1200.0),
+                new Product("Mouse", "Electronics", 25.0)
+            )),
+            new Order("102", "PENDING", Arrays.asList(
+                new Product("Keyboard", "Electronics", 75.0)
+            )),
+            new Order("103", "COMPLETED", Arrays.asList(
+                new Product("Desk", "Furniture", 300.0),
+                new Product("Chair", "Furniture", 150.0)
+            )),
+            new Order("104", "COMPLETED", Arrays.asList(
+                new Product("Notebook", "Stationery", 5.0),
+                new Product("Pen", "Stationery", 2.0),
+                new Product("Coffee Mug", "Home Goods", 15.0)
+            )),
+            new Order("105", "COMPLETED", Arrays.asList(
+                new Product("Monitor", "Electronics", 250.0)
+            ))
+        );
+
+
+
+
+
+// Assuming Order and Product classes are defined
+List<Order> orders = // ... populated list of orders;
+
+Map<String, Double> salesReport = orders.stream()
+    .filter(order -> "COMPLETED".equals(order.getStatus()))
+    .flatMap(order -> order.getProducts().stream())
+    .collect(Collectors.groupingBy(
+        Product::getCategory,
+        LinkedHashMap::new, // To maintain insertion order for later sorting
+        Collectors.summingDouble(Product::getPrice)
+    ));
+
+// Sort the map entries by value in reverse order
+Map<String, Double> sortedSalesReport = salesReport.entrySet().stream()
+    .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+    .collect(Collectors.toMap(
+        Map.Entry::getKey,
+        Map.Entry::getValue,
+        (oldValue, newValue) -> oldValue, // Merge function for duplicates, not strictly needed here
+        LinkedHashMap::new // Preserve the sorting order
+    ));
+
+
+
+
+
+
+get odd numbers in list to sum and even numbers in list to sum fin ally total sum in java?
+
+
+
+
+
+import java.util.Arrays;
+import java.util.List;
+
+public class SumCalculator {
+
+    public static void main(String[] args) {
+        List<Integer> numbers = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+        
+        int oddSum = 0;
+        int evenSum = 0;
+        
+        for (int number : numbers) {
+            if (number % 2 == 0) {
+                evenSum += number;
+            } else {
+                oddSum += number;
+            }
+        }
+        
+        int totalSum = oddSum + evenSum;
+        
+        System.out.println("Sum of odd numbers: " + oddSum);
+        System.out.println("Sum of even numbers: " + evenSum);
+        System.out.println("Total sum: " + totalSum);
+    }
+}
+
+
+
+
+
+
+
+
+
+import java.util.Arrays;
+import java.util.List;
+
+public class SumCalculatorStream {
+
+    public static void main(String[] args) {
+        List<Integer> numbers = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+
+        int oddSum = numbers.stream()
+                            .filter(n -> n % 2 != 0)
+                            .mapToInt(Integer::intValue)
+                            .sum();
+
+        int evenSum = numbers.stream()
+                             .filter(n -> n % 2 == 0)
+                             .mapToInt(Integer::intValue)
+                             .sum();
+
+        int totalSum = numbers.stream()
+                              .mapToInt(Integer::intValue)
+                              .sum();
+
+        System.out.println("Sum of odd numbers: " + oddSum);
+        System.out.println("Sum of even numbers: " + evenSum);
+        System.out.println("Total sum: " + totalSum);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+sequential vs parallel streams on large list
+
+
+import java.util.List;
+import java.util.Random;
+import java.util.stream.Collectors;
+
+public class SimpleStreamComparison {
+
+    public static void main(String[] args) {
+        // Define the size of the list to make the performance difference noticeable.
+        int listSize = 5_000_000;
+        
+        System.out.println("Generating a list of " + listSize + " random integers...");
+        Random g= new Random(); 
+        // Create a large list of random integers.
+        List<Integer> numbers = new Random().ints(listSize, 1, 1000).boxed().collect(Collectors.toList());
+        
+        System.out.println("List generation complete.\n");
+
+        // --- Sequential Stream Test ---
+        long startTimeSequential = System.nanoTime();
+
+        // Use a sequential stream to filter for odd numbers and sum them.
+        long sequentialSum = numbers.stream()
+            .filter(n -> n % 2 != 0) // Filter for odd numbers
+            .mapToLong(n -> n)       // Map to a long for the sum
+            .sum();
+
+        long endTimeSequential = System.nanoTime();
+        long durationSequential = (endTimeSequential - startTimeSequential) / 1_000_000;
+
+        System.out.println("Sequential Stream Time: " + durationSequential + " ms");
+        System.out.println("Result: " + sequentialSum + "\n");
+
+        // --- Parallel Stream Test ---
+        long startTimeParallel = System.nanoTime();
+
+        // Use a parallel stream for the same operation.
+        // This will leverage multiple cores to process the data faster.
+        long parallelSum = numbers.parallelStream()
+            .filter(n -> n % 2 != 0)
+            .mapToLong(n -> n)
+            .sum();
+
+        long endTimeParallel = System.nanoTime();
+        long durationParallel = (endTimeParallel - startTimeParallel) / 1_000_000;
+
+        System.out.println("Parallel Stream Time: " + durationParallel + " ms");
+        System.out.println("Result: " + parallelSum + "\n");
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+. Single Transaction
+
+👉 Max profit by buying once and selling once.
+(Keep track of minimum price so far and max profit)
+
+public class OneTransaction {
+    public static int maxProfit(int[] prices) {
+        int minPrice = Integer.MAX_VALUE, profit = 0;
+        for (int price : prices) {
+            minPrice = Math.min(minPrice, price);
+            profit = Math.max(profit, price - minPrice);
+        }
+        return profit;
+    }
+
+    public static void main(String[] args) {
+        int[] prices = {8, 3, 5, 1, 6};
+        System.out.println("Max Profit = " + maxProfit(prices)); // Output -> 5
+    }
+}
+
+
+u are given an array of daily stock prices. You can perform as many buy and sell transactions as you want, but you cannot engage in multiple transactions simultaneously (i.e., you must sell the stock before you buy again). Find and return the maximum profit.
+
+Example:
+🔹 2. Unlimited Transactions
+
+👉 Add up all upward differences.
+(This is your code ✅)
+
+public class UnlimitedTransactions {
+    public static int maxProfit(int[] prices) {
+        int profit = 0;
+        for (int i = 1; i < prices.length; i++) {
+            if (prices[i] > prices[i - 1]) {
+                profit += prices[i] - prices[i - 1];
+            }
+        }
+        return profit;
+    }
+
+    public static void main(String[] args) {
+        int[] prices = {1, 2, 5, 6};
+        System.out.println("Max Profit = " + maxProfit(prices)); // Output -> 5
+    }
+}
+
+🔹 3. At Most k Transactions
+
+👉 Use Dynamic Programming.
+
+public class KTransactions {
+    public static int maxProfit(int k, int[] prices) {
+        int n = prices.length;
+        if (n == 0 || k == 0) return 0;
+
+        // If k is large, it’s same as unlimited
+        if (k >= n / 2) {
+            int profit = 0;
+            for (int i = 1; i < n; i++) {
+                if (prices[i] > prices[i - 1]) {
+                    profit += prices[i] - prices[i - 1];
+                }
+            }
+            return profit;
+        }
+ // dp[t][d] represents the maximum profit using at most 't' transactions
+        // up to day 'd'.
+        int[][] dp = new int[k + 1][n];
+
+        // Fill the DP table
+        for (int t = 1; t <= k; t++) {
+            // maxDiff tracks the maximum profit from t-1 transactions minus
+            // the cost of buying on a previous day.
+            int maxDiff = -prices[0];
+            
+            for (int d = 1; d < n; d++) {
+                // Option 1: No transaction on day 'd'. Profit is the same as the previous day.
+                // Option 2: Sell on day 'd'. This means we bought on a previous day 'j'
+                // and made t-1 transactions before day 'j'. The profit would be
+                // prices[d] + (max profit from t-1 transactions before day d - prices[j]).
+                // maxDiff helps us find the best previous 'buy' day efficiently.
+                dp[t][d] = Math.max(dp[t][d - 1], prices[d] + maxDiff);
+
+                // Update maxDiff for the next day. This considers two possibilities
+                // for the next 'buy' opportunity:
+                // 1. We completed t-1 transactions by day 'd' and now buy on day 'd'.
+                //    The total profit so far would be dp[t-1][d] - prices[d].
+                // 2. The previous maxDiff from a day before 'd' is still the best.
+                maxDiff = Math.max(maxDiff, dp[t - 1][d] - prices[d]);
+            }
+        }
+        
+        // The final result is the maximum profit with at most 'k' transactions
+        // by the last day.
+        return dp[k][n - 1];
+    }    }
+
+    public static void main(String[] args) {
+        int[] prices = {1, 10, 2, 15};
+        int k = 2;
+        System.out.println("Max Profit = " + maxProfit(k, prices)); // Output -> 22
+    }
+}
+
+🔹 4. With Transaction Fee
+
+👉 Each transaction costs a fee.
+
+public class WithFee {
+    public static int maxProfit(int[] prices, int fee) {
+        int hold = -prices[0], cash = 0;
+        for (int i = 1; i < prices.length; i++) {
+            cash = Math.max(cash, hold + prices[i] - fee);
+            hold = Math.max(hold, cash - prices[i]);
+        }
+        return cash;
+    }
+
+    public static void main(String[] args) {
+        int[] prices = {1, 3, 2, 8, 4, 9};
+        int fee = 2;
+        System.out.println("Max Profit = " + maxProfit(prices, fee)); // Output -> 8
+    }
+}
+
+🔹 5. With Cooldown
+
+👉 After selling, must wait 1 day before buying again.
+
+public class WithCooldown {
+    public static int maxProfit(int[] prices) {
+        if (prices.length == 0) return 0;
+        int n = prices.length;
+        int[] hold = new int[n];
+        int[] sold = new int[n];
+        int[] rest = new int[n];
+
+        hold[0] = -prices[0];
+        for (int i = 1; i < n; i++) {
+            hold[i] = Math.max(hold[i - 1], rest[i - 1] - prices[i]);
+            sold[i] = hold[i - 1] + prices[i];
+            rest[i] = Math.max(rest[i - 1], sold[i - 1]);
+        }
+        return Math.max(sold[n - 1], rest[n - 1]);
+    }
+
+    public static void main(String[] args) {
+        int[] prices = {1, 2, 3, 0, 2};
+        System.out.println("Max Profit = " + maxProfit(prices)); // Output -> 3
+    }
+}
+
+
+✅ Summary of Use Cases
+
+One transaction → track min price
+
+Unlimited transactions → add all upward moves (your solution)
+
+At most k transactions → DP
+
+With fee

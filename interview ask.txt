@@ -1,0 +1,6 @@
+interview ask:
+
+transactional
+index
+version control
+Component

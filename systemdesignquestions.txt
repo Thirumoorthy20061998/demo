@@ -1,0 +1,513 @@
+You've highlighted some of the most common and important system design questions. Interviewers use these to evaluate not only your technical knowledge but also your problem-solving process and communication skills. 
+
+Here's a breakdown of top questions and the key concepts you should be prepared to discuss for each, categorized by design level.
+
+### Low-Level Design (LLD) Questions
+
+These questions test your understanding of Object-Oriented Design (OOD) principles, design patterns, and writing clean, maintainable code.
+
+* **Design a Vending Machine:** This is a classic. You should focus on:
+    * **Classes:** `VendingMachine`, `Item`, `State` (for managing different states like `Idle`, `Selection`, `Dispensing`), `Coin`, `Cashier`.
+    * **Design Patterns:** State pattern is a perfect fit here.
+    * **Key Concepts:** Handling different types of inputs (coins, buttons), managing inventory, and handling invalid states.
+* **Design a Parking Lot System:** This tests your ability to model a physical system with classes and relationships.
+    * **Classes:** `ParkingLot`, `ParkingFloor`, `ParkingSpot` (with subclasses for different vehicle types like `Car`, `Bike`, `Truck`), `Vehicle`, `Ticket`, `Gate`.
+    * **Key Concepts:** Designing for different vehicle sizes, allocating and deallocating spots, calculating parking fees, and handling entry/exit.
+* **Design a Logger Class:** This is a simpler question that focuses on core OOD principles and design patterns.
+    * **Classes:** `Logger`, `LogLevel` (enum), `Appender` (with subclasses like `ConsoleAppender`, `FileAppender`).
+    * **Design Patterns:** Singleton pattern for the `Logger` class, and Strategy pattern for different `Appender` implementations.
+    * **Key Concepts:** Thread safety, different logging levels, and writing to various outputs.
+* **Design a Deck of Cards:** A great question to test your understanding of inheritance, polymorphism, and data structures.
+    * **Classes:** `Card`, `Deck`, `Suit`, `Value`. You could also have subclasses of `Card` for special types.
+    * **Key Concepts:** Shuffling the deck, dealing cards, and handling different game rules.
+
+### High-Level Design (HLD) Questions
+
+These questions are about designing large-scale, distributed systems. The focus is on architecture, scalability, availability, and trade-offs.
+
+* **Design a URL Shortening Service (like TinyURL):** A very common question that touches on many core HLD concepts.
+    * **Key Concepts:**
+        * **Hash Function:** How to generate a unique short key from a long URL.
+        * **Database:** A key-value store (NoSQL) like Cassandra or a relational database (SQL) is a good choice. Discuss the pros and cons of each.
+        * **Scalability:** How to handle millions of read requests (very read-heavy system). Discuss caching, load balancers, and sharding.
+        * **Conflict Resolution:** How to handle collisions if the hash function produces duplicate keys.
+* **Design a Food Delivery Application Backend (like Swiggy or Zomato):** This is a complex, real-world scenario.
+    * **Key Concepts:**
+        * **Microservices:** How to break the system into services like `User`, `Restaurant`, `Order`, `Payment`, `Delivery`, and `Notification`.
+        * **Asynchronous Communication:** Using a message queue (like Kafka) to handle order placement, payment processing, and delivery assignment.
+        * **Location-Based Services:** How to track driver location and find nearby restaurants.
+        * **Real-time Updates:** Using WebSockets or long polling for real-time order tracking.
+* **Design a Video Streaming Service (like Netflix):** This is an advanced question that requires knowledge of video technology and global distribution.
+    * **Key Concepts:**
+        * **Content Delivery Network (CDN):** How to deliver video content with low latency to a global audience.
+        * **Video Encoding & Transcoding:** How to handle different video formats, resolutions, and quality levels for various devices.
+        * **Storage:** Using a distributed file system (like HDFS) or object storage (like S3) for the video files.
+        * **Recommendation Engine:** How to suggest new content to users based on their viewing history.
+* **Design a Social Media Feed (like Twitter or Instagram):** This question tests your ability to handle a massive volume of data and high concurrency.
+    * **Key Concepts:**
+        * **Fan-out:** How to handle the "fan-out on write" (when a user posts, the content is pushed to all their followers' feeds) vs. "fan-out on read" (when a user opens their feed, the system pulls content from all the people they follow) approaches.
+        * **Databases:** Using a combination of databases, like a key-value store for user data, a graph database for followers/following, and a time-series database for the feed.
+        * **Caching:** Extensive use of caching for user profiles and popular posts.
+        * **Real-time Updates:** Using WebSockets to show new tweets or posts in real-time.
+
+### Foundational System Design Concepts
+
+In addition to the specific problems, you should be ready to answer conceptual questions that are essential for any HLD discussion.
+
+* **CAP Theorem:** What is it, and what does it mean for a distributed system? Explain the trade-offs between Consistency, Availability, and Partition Tolerance.
+* **Load Balancing:** Explain its purpose and different strategies (e.g., Round Robin, Least Connections).
+* **Caching:** Discuss different caching levels (client, CDN, application, database) and strategies (e.g., Read-Through, Write-Through, Cache-Aside).
+* **Databases:** Explain the difference between SQL and NoSQL databases, and when you would choose one over the other.
+* **Sharding and Partitioning:** How do you scale a database horizontally? Explain different sharding strategies.
+* **Message Queues:** Why are they important in a distributed system? Explain the benefits of asynchronous communication.
+* **APIs:** Discuss REST vs. GraphQL and their respective use cases.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Open this Flow Chart editor browser: https://app.diagrams.net/
+Imagine you need to develop a feature to validate 100 items at the same time, where each item must pass through 1,500 different backend validations. Note that as the best performance, it takes 5 mins to run 1500 validations on a single item. (Assume technologies: Frontend in Angular, Backend in Java Spring boot Microservices)
+Create a flow chart to show the interaction between microservices and other technical components (like queues, tables, gateway etc) that are required to implement above feature. Ensure that your solution handles error and is scalable. Once finished, take a screenshot of your flow chart and paste it in the chat.
+σ
+
+
+
+
+
+
+
+
+igh-Level Architecture
+The solution involves several microservices and infrastructure components working together to handle the long-running validation job without blocking the user interface.
+
+Frontend (Angular App): Initiates the validation request.
+
+API Gateway: The entry point for all frontend requests.
+
+Validation API Service: A lightweight Spring Boot microservice that accepts the initial request and delegates the heavy lifting.
+
+Message Queue (e.g., RabbitMQ, Kafka): The central hub for asynchronous communication. It holds items to be validated as messages.
+
+Validation Worker Service: A separate, scalable Spring Boot microservice. It listens to the queue, processes one validation message at a time, and updates the status.
+
+Shared Database (e.g., PostgreSQL, MongoDB): Stores the state and validation results for each item. This allows the frontend to check the job's progress.
+
+Detailed Workflow
+Request Initiation: The user on the Frontend selects 100 items and clicks a "Validate" button. The Frontend sends a single POST request to the API Gateway with the list of 100 items to be validated.
+
+Job Creation: The API Gateway routes the request to the Validation API Service. This service immediately does the following:
+
+Creates a new "Validation Job" record in the Shared Database with a unique jobId and an initial status of PENDING.
+
+For each of the 100 items, it creates an individual record in the Shared Database, linking it to the jobId and setting its status to PENDING.
+
+It responds immediately to the Frontend with the jobId. This non-blocking response allows the user interface to display a "Job submitted" message.
+
+Asynchronous Processing: For each of the 100 items, the Validation API Service publishes a message to the Message Queue. Each message contains the item's data and its unique ID.
+
+Parallel Validation: One or more instances of the Validation Worker Service are listening to the Message Queue. When a worker becomes available, it pulls a single message from the queue.
+
+The Validation Worker begins running the 1,500 backend validations for that one item.
+
+It updates the item's status in the Shared Database to IN_PROGRESS.
+
+It handles errors gracefully. If a validation fails, it records the error message and sets the item's status to FAILED. If all validations pass, it sets the status to COMPLETED.
+
+Status Monitoring: The Frontend, having received the jobId in step 2, can now regularly poll a separate status endpoint on the Validation API Service (e.g., GET /api/jobs/{jobId}). This endpoint queries the Shared Database for the overall status of the job and its 100 items.
+
+Completion Notification: When all 100 items have a status of COMPLETED or FAILED in the Shared Database, the job is finished. The next time the Frontend polls for the status, it will receive the final results. This might also be done more proactively using WebSockets to push the final status to the client in real-time.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Question: Design a system to handle a high volume of image uploads from users. Each image needs to be processed to create multiple thumbnails of different sizes, compressed, and stored in a searchable database. The processing for a single image can take up to 2 minutes, and you expect bursts of thousands of uploads per minute.
+
+
+
+
+
+
+
+Technical Breakdown: High-Volume Image Upload System
+This is a step-by-step explanation of how the system works using common technical terms.
+
+1. The User Uploads an Image
+Front End (Client): This is the web page or mobile app the user interacts with. It sends the image file to our server.
+
+2. The Server Receives the Image
+API Gateway / Upload Service: This is the first server that receives the request. Its job is to be very fast and not do any heavy work. It immediately does the following:
+
+Saves the original image to a secure, scalable file storage system.
+
+Puts a message on a waiting list, saying "Image X is ready to be processed."
+
+Sends an instant "Success" message back to the user's device.
+
+3. Storing the Image File
+Object Storage (e.g., AWS S3, Google Cloud Storage): This is a service designed to store a huge number of files (like images). It's where the original, high-quality image is kept safe. It's built to be reliable and accessible.
+
+4. Processing the Image in the Background
+Message Queue (e.g., SQS, RabbitMQ): This is a digital waiting list. When the API Gateway saves a file, it adds a "job" to this queue. This queue holds all the image processing jobs that need to be done. It prevents the system from getting overloaded during a sudden burst of uploads.
+
+Image Processing Workers: These are small, independent programs that constantly check the Message Queue for new jobs. When a worker finds a job, it:
+
+Downloads the original image from Object Storage.
+
+Creates different versions of the image (smaller sizes, compressed versions).
+
+Uploads these new images back to the Object Storage.
+
+5. Storing Information about the Images
+Database (e.g., DynamoDB, Firestore): This is a searchable table that stores all the important information (metadata) about each image, such as:
+
+The user who uploaded it.
+
+The unique ID of the image.
+
+The link to the original image in Object Storage.
+
+The links to all the different thumbnail versions.
+
+6. Letting the User Know
+Notification Service: Once a worker has finished processing the image and updated the database, this service sends a message back to the user's device. This could be a push notification or an in-app message, letting them know that their image is ready.
+
+By using this approach, the system can handle a massive number of uploads without making users wait, as all the slow
+
+
+
+
+
+
+
+
+
+
+Kafka is used in a Loan Origination System (LOS) as a message broker to enable asynchronous and event-driven communication between different services.
+
+The best example is using Kafka to manage the multi-step, end-to-end loan application process.
+
+Application Submission: When a customer submits a loan application, the ApplicationService publishes a LoanApplicationSubmitted event to a Kafka topic. This service doesn't wait for a response; it's a "fire and forget" action.
+
+Parallel Processing: The LoanApplicationSubmitted event is consumed by multiple, independent services at the same time, such as a CreditCheckService and a FraudDetectionService.
+
+Result Aggregation: After these services complete their tasks, they each publish a result to new Kafka topics (e.g., CreditCheckResult and FraudCheckResult).
+
+Final Decision: A DecisioningService consumes the events from both result topics. Once it has all the necessary information, it makes the final decision (approve, deny, etc.) and publishes a final LoanDecision event.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ Imagine you are building a payment processing system. A critical requirement is that a payment can be successful or unsuccessful, but it must never be lost. Design a system that ensures every payment request is processed exactly once, even if microservices crash, network connections fail, or the database becomes temporarily unavailable.
+
+
+
+
+xactly-Once Payment Processing System Design
+Overview
+This document describes a robust system designed to handle payment requests and ensure that each payment is processed exactly once. This design prioritizes reliability and fault tolerance, guaranteeing that no payment requests are lost, even in the face of microservice crashes, network failures, or database issues.
+
+The core principle of this design is to achieve "exactly-once" processing through a combination of an asynchronous, message-based architecture and a key concept called idempotency.
+
+Core Challenges
+Building a fault-tolerant payment system presents several key challenges:
+
+Idempotency: A client or service might send the same request multiple times due to a network timeout. The system must be able to recognize and de-duplicate these requests.
+
+Atomicity: An operation must either fully succeed or completely fail. It should never be left in a half-finished state.
+
+Durability: The system must not lose a request, even if a component fails after receiving it but before processing it.
+
+Failure Handling: The system must gracefully handle all forms of failure (service crashes, network partitions, database unavailability) and recover without manual intervention or data loss.
+
+System Components
+The system is composed of the following microservices and data stores:
+
+Payment Request API (Gateway): The entry point for all payment requests from the client.
+
+Message Queue: A durable, reliable queue that acts as a buffer and a single source of truth for pending payments.
+
+Payment Processing Worker: The service that performs the actual transaction with the payment provider.
+
+Transaction Database: A durable database that serves as the final source of truth for the state of every payment.
+
+Idempotency Store (Cache/Database): A fast, key-value store to track recently seen payment requests and prevent duplicates.
+
+The Payment Flow: Ensuring "Exactly-Once" Processing
+Here is a step-by-step breakdown of how a payment request is handled from start to finish, with a focus on fault tolerance.
+
+Step 1: Client Request and Idempotency Key
+The client application (e.g., a web form) sends a payment request to the Payment Request API. The client is responsible for generating a unique Idempotency Key for each request. This key is often a UUID (Universally Unique Identifier). If the client gets an error or a timeout, it can safely retry the same request with the same idempotency key.
+
+Step 2: Request Validation and Storing in a Queue
+The Payment Request API performs the following actions atomically:
+
+Checks the Idempotency Store: It first checks if the given idempotency key has already been processed.
+
+If the key exists, it means this is a duplicate request (a retry), and the API returns the result of the previous transaction.
+
+If the key does not exist, it's a new request.
+
+Adds to the Message Queue: The API places the entire payment request message (including the idempotency key) into a Message Queue. The message is guaranteed to be durable and will not be lost.
+
+Acknowledges the Request: The API sends an immediate "Request Received" message back to the client. This confirms the request is safely in the system, even if the processing takes time.
+
+Step 3: Payment Processing by Workers
+The Payment Processing Workers continuously poll the Message Queue for new messages. When a worker picks up a message:
+
+Processes the Transaction: The worker attempts to perform the payment with a third-party payment provider. This is the part that might fail due to network issues or an invalid card.
+
+Updates the Transaction Database: After the transaction is complete (successful or unsuccessful), the worker creates or updates an entry in the Transaction Database. This database is the final source of truth and contains the payment status, amount, and other details.
+
+Updates the Idempotency Store: In a single, atomic transaction, the worker updates the status of the payment in the Transaction Database and records the idempotency key and the final result in the Idempotency Store.
+
+Step 4: Acknowledging the Message
+Only after successfully completing both database updates (Transaction Database and Idempotency Store) does the worker acknowledge the message in the Message Queue.
+
+If the worker fails before this point (e.g., crashes): The message is not acknowledged. The queue's durability mechanism will re-deliver the message to another available worker, ensuring no payment is ever lost.
+
+If the worker fails after this point: The transaction is already complete and recorded. The Idempotency Store will prevent any other worker from re-processing the same request.
+
+Resilience Mechanisms
+This architecture is built for resilience:
+
+Service Crashes: If a Payment Processing Worker crashes, the message it was working on is released back to the queue for another worker to pick up and process.
+
+Network Failures: Timeouts and network errors between services or to the payment provider are handled by retries with exponential backoff. Because of the Idempotency Store, a retry is safe and won't result in a double charge.
+
+Database Unavailability: If the Transaction Database is temporarily unavailable, the Payment Processing Worker will fail to complete its atomic update. The message will not be acknowledged in the queue and will be re-delivered once the database is back online.
+
+Message Queue Failure: The queue is a critical component and must be highly available and durable. It ensures that payment requests are not lost, even if all processing workers are down.
+
+Conclusion
+This system design ensures "exactly-once" payment processing by separating the concerns of receiving requests, queuing them, and processing them. The use of a durable Message Queue guarantees no requests are lost, while a dedicated Idempotency Store and atomic database updates prevent duplicate processing, even when retries ar
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+igh-Volume Asynchronous Item Validation Flow
+This flowchart illustrates a scalable and error-resilient architecture for validating 100 items, each requiring 1,500 backend validations over 5 minutes. The core principle is asynchronous processing using a message queue.
+
+graph TD
+    A[Angular Frontend] --> B(API Gateway);
+    B --> C{Validation Orchestrator Service};
+
+    C -- "1. Receive Batch (100 items)" --> D[Database: Batches & Items Table];
+    C -- "2. Persist Batch Status (PENDING)" --> D;
+    C -- "3. Split & Publish Each Item" --> E[Kafka: validation-request-topic];
+    C -- "Returns 202 Accepted (Batch ID)" --> B;
+
+    E --> F{Item Validation Worker Service};
+    F -- "Scalable Instances" --> F;
+
+    F -- "1. Consume Item Message" --> G[Perform 1500 Validations (5 mins)];
+    G --> H{Validation Result?};
+
+    H -- "SUCCESS" --> I[Kafka: validation-result-topic];
+    H -- "FAILURE" --> J{Handle Item Error (Log, Retry)};
+
+    J -- "Retries Exhausted?" --> K{Kafka: validation-error-dlq};
+    J -- "Retries Remaining" --> E; // Re-queue for retry
+
+    I --> L{Status Update Service};
+    L -- "1. Consume Item Result" --> D;
+    L -- "2. Update Item Status in DB" --> D;
+    L -- "3. Check Batch Completion" --> D;
+    L -- "4. Update Batch Status (COMPLETED/PARTIAL_FAIL)" --> D;
+
+    subgraph Error Handling & Monitoring
+        K --> M[Monitoring & Alerts];
+        L -- "Batch Completion/Failure" --> M;
+    end
+
+    subgraph Frontend Status Polling
+        A -- "Poll Status (Batch ID)" --> C;
+        C -- "Retrieve Batch Status from DB" --> D;
+        C -- "Return Status" --> A;
+    end
+
+    style A fill:#ADD8E6,stroke:#333,stroke-width:2px;
+    style B fill:#90EE90,stroke:#333,stroke-width:2px;
+    style C fill:#FFD700,stroke:#333,stroke-width:2px;
+    style D fill:#87CEEB,stroke:#333,stroke-width:2px;
+    style E fill:#FFB6C1,stroke:#333,stroke-width:2px;
+    style F fill:#98FB98,stroke:#333,stroke-width:2px;
+    style G fill:#FFD700,stroke:#333,stroke-width:2px;
+    style H fill:#FFD700,stroke:#333,stroke-width:2px;
+    style I fill:#FFB6C1,stroke:#333,stroke-width:2px;
+    style J fill:#FFD700,stroke:#333,stroke-width:2px;
+    style K fill:#FFB6C1,stroke:#333,stroke-width:2px;
+    style L fill:#FFD700,stroke:#333,stroke-width:2px;
+    style M fill:#D3D3D3,stroke:#333,stroke-width:2px;
+
+Explanation of Components and Flow:
+Angular Frontend: Initiates the request to validate a batch of 100 items. It then polls the backend for the current status of the batch.
+
+API Gateway (e.g., Spring Cloud Gateway): Acts as the entry point for all external requests, routing them to the appropriate microservice.
+
+Validation Orchestrator Service (Spring Boot Microservice):
+
+Receives the initial request for 100 items.
+
+Immediately persists the batch and individual item details into the Database with an initial status (e.g., "PENDING").
+
+Splits the 100 items into individual messages.
+
+Publishes each item as a separate message to the Kafka: validation-request-topic.
+
+Returns a 202 Accepted response to the frontend with a batch ID, indicating that the request has been received and processing has begun asynchronously.
+
+Handles status polling requests from the frontend, querying the database.
+
+Kafka (Message Broker):
+
+validation-request-topic: A queue where individual items await validation. This decouples the request from the processing and acts as a buffer for spikes in load.
+
+validation-result-topic: A queue where the results of individual item validations (success or failure) are published.
+
+validation-error-dlq (Dead Letter Queue): A dedicated queue for messages that failed processing after all retries, allowing for manual inspection and troubleshooting.
+
+Item Validation Worker Service (Spring Boot Microservice - Scalable):
+
+Multiple instances of this service consume messages from the validation-request-topic.
+
+Each instance picks up one item and performs the 1,500 backend validations. This is the 5-minute long-running process.
+
+Error Handling: If an item's validation fails, the worker logs the error. It might attempt retries (e.g., 3 times with exponential backoff). If retries are exhausted, the message is sent to the validation-error-dlq.
+
+Once validation is complete (success or final failure), the worker publishes the result to the validation-result-topic.
+
+Status Update Service (Spring Boot Microservice):
+
+Consumes messages from the validation-result-topic.
+
+Updates the status of the individual item in the Database.
+
+Keeps track of the overall batch progress. Once all 100 items for a batch have been processed (either successfully or with final failure), it updates the overall batch status in the Database (e.g., "COMPLETED" or "COMPLETED_WITH_FAILURES").
+
+Database (e.g., PostgreSQL/MySQL):
+
+Stores the initial batch details and individual item data.
+
+Persists the real-time status of each item and the overall batch, allowing the frontend to poll for updates.
+
+Monitoring & Alerts: All services are monitored, and alerts are configured for Kafka consumer lag, service errors, and critical batch failures (e.g., if a batch remains stuck in PENDING for too long).
+
+Scalability:
+Horizontal Scaling: The Item Validation Worker Service can be scaled horizontally by simply adding more instances. Kafka acts as a natural load balancer, distributing messages among available workers.
+
+Decoupling: Kafka decouples the services, allowing them to operate and scale independently without direct dependencies.
+
+Error Handling:
+Kafka Durability: Messages are persisted in Kafka, preventing data loss if services crash.
+
+Worker Retries: Individual item validation failures are retried automatically.
+
+Dead Letter Queue (DLQ): Unprocessable messages are moved to a DLQ for manual inspection, preventing them from blocking the main queue.
+
+Persistent Status: The database maintains the state of each item and batch, allowing recovery and reconciliation even if services fail.
+
+Explicit Status Updates: The Status Update Service ensures the frontend and other systems are eventually consistent with the actual processing outcome.
+
+Screenshot Placeholder:
+
+(Imagine a screenshot of the above Mermaid diagram rendered as a clear flowchart, similar to what you would get from app.diagrams.net, with distinct colors for each component type as described in the style section of the Mermaid code.)
+
+This architecture ensures that the frontend remains responsive, the backend can handle high volumes of long-running tasks, and potential failure
+
+
+
+
+
+
+
+

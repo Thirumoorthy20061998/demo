@@ -1,0 +1,168 @@
+Thread Scheduler Interview Questions
+1. What is a Thread Scheduler in Java?
+
+Answer: The Thread Scheduler is a component of the Java Virtual Machine (JVM) or, more accurately, 
+the underlying operating system's scheduler, that decides which thread should run at any given time among 
+multiple runnable threads. It's responsible for allocating CPU time to threads. 
+Its behavior is platform-dependent and generally non-deterministic, meaning you cannot
+ predict the exact order in which threads will execute.
+
+
+
+
+Explain ReadWriteLock and its use case.
+A lock that allows multiple readers simultaneously but only one writer at a time for a shared resource, improving performance for read-heavy scenarios.
+
+
+
+n AtomicInteger is a class in Java that provides an int value which can be safely updated by multiple threads without needing to use the synchronized keyword. It's part of the java.util.concurrent.atomic package.
+
+
+
+
+
+
+
+2. How does the Thread Scheduler work (briefly explain time-slicing and preemption)?
+
+Answer: Thread scheduling typically involves:
+
+Time-Slicing: The scheduler allocates a small unit of CPU time (a "time slice") to each runnable thread. When a thread's time slice expires, it's preempted (interrupted) and another runnable thread gets its turn. This creates the illusion of parallel execution on a single-core CPU.
+
+Preemption: A higher-priority thread can interrupt a lower-priority thread that is currently running. Also, a thread might be preempted if it enters a waiting or blocked state (e.g., waiting for I/O or a lock).
+
+Note: While Java allows setting thread priorities (1-10), the actual implementation of how these priorities are honored by the OS scheduler can vary. It's more of a hint than a strict guarantee.
+
+3. Why is thread execution non-deterministic in Java?
+
+Answer: Because the thread scheduler is external to your Java program and its exact algorithm is operating system-dependent. Factors like the number of cores, other processes running on the system, and the scheduler's internal logic all influence when and for how long a thread gets CPU time. This non-deterministic nature makes multithreaded programming complex, as you cannot rely on a specific execution order unless you explicitly enforce it through synchronization mechanisms.
+
+4. What are the different states of a thread in Java? How do they relate to the scheduler?
+
+Answer: Threads can be in various states, which dictate whether they are eligible for scheduling:
+
+NEW: A thread that has been created but not yet started. It's not yet considered by the scheduler.
+
+RUNNABLE: A thread that is either currently executing or is ready to execute and waiting for the scheduler to allocate CPU time.
+
+BLOCKED: A thread that is waiting to acquire a monitor lock to enter a synchronized block/method. It cannot execute until the lock is released and acquired.
+
+WAITING: A thread that is waiting indefinitely for another thread to perform a particular action (e.g., calling Object.wait(), Thread.join(), Lock.lock()).
+
+TIMED_WAITING: A thread that is waiting for another thread to perform an action for a specified waiting time (e.g., Thread.sleep(long millis), Object.wait(long millis), Thread.join(long millis)).
+
+TERMINATED: A thread that has completed its execution (its run() method has finished). It's no longer considered by the scheduler.
+
+5. How do Thread.yield(), Thread.sleep(), Object.wait(), Object.notify(), and Object.notifyAll() interact with the thread scheduler?
+
+Thread.yield(): A hint to the scheduler that the current thread is willing to yield its current use of a processor. The scheduler is free to ignore this hint. The thread moves from RUNNING to RUNNABLE state. It doesn't release any locks.
+
+Thread.sleep(long millis): Causes the currently executing thread to pause for a specified duration. The thread moves from RUNNING to TIMED_WAITING state. It does not release any locks it holds.
+
+Object.wait(): Causes the current thread to wait indefinitely until another thread invokes the notify() or notifyAll() method on the same object. The thread moves from RUNNING to WAITING state and releases the lock it holds on that object.
+
+Object.notify(): Wakes up a single thread that is waiting on this object's monitor. The awakened thread then competes for the lock.
+
+Object.notifyAll(): Wakes up all threads that are waiting on this object's monitor. All awakened threads then compete for the lock.
+
+Key difference between sleep() and wait(): sleep() doesn't release locks, wait() does. wait(), notify(), and notifyAll() must be called from within a synchronized block/method, while sleep() can be called anywhere.
+
+Deadlocks Interview Questions
+1. What is a Deadlock in Multithreading?
+
+Answer: A deadlock is a situation in concurrent programming where two or more threads are permanently blocked, 
+waiting for each other to release the resources (typically locks) that they need to proceed. Each thread holds a
+ resource and waits for a resource held by another blocked thread, forming a circular dependency.
+
+2. What are the four necessary conditions for a Deadlock to occur (Coffman Conditions)?
+
+Answer: For a deadlock to occur, all four of the following conditions must be met simultaneously:
+
+Mutual Exclusion: At least one resource must be held in a non-sharable mode, meaning only one thread can use the resource at any given time.
+
+Hold and Wait: A thread must be holding at least one resource and waiting to acquire additional resources that are currently being held by other threads.
+
+No Preemption: Resources cannot be forcibly taken from a thread. A resource can only be released voluntarily by the thread holding it after it has completed its task.
+
+Circular Wait: A set of threads T_1,T_2,...,T_n must exist such that T_1 is waiting for a resource held by T_2, T_2 is waiting for a resource held by T_3, ..., T_n−1 is waiting for a resource held by T_n, and T_n is waiting for a resource held by T_1.
+
+4. How can you detect a Deadlock in a running Java application?
+
+Answer:
+
+Thread Dumps: This is the most common and effective way. You can generate a thread dump (e.g., using jstack <pid> or kill -3 <pid> on Linux/Unix, or Ctrl+Break on Windows for command prompt Java applications). A thread dump shows the state of all threads, including which locks they hold and which locks they are waiting for. 
+Deadlocks are usually explicitly labeled as "found one Java-level deadlock."
+
+Monitoring Tools: Tools like JConsole, VisualVM, or commercial APM (Application Performance Monitoring) tools can also provide real-time monitoring and deadlock detection.
+
+5. How can you prevent/avoid Deadlocks in Java?
+
+Answer: To prevent deadlocks, you need to break at least one of the four Coffman conditions:
+
+Break Mutual Exclusion: This is usually not possible or desirable for resources that inherently require exclusive access (e.g., writing to a file, updating a shared counter).
+
+Break Hold and Wait (Acquire All Resources at Once): A thread should acquire all the resources it needs before starting its work. If it can't acquire all of them, it releases any resources it's currently holding and retries later. This can lead to starvation if resources are constantly busy.
+
+Break No Preemption (Preempt Resources): If a thread is holding some resources and requests another that cannot be immediately granted, it could be forced to release its currently held resources. This is complex to implement correctly and can lead to data inconsistency. Java's Lock interface (specifically tryLock()) allows for this.
+
+Break Circular Wait (Resource Ordering): This is the most common and practical approach in Java. Establish a global ordering for acquiring locks. If all threads always acquire locks in the same predefined order, a circular wait cannot form.
+
+Example: If you have lockA and lockB, always acquire lockA before lockB.
+
+Other strategies:
+
+Use java.util.concurrent utilities: The java.util.concurrent package provides higher-level concurrency constructs like ReentrantLock (with tryLock() for non-blocking acquisition), Semaphore, CountDownLatch, CyclicBarrier, and Executors which are designed to minimize the risk of deadlocks by handling underlying synchronization more robustly.
+
+Avoid Nested Locks: As shown in the example, nested synchronized blocks or acquiring locks on different objects can easily lead to deadlocks if not carefully managed.
+
+Set Timeouts for Lock Acquisition: Use lock.tryLock(long timeout, TimeUnit unit) with ReentrantLock to attempt to acquire a lock within a certain time frame. If the lock isn't acquired, the thread can back off and try again, preventing indefinite waiting.
+
+6. What's the difference between synchronized blocks/methods and ReentrantLock regarding deadlock avoidance?
+
+Answer:
+
+synchronized: Provides implicit locking. It's simpler to use but less flexible. It only supports blocking lock acquisition (a thread waits indefinitely for the lock). You cannot attempt to acquire a lock, check if it's available, or time out. This makes breaking the "Hold and Wait" or "No Preemption" conditions difficult.
+
+ReentrantLock: Offers more control and flexibility. It provides:
+
+tryLock(): Attempts to acquire the lock. Returns true if successful, false otherwise, allowing the thread to do something else or back off.
+
+tryLock(long timeout, TimeUnit unit): Attempts to acquire the lock within a specified timeout. This directly helps in breaking the "Hold and Wait" condition by allowing a thread to give up waiting if it can't get the lock in time.
+
+Interruptible Lock Acquisition: lock.lockInterruptibly() allows a thread to be interrupted while waiting for a lock, which synchronized doesn't directly support (a thread waiting on a synchronized block cannot be interrupted from that wait).
+
+While ReentrantLock provides tools to avoid deadlocks, it's still up to the developer to use them correctly to prevent the Coffman conditions from being met. synchronized offers less control, making it easier to accidentally create deadlocks if multiple locks are involved.
+
+7. Can you have a deadlock with only one thread?
+
+Answer: No. By definition, a deadlock involves two or more threads waiting for each other to release resources. A single thread cannot be waiting for a resource it itself is holding or for another thread that doesn't exist.
+
+8. Can volatile variables lead to deadlocks?
+
+Answer: No. volatile ensures visibility of variable changes across threads and prevents reordering of instructions around volatile reads/writes. It does not involve locking mechanisms. Deadlocks occur due to threads blocking on shared locks, which volatile does not manage. While volatile is crucial for thread safety in certain scenarios, it's unrelated to deadlocks.
+
+
+
+
+
+
+
+
+
+
+ Explain Livelock and compare it with Deadlock.
+* Answer:
+* Livelock: A situation where two or more threads are not blocked, but they are continuously changing their state in response to each other's actions, without making any progress towards completing their tasks. They are "busy waiting" and endlessly reacting, like two people trying to pass each other in a narrow hallway, constantly moving side to side but never getting past.
+* Comparison with Deadlock:
+* State: In a deadlock, threads are blocked and waiting. In a livelock, threads are active (running) but unproductive.
+* CPU Usage: Deadlocked threads consume minimal CPU (unless woken up for a context switch), as they are just waiting. Livelocked threads can consume significant CPU as they are constantly executing logic.
+* Progress: Neither makes progress.
+* Detection: Deadlocks are easier to detect via thread dumps (explicit "BLOCKED" state). Livelocks are harder to detect programmatically; they often manifest as high CPU usage without task completion.
+* Example (Livelock): Two threads trying to acquire two resources. If Thread A tries to acquire Resource 1, fails, releases Resource 2, and Thread B tries to acquire Resource 2, fails, releases Resource 1, and they keep repeating this dance without ever acquiring both. This can happen if threads repeatedly give up locks and retry immediately without a backoff strategy.
+* Prevention: Introducing randomness or exponential backoff when retrying lock acquisition or resource access can help break livelocks.
+
+
+
+
+
+

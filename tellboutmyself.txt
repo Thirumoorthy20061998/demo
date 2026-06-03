@@ -1,0 +1,238 @@
+
+
+
+self intro
+Hi, my name is (your name). I'm a java developer with over three years of experience in the software industry. I have a strong background in Java development, with extensive hands-on experience using frameworks like Spring Boot in micoservice and tools using Spring mvc , spring datajpa, spring core, spring security, spring cloud, asynchronous communication, apache kafka , sping webflux, resttemplate
+
+In my most recent role,  iam worked in banking domain I worked on a fintech product of loan orgination system and gained experience with SQL, APIs integrations from multiple banks with vendors, workflow development of different loan applications and Sngle sign on now  I'm looking for a new challenge and opportunities where i can grow simultaneously.
+
+
+
+tell about your experience?
+
+"I'm a Java backend specialist with over four years of experience, primarily using the Spring Boot framework. My most recent work involves designing and scaling microservices and high-performance RESTful APIs in a critical banking environment. I focus on database optimization using MS SQL and Oracle with Hibernate/JPA, ensuring system security, and integrating complex external systems. I love translating business needs into clean, robust technical solutions."
+
+
+recent project:
+"I worked on a logistics platform that links web orders to drivers through a mobile app and manages the full order lifecycle — from creation to assignment, Proof of Boarding (POB), Actual Time of Departure (ATD), and Proof of Delivery (POD). I implemented support for multiple order types like deliveries, returns, MULTIDROP and broadcast orders so the system could handle routine drops, reverse logistics, and mass assignments. I also extended the same codebase for a UK deployment (IFM-UK), adding site and route master modules and configuring the platform to accept innight-only orders to meet local rules and improve night-shift operations."
+
+
+
+
+I’m switching because my consulting contract with TVSCS for this client ended after 7 months, and while my parent company is arranging a new client placement, I’m currently on a temporary internal support project. I’m looking for a permanent role where I can grow long-term, and this opportunity aligns well with my career goals in logistics and backend systems—so I applied to build stability and continue learning in one place.
+
+
+
+
+
+
+
+
+
+
+
+
+CHALLENGES OR BIGGEST ISSUE
+The biggest technical challenge was ensuring atomicity and consistency in the auction when thousands of drivers bid simultaneously.
+Problem: Race conditions caused duplicate assignments where two drivers received the same order
+Solution:
+
+Used Kafka as a single source of truth to serialize bid events in strict order.
+
+Implemented a scheduler-based timeout to cut off bids at exactly the right moment.
+
+full auditability via Datadog traces 
+
+
+BEST FEATURE
+
+The best feature I implemented was the auto-grouping system that automatically groups multiple orders into batches for delivery.
+
+It groups orders based on route master, entity, and various business conditions (like pickup/drop location, time window, vehicle capacity). A scheduler runs this process daily as part of standard operations, so dispatchers don’t have to group orders manually.
+
+Result: Orders are grouped correctly every day, dispatch time is reduced, drivers get optimized routes, and operations run smoothly without manual effort.
+
+
+
+
+
+
+
+why switching?
+
+sir, i was looking for a opportunity where i can learn and grow simultaneously and while i was searching for the job i found this opportunity to be more aligned with my carrer, so i applied for this role sir.
+
+without offer why leave?
+The high-pressure environment made it challenging to dedicate the necessary time to a thorough job search while performing at my best. I wanted to be able to focus fully on finding the right long-term opportunity, which is why I decided to resign first.
+
+
+daily routine?
+i start my day with meeting on clients and vendors ragarding discuss with list of bug issues.After these meetings, my primary task is to focus on application development. I spend the rest of my day writing code and implementing solutions to address the bugs and new features we discussed and finally deliever to our quality team 
+
+microservice experience
+I've worked with microservices for about four years, primarily using Java and Spring Boot. My experience covers the entire lifecycle, from initial design and development to production deployment.
+
+I specialize in:
+
+Designing services with clear APIs and loose coupling.
+
+Developing RESTful APIs and implementing business logic.
+
+Deploying services using Docker and Kubernetes.
+
+Ensuring resilience with patterns like circuit breakers and retries.
+
+Overall, my experience is hands-on and focused on building robust and scalable microservice architectures.
+
+
+
+
+recent project:
+
+My most recent project involved building and customizing modules for a Loan Origination System (LOS) used by banks. I used the Joget low-code platform to automate critical processes like loan verification, credit appraisal, and document management. I also integrated several third-party APIs for things like customer identity checks and secure document storage, while managing the database using MS SQL Server, Hibernate, and JPA. The goal was to streamline complex workflows, reduce manual work, and ensure a scalable, compliant system.
+  
+my recent project involved migrate our spring applications to lowcode no code platform of using joget framework, to automate critical processes like loan verification, credit appraisal, and document management. the main goal is to reduce the complex manual work to implement drag and drop functionality and resuable  customized components and workflow mappings.
+
+
+Describe in detail about last best feature implemented by you?
+the best feature iam implemented to develop the sso integration of multiple vendors to integrate  with our multiple categories loan application to implement  centralized login system to maintain in single database 
+
+ Describe in detail about last issue/bug worked on in production, from discovery to resolution? 
+the initial loan approval process is very slow  This was caused by large credit check and fraud analysis files being stored in a temporary memory cache, which consumed  more memory  the Java Virtual Machine (JVM).
+
+Solution:
+To resolve this, I reconfigured the system to give the JVM more memory, which allowed it to handle the large files without being overloaded. I also implemented a process to regularly clear out the temporary cache, preventing old files from building up and causing new memory issues. This made the system much more stable and reliable.
+
+Using Guava Cache (Recommended)
+Guava's CacheBuilder is designed for this exact scenario, providing automatic, thread-safe, time-based eviction without manual scheduling.
+
+Java
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import java.util.concurrent.TimeUnit;
+
+// A simple structure to hold the report data
+public class ReportData { /* fields like String content, long size, etc. */ }
+
+public class AutoClearingReportCache {
+
+    // 1. Define the Cache: Key is the application ID (String), Value is the report data
+    private final Cache<String, ReportData> temporaryCache = CacheBuilder.newBuilder()
+            // Clears entries 5 minutes after they were written/inserted
+            .expireAfterWrite(5, TimeUnit.MINUTES)
+            // Optional: Limit the total size of the cache by number of entries
+            .maximumSize(5000) 
+            .build();
+
+    /**
+     * Stores a report associated with a loan application ID.
+     * @param applicationId The ID of the application.
+     * @param reportData The large report data object.
+     */
+    public void putReport(String applicationId, ReportData reportData) {
+        temporaryCache.put(applicationId, reportData);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Describe in detail about your last performance improvement task.
+Problem statement: The "Pending Applications" dashboard was loading very slowly (5-15 seconds) because a critical database query was inefficient, causing a full table scan instead of a quick index lookup.
+
+Solution: 
+
+The query was optimized by rewriting it with a custom JPQL query and by adding a composite database index, reducing the execution time to under 200 milliseconds and the dashboard load time to less than a second.
+
+to rewrite the custom query We used a new database index and a custom query to make a slow process fast, reducing the time from a long wait to under a second.
+
+
+
+
+
+
+
+
+Why You're Interested in This Role
+
+I'm interested in this role because my background in [Your relevant skill, e.g., cloud computing, data analysis] 
+aligns perfectly with the job description. I've been following IBM's strategic shift to focus on hybrid cloud and AI, 
+and I'm particularly impressed by your commitment to innovation with platforms like Watsonx and the integration of Red Hat. 
+This role is a great opportunity for me to contribute my skills to a company leading in these critical areas.
+
+
+What do you know about our company?
+IBM is a leader in hybrid cloud and AI,  I've been following IBM's strategic shift to focus on hybrid cloud and AI, 
+and I'm particularly impressed by your commitment to innovation with platforms like Watsonx and the integration of Red Hat. This role is a great opportunity for me to contribute my skills to a company leading in these critical areas.
+
+
+Where do you see yourself in five years?" 
+n five years, I aim to be a technical lead, leading a team and taking on more complex projects. I want to continue growing my skills in this field and contribute to the company's long-term goals.
+
+You should hire me because my skills in [mention a specific skill, e.g., Java development, database management] and my experience in [mention a specific accomplishment, e.g., optimizing queries, leading a project] directly align with the needs of this role. I'm confident I can immediately contribute by [mention a specific way you will help, e.g., improving system performance, solving client issues], helping the team achieve its goals quickly and effectively.
+
+
+
+
+My greatest strength is my ability to adapt quickly to new technologies and environments. and problem solving at critical areas , client management
+In my previous role, our team transitioned to a new project management software with very little notice.
+ Instead of waiting for formal training, I took the initiative to learn the platform on my own, 
+and then I created a quick guide for my colleagues.
+
+
+last implementation working:
+
+my last  implementation iam worked on  valocity api for integration with bank to external vendors for the purpose of assign vendors to loan applied customers for security documents direct inspection verification this api provides the entire automation process from assignment to approval.
+
+
+
+Over-analyzing is my weakness
+I have a tendency to over-analyze problems, which can sometimes slow down my decision-making. and now day to day i make effort to resolve my weakness.
+
+
+A Loan Origination System (LOS) is a digital platform that automates and manages the entire loan application 
+and approval process for financial institutions. 
+It streamlines everything from the initial application to credit checks, document verification,
+ and final approval, making the process faster and more efficient.
+
+
+Tell me about a time you had to deal with a difficult coworker."
+I had a teammate with a different communication style. I scheduled a one-on-one to understand their perspective.
+ By openly discussing our approaches, we found a middle ground and improved our project collaboration.
+
+2. "Describe a time you failed at something."
+I once deployed a code update without a final check, which caused a minor bug.
+ I immediately rolled back the change, fixed the issue, and learned to always follow the full testing protocol, 
+no matter the time pressure.
+
+3. "Tell me about a time you went above and beyond for a project."
+During a project with a tight deadline, a key technical issue arose. 
+I took the initiative to work extra hours to research and develop a solution, which allowed 
+the team to launch the product on schedule.
+
+4. "How do you handle conflict within a team?"
+I believe in direct and respectful communication. When a conflict arises, 
+I try to understand the other person's perspective first and then focus on 
+finding a solution that works for everyone.
+
+5. "Tell me about a time you had to learn something new quickly."
+I was able to quickly learn a new scripting language to automate a critical report when a teammate was out. I studied existing code and documentation, and within a few days, I wrote the new script and avoided any project delays.
+

@@ -1,0 +1,1320 @@
+Delivered-To: thiruvj8608@gmail.com
+Received: by 2002:a05:7010:5344:b0:43a:6245:108c with SMTP id n4csp5311686mde;
+        Fri, 4 Jul 2025 02:53:40 -0700 (PDT)
+X-Received: by 2002:a17:903:1b4d:b0:235:ef87:bd50 with SMTP id d9443c01a7336-23c875a85f8mr23928325ad.45.1751622819717;
+        Fri, 04 Jul 2025 02:53:39 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1751622819; cv=none;
+        d=google.com; s=arc-20240605;
+        b=cg4gXJkszTSghJh+UiL6SYMPoHXzOckUUnseywOM63CiXV4+FJ9cwwxOq6HPPMlRIw
+         SqRav733kw/ZdXBoNV3IicUL8ID+2XkSo7asZwDrbRjnZkm3gwkEkylch8dWvH1j/ANg
+         X1IKrHRUdZCi06LbVPPztqFi58yfJnw+Tfdk/2Q9+N2gmUkK3yOTjahNiTRjLgzGnxSI
+         zmUhk9caRNg3APvBwl+LAVdTB0KJZidZ8lKG0vPd/a1rM5CVFjbCR4m3KqxXkxTvbIMv
+         m58Bm4A5OCGKYmsLLggCcwZmQ2F+sR00/IQVOHo4I7F1SSaiJhJNR+rDECG3vWYaz8F1
+         N+Rw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=to:subject:message-id:date:from:mime-version:dkim-signature;
+        bh=onTlKpXsaH23TmbAR1RlMdyzHiInIuAlfZDDxLLobgI=;
+        fh=ZC0zPpBbHDLQFIOa8/yqpD0mz91UkcrZEeX/OKDkjFg=;
+        b=OiaPyUoxuVbTXKPqJX6c14F9RIixqm81vIVcZLpRbUaU3jWUHMM/cmqqdXGPy9iqNX
+         sFEr7mWRRukTaq0YJyS1yXoE/os9zy/bV67cgjKXT7LlnBy7RA8X5kmcL41QlVlYf9tE
+         tzeXZlOhDd5Qbvxg808yXFJ9Dpoc1Uj+bWpBJNJ53++PfDcWiXs04v3oXfIlT5tHV58Z
+         xzSqtMcGfDyXKUXxzEFeC6HjSv0V/dfB+562LvAWBBQfNm4Ub/yB6vb6wsZWkFN1bhjO
+         Lxdbalzi5QvcI0uzqRgDMAmT76fb7+j48pyT5yp4cIlpJfiN6IjBslbyAmlIeMginSVG
+         8RCw==;
+        dara=google.com
+ARC-Authentication-Results: i=1; mx.google.com;
+       dkim=pass header.i=@gmail.com header.s=20230601 header.b=iviP8o62;
+       spf=pass (google.com: domain of thiru201998@gmail.com designates 209.85.220.41 as permitted sender) smtp.mailfrom=thiru201998@gmail.com;
+       dmarc=pass (p=NONE sp=QUARANTINE dis=NONE) header.from=gmail.com;
+       dara=pass header.i=@gmail.com
+Return-Path: <thiru201998@gmail.com>
+Received: from mail-sor-f41.google.com (mail-sor-f41.google.com. [209.85.220.41])
+        by mx.google.com with SMTPS id d9443c01a7336-23c842bc5a9sor10033805ad.1.2025.07.04.02.53.39
+        for <thiruvj8608@gmail.com>
+        (Google Transport Security);
+        Fri, 04 Jul 2025 02:53:39 -0700 (PDT)
+Received-SPF: pass (google.com: domain of thiru201998@gmail.com designates 209.85.220.41 as permitted sender) client-ip=209.85.220.41;
+Authentication-Results: mx.google.com;
+       dkim=pass header.i=@gmail.com header.s=20230601 header.b=iviP8o62;
+       spf=pass (google.com: domain of thiru201998@gmail.com designates 209.85.220.41 as permitted sender) smtp.mailfrom=thiru201998@gmail.com;
+       dmarc=pass (p=NONE sp=QUARANTINE dis=NONE) header.from=gmail.com;
+       dara=pass header.i=@gmail.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1751622819; x=1752227619; dara=google.com;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=onTlKpXsaH23TmbAR1RlMdyzHiInIuAlfZDDxLLobgI=;
+        b=iviP8o62xWBkD64kqrbhLJaYjjLbomq3mffQ6jiEYQPa8CZ5nKYv5VCjhPM//L3usk
+         Zu0ytqX4hpsDrBZ1zT1n2Y3rOSa5uXG4xoiuH6HVZ93jiOWsKvdHRWpgPFlo6e0Wpvw8
+         Cepns4u8mYgN+VAD45YhbOmPBXeEVX2+1Zd0EkTV+bPTB0eU1oK2Z3kyBbZdQdv78+HW
+         LYOimDyCWoPUDob4BjX37UzesIb/n8Bpvph/xwuyseeEKDtG0852iH/5XWozevz1ZJLZ
+         zieiXn4xGaqiWgserPyoidQ6i8Y1qrI3KrJ7wIbMdeRvNdt1A4HFIBJLqJQpAqSJT6kd
+         nqrg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1751622819; x=1752227619;
+        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=onTlKpXsaH23TmbAR1RlMdyzHiInIuAlfZDDxLLobgI=;
+        b=V+qMZTY8VrUe06wN2tAFTtx9mhpB1ShFU+/ad/AXhmzN6pPOaVLOQjf59M8lWwDnXL
+         3SI6XttzDLSjS4rvnphpnAT0Q3RM/bxS0x9M0ftVdixpHmlDV/ai5NpJmvMLrU4/9i2f
+         tikCWypqYCUMEID4CN3EB626QRx1P+/2Hc0Kz7Ybh70QmLUBbeP/WflPxwsYqii1Fmdc
+         KlHZyYjhJdKxmOJxt4YVgK4jYQrJ4rzZQvmNwGW7PFAbtkE9h+AbSIxVXsyfTr++2FDp
+         sBkgjO5DJ9iIhFUQij1QIuGloHtLbDoAovkNYvPr7lmHAuXQ0SRe8RFvmiFT4sriEayT
+         qyYw==
+X-Gm-Message-State: AOJu0YzSUGMTeKMk72xhsLvV5tdUELQwajXXAqbj50BSeJd3/ms7SKMA
+	/yayuWaozx3yB+aQM0+IDupVKBy5JMtgAjPZtMIbQS0z8rVB2qldSSWyQZZeWS60QFpT16g+/j3
+	g2/LVfCPjvfUsDdcTFWswnOictrL5VWgPZg==
+X-Gm-Gg: ASbGncvUZHxNlGy8nQrwh/yKXxQka7qLiIpiYNbCCVvGcf3NELYC9NS+73jZdk0YlrN
+	a5PIz6z1scLHMvm6Eo7S7fS4ump8fRC7kRLQS7788G3ZFO9/JmVe3GlDmB/m6L62tVHPyGLcTIm
+	OO3FMQrC3TkJZb3oVfd0BAqOqaxszPhni2eUI8L4FMh0M=
+X-Google-Smtp-Source: AGHT+IGuquQblxhVlMzG4TOlu9EpUwzGQzCjJKAVIyrSquTJpRPsuRewRK+yVvAnrxP0j8eiNyGxbYKgWDj0qmRhZ28=
+X-Received: by 2002:a17:90a:d40b:b0:311:9c9a:58ca with SMTP id
+ 98e67ed59e1d1-31aadcf4c5dmr2345993a91.8.1751622818624; Fri, 04 Jul 2025
+ 02:53:38 -0700 (PDT)
+MIME-Version: 1.0
+From: Thiru Moorthy <thiru201998@gmail.com>
+Date: Fri, 4 Jul 2025 15:22:12 +0530
+X-Gm-Features: Ac12FXx4IrWhE5o9VKrUIISvrde6ZpNOHm2EVhtTYABi4Eoz22B2MlqTyUPtmYI
+Message-ID: <CADRAXAKSBpUoYUoG_Pd6n4orJb21mzk6ja96gBT8nBfhQ0x_JQ@mail.gmail.com>
+Subject: spring cloud eureka, spring cloud api gateway, co...
+To: thiruvj8608@gmail.com
+Content-Type: multipart/alternative; boundary="000000000000e27a2b063917772d"
+
+--000000000000e27a2b063917772d
+Content-Type: text/plain; charset="UTF-8"
+
+Let's design a simplified *E-commerce Order Processing and Payment System*
+using the Spring Cloud ecosystem. This will demonstrate the interplay of
+the technologies you mentioned.
+
+Application Overview: E-commerce Order & Payment System
+
+Our E-commerce system will allow users to:
+
+   1.
+
+   Browse products (not explicitly covered by services here, but implied).
+   2.
+
+   Place orders.
+   3.
+
+   Process payments.
+   4.
+
+   Receive order confirmations and potentially shipping updates.
+
+*Microservices involved:*
+
+   -
+
+   *Order Service:* Handles creating, retrieving, and managing orders.
+   -
+
+   *Payment Service:* Manages payment transactions with external payment
+   gateways.
+   -
+
+   *Notification Service:* Sends email/SMS confirmations.
+   -
+
+   *Inventory Service:* Manages product stock (simplified for this example).
+
+*Spring Cloud Components & Their Roles:*
+
+   -
+
+   *Spring Cloud Eureka (Service Discovery):* The "phone book" for all our
+   microservices. Each microservice registers itself here.
+   -
+
+   *Spring Cloud API Gateway:* The single entry point for all client
+   requests. It routes requests to the correct microservice and can handle
+   cross-cutting concerns like authentication, rate limiting, etc.
+   -
+
+   *Spring Cloud Config Server:* Centralizes configuration for all
+   microservices, allowing dynamic updates without restarting services.
+   -
+
+   *Spring Cloud Circuit Breaker (e.g., Resilience4j):* Provides fault
+   tolerance by preventing cascading failures when a service is slow or
+   unresponsive.
+   -
+
+   *Message Broker (e.g., Apache Kafka or RabbitMQ):* Enables asynchronous
+   communication between microservices, decoupling them and improving
+   resilience.
+   -
+
+   *Payment System Webhooks:* A mechanism for the external Payment Gateway
+   to notify our system about the outcome of a payment transaction (e.g.,
+   success/failure).
+
+------------------------------
+
+Flow-by-Flow Explanation
+
+Let's trace a user placing an order and completing a payment.
+
+*Phase 1: System Initialization and Configuration*
+
+1. Config Server Starts Up:
+
+* The Config Server (a Spring Boot application with @EnableConfigServer)
+starts first.
+
+* It's configured to read properties from a Git repository (e.g., GitHub,
+GitLab). This repository holds application.yml or application.properties
+files for each microservice (e.g., order-service.yml, payment-service.yml,
+notification-service.yml).
+
+* Purpose: Centralized management of configurations. If you want to change
+a database URL or an external API key, you change it in one place (Git
+repo), and services can pick it up.
+
+2. Eureka Server Starts Up:
+
+* The Eureka Server (a Spring Boot application with @EnableEurekaServer)
+starts.
+
+* It begins listening for microservices to register themselves.
+
+* Purpose: The central registry for service discovery.
+
+3. Microservices Start Up and Register:
+
+* The Order Service, Payment Service, Notification Service, and Inventory
+Service (all Spring Boot applications) start up.
+
+* Each of these services is a Eureka Client (annotated with
+@EnableDiscoveryClient and configured to point to the Eureka Server).
+
+* As they start, they register themselves with the Eureka Server, providing
+their application name (e.g., order-service, payment-service) and their
+network location (IP and port).
+
+* Each service also fetches its configuration from the Config Server upon
+startup.
+
+* Purpose: Microservices become discoverable. They get their necessary
+configurations from a central source.
+
+4. API Gateway Starts Up and Discovers Routes:
+
+* The Spring Cloud API Gateway (a Spring Boot application with
+@EnableDiscoveryClient and @EnableGateway) starts.
+
+* It registers with Eureka and also pulls its routing configuration. This
+configuration defines rules like: "if a request comes to /api/orders/**,
+route it to the order-service." The Gateway knows where the order-service
+is by querying Eureka.
+
+* Purpose: The single entry point for all external clients, abstracting the
+underlying microservice architecture.
+------------------------------
+
+*Phase 2: User Places an Order*
+
+1. Client Request to API Gateway:
+
+* A user (via a web browser or mobile app) makes a request to place an
+order: POST /api/orders
+
+* This request first hits the Spring Cloud API Gateway.
+
+* API Gateway's Role:
+
+* Routing: Based on its configuration, the API Gateway identifies that
+/api/orders should be routed to the order-service. It looks up
+order-service in Eureka to find its current address.
+
+* Pre-filters (e.g., Authentication/Authorization): The Gateway might apply
+security checks here (e.g., validate JWT token).
+
+* Rate Limiting: Prevent too many requests from a single client.
+
+2. Order Service Processes Request:
+
+* The request is forwarded by the API Gateway to the Order Service.
+
+* The Order Service:
+
+* Receives the order details (items, user ID, shipping address, etc.).
+
+* Interacts with the Inventory Service (via Eureka for discovery) to check
+product availability and reserve stock. This communication might use Feign
+Client or RestTemplate, which are also often integrated with Eureka for
+service lookup.
+
+* Creates a new Order record in its database with a "PENDING_PAYMENT"
+status.
+
+* Returns a response (e.g., 201 Created with order details) to the API
+Gateway.
+
+3. Response back to Client:
+
+* The API Gateway receives the response from the Order Service and sends it
+back to the user.
+------------------------------
+
+*Phase 3: Initiating Payment*
+
+1. Client Initiates Payment:
+
+* The user's client application, upon successful order creation, directs to
+a payment page.
+
+* When the user clicks "Pay," the client sends a request to the API
+Gateway: POST /api/payments/initiate with order details and payment method
+(e.g., credit card info).
+
+2. API Gateway Routes to Payment Service:
+
+* The API Gateway routes this request to the Payment Service after looking
+it up in Eureka.
+
+3. Payment Service Interacts with External Gateway (Circuit Breaker in
+action):
+
+* The Payment Service receives the request.
+
+* It constructs a payment request payload for an external Payment Gateway
+(e.g., Stripe, Razorpay).
+
+* Circuit Breaker's Role: When the Payment Service makes the outbound call
+to the external Payment Gateway, it wraps this call with a Circuit Breaker.
+
+* Normal State (CLOSED): The call goes through.
+
+* Failure Threshold: If the external Payment Gateway starts responding with
+errors or timeouts frequently (e.g., 50% failures in 10 seconds), the
+Circuit Breaker "opens."
+
+* Open State: While open, subsequent calls to the external Payment Gateway
+are immediately failed (or routed to a fallback method) without even
+attempting the actual call. This prevents the Payment Service from getting
+overloaded and allows the external Payment Gateway to recover.
+
+* Half-Open State: After a configured time, the Circuit Breaker allows a
+few test requests to see if the external Payment Gateway has recovered. If
+they succeed, it closes; otherwise, it remains open.
+
+* The Payment Service then directs the user to the Payment Gateway's secure
+page (or handles it directly if it's an API integration).
+------------------------------
+
+*Phase 4: Payment Completion & Asynchronous Notifications (Webhooks &
+Message Broker)*
+
+1. External Payment Gateway Processes Payment:
+
+* The user completes the payment on the external Payment Gateway's page.
+
+* The external Payment Gateway processes the transaction.
+
+2. Payment Gateway Sends Webhook:
+
+* Once the payment is successful (or failed), the external Payment Gateway
+sends a webhook (an HTTP POST request) to a pre-configured endpoint in our
+system. This endpoint is typically exposed directly by our Payment Service
+or via the API Gateway.
+
+* Example Webhook URL:
+https://our-ecommerce.com/api/payments/webhook-callback
+
+3. Payment Service Receives Webhook:
+
+* The Payment Service (or API Gateway routing to it) receives the webhook
+notification.
+
+* It validates the webhook (e.g., by checking a signature to ensure it's
+from the legitimate Payment Gateway).
+
+* It updates its internal records for the payment status.
+
+4. Payment Service Publishes Message to Message Broker:
+
+* Instead of directly calling the Order Service or Notification Service,
+the Payment Service publishes a "Payment Completed" or "Payment Failed"
+event message to the Message Broker (e.g., a Kafka topic like
+payment-events).
+
+* The message would contain the orderId, paymentStatus, transactionId, etc.
+
+* Message Broker's Role:
+
+* Decoupling: The Payment Service doesn't need to know who needs to know
+about the payment status. It just publishes the event.
+
+* Asynchronous: It doesn't wait for other services to process the event.
+
+* Reliability: The Message Broker ensures the message is delivered to all
+subscribers, even if they are temporarily down.
+
+5. Order Service Consumes Message:
+
+* The Order Service has a consumer configured to listen to the
+payment-events topic on the Message Broker.
+
+* When it receives a "Payment Completed" message for a specific orderId, it
+updates the order status from "PENDING_PAYMENT" to "PROCESSING" (or "PAID").
+
+* If it receives a "Payment Failed" message, it updates the order status to
+"PAYMENT_FAILED."
+
+6. Notification Service Consumes Message:
+
+* Similarly, the Notification Service also listens to the payment-events
+topic on the Message Broker.
+
+* When it receives a "Payment Completed" message, it sends an order
+confirmation email/SMS to the user.
+
+* If it receives a "Payment Failed" message, it might send a notification
+to the user about the failed payment and instructions to retry.
+------------------------------
+
+*Summary of Flow and Component Interaction:*
+
+[Client (Web/Mobile)]
+       | (1. POST /api/orders)
+       V
+[Spring Cloud API Gateway] ----- (Routes based on Eureka) ----> [Order Service]
+       ^                                  |
+       |                                  | (Checks stock via Eureka)
+       |                                  V
+       |                            [Inventory Service]
+       |                                  |
+       |                                  V
+       |                               (Saves Order: PENDING_PAYMENT)
+       |                                  |
+       <----------------------------------
+       | (2. POST /api/payments/initiate)
+       V
+[Spring Cloud API Gateway] ----- (Routes based on Eureka) ---->
+[Payment Service]
+       ^                                  |
+       |                                  | (Wraps with Circuit Breaker)
+       |                                  V
+       |                            [External Payment Gateway (Stripe/Razorpay)]
+       |                                  |
+       |                                  V (Webhooks - HTTP POST)
+       |                            [Payment Service] <-------------------------
+       |                                  |
+       |                                  | (Publishes "Payment
+Completed" event)
+       |                                  V
+       |                            [Message Broker (Kafka/RabbitMQ)]
+       |                                  |       |
+       |                                  V       V
+       |                            [Order Service] [Notification Service]
+       | (Consumes and updates Order)   (Consumes and sends email/SMS)
+       |
+[Config Server] <---- (Provides dynamic configs to all services & Gateway)
+       ^
+       | (Fetches configs from)
+       |
+[Git Repository (YAML files)]
+
+
+[Eureka Server] <---- (Registers and provides lookup for all services & Gateway)
+
+This comprehensive example shows how these Spring Cloud components work
+together to build a robust, scalable, and resilient microservices
+architecture for an e-commerce application.
+
+--000000000000e27a2b063917772d
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><p style=3D"background:none 0% 0%/auto repeat scroll paddi=
+ng-box border-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:none;co=
+lor:rgb(27,28,29);columns:auto;direction:ltr;display:block;float:none;isola=
+tion:auto;margin-top:0px!important;margin-right:0px;margin-bottom:16px;marg=
+in-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px;quotes:aut=
+o;speak:normal;zoom:1;font-family:&quot;Google Sans Text&quot;,sans-serif!i=
+mportant;line-height:1.15!important">Let&#39;s design a simplified <b style=
+=3D"background:none 0% 0%/auto repeat scroll padding-box border-box rgba(0,=
+0,0,0);border:0px none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns=
+:auto;direction:ltr;display:inline;float:none;isolation:auto;margin-top:0px=
+!important;margin-right:0px;margin-bottom:0px;margin-left:0px;opacity:1;out=
+line:rgb(27,28,29) none 0px;padding:0px;quotes:auto;speak:normal;zoom:1;fon=
+t-family:&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.15=
+!important">E-commerce Order Processing and Payment System</b> using the Sp=
+ring Cloud ecosystem. This will demonstrate the interplay of the technologi=
+es you mentioned.</p><p style=3D"background:none 0% 0%/auto repeat scroll p=
+adding-box border-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:non=
+e;color:rgb(27,28,29);columns:auto;direction:ltr;display:block;float:none;i=
+solation:auto;margin-top:0px!important;margin-right:0px;margin-bottom:16px;=
+margin-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px;quotes=
+:auto;speak:normal;zoom:1;font-family:&quot;Google Sans Text&quot;,sans-ser=
+if!important;line-height:1.15!important"></p><h2 style=3D"background:none 0=
+% 0%/auto repeat scroll padding-box border-box rgba(0,0,0,0);border:0px non=
+e rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto;direction:ltr;d=
+isplay:block;float:none;isolation:auto;margin-top:0px!important;margin-righ=
+t:0px;margin-bottom:8px;margin-left:0px;opacity:1;outline:rgb(27,28,29) non=
+e 0px;padding:0px;quotes:auto;speak:normal;zoom:1;font-family:&quot;Google =
+Sans&quot;,sans-serif!important;line-height:1.15!important">Application Ove=
+rview: E-commerce Order &amp; Payment System</h2><p style=3D"background:non=
+e 0% 0%/auto repeat scroll padding-box border-box rgba(0,0,0,0);border:0px =
+none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto;direction:lt=
+r;display:block;float:none;isolation:auto;margin-top:0px!important;margin-r=
+ight:0px;margin-bottom:16px;margin-left:0px;opacity:1;outline:rgb(27,28,29)=
+ none 0px;padding:0px;quotes:auto;speak:normal;zoom:1;font-family:&quot;Goo=
+gle Sans Text&quot;,sans-serif!important;line-height:1.15!important"></p><p=
+ style=3D"background:none 0% 0%/auto repeat scroll padding-box border-box r=
+gba(0,0,0,0);border:0px none rgb(27,28,29);clear:none;color:rgb(27,28,29);c=
+olumns:auto;direction:ltr;display:block;float:none;isolation:auto;margin-to=
+p:0px!important;margin-right:0px;margin-bottom:8px;margin-left:0px;opacity:=
+1;outline:rgb(27,28,29) none 0px;padding:0px;quotes:auto;speak:normal;zoom:=
+1;font-family:&quot;Google Sans Text&quot;,sans-serif!important;line-height=
+:1.15!important">Our E-commerce system will allow users to:</p><ol start=3D=
+"1" style=3D"background:none 0% 0%/auto repeat scroll padding-box border-bo=
+x rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:none;color:rgb(27,28,29=
+);columns:auto;direction:ltr;display:block;float:none;isolation:auto;margin=
+-top:0px!important;margin-right:0px;margin-bottom:16px;margin-left:0px;opac=
+ity:1;outline:rgb(27,28,29) none 0px;padding:0px 0px 0px 28px;quotes:auto;s=
+peak:normal;zoom:1;font-family:&quot;Google Sans Text&quot;,sans-serif!impo=
+rtant;line-height:1.15!important"><li style=3D"background:none 0% 0%/auto r=
+epeat scroll padding-box border-box rgba(0,0,0,0);border:0px none rgb(27,28=
+,29);clear:none;color:rgb(27,28,29);columns:auto;direction:ltr;display:list=
+-item;float:none;isolation:auto;margin-top:0px!important;margin-right:0px;m=
+argin-bottom:8px;margin-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;p=
+adding:0px 0px 0px 4px;quotes:auto;speak:normal;zoom:1;font-family:&quot;Go=
+ogle Sans Text&quot;,sans-serif!important;line-height:1.15!important"><p st=
+yle=3D"background:none 0% 0%/auto repeat scroll padding-box border-box rgba=
+(0,0,0,0);border:0px none rgb(27,28,29);clear:none;color:rgb(27,28,29);colu=
+mns:auto;direction:ltr;display:block;float:none;isolation:auto;margin-top:0=
+px!important;margin-right:0px;margin-bottom:8px;margin-left:0px;opacity:1;o=
+utline:rgb(27,28,29) none 0px;padding:0px 0px 0px 4px;quotes:auto;speak:nor=
+mal;zoom:1;font-family:&quot;Google Sans Text&quot;,sans-serif!important;li=
+ne-height:1.15!important">Browse products (not explicitly covered by servic=
+es here, but implied).</p></li><li style=3D"background:none 0% 0%/auto repe=
+at scroll padding-box border-box rgba(0,0,0,0);border:0px none rgb(27,28,29=
+);clear:none;color:rgb(27,28,29);columns:auto;direction:ltr;display:list-it=
+em;float:none;isolation:auto;margin-top:0px!important;margin-right:0px;marg=
+in-bottom:8px;margin-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;padd=
+ing:0px 0px 0px 4px;quotes:auto;speak:normal;zoom:1;font-family:&quot;Googl=
+e Sans Text&quot;,sans-serif!important;line-height:1.15!important"><p style=
+=3D"background:none 0% 0%/auto repeat scroll padding-box border-box rgba(0,=
+0,0,0);border:0px none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns=
+:auto;direction:ltr;display:block;float:none;isolation:auto;margin-top:0px!=
+important;margin-right:0px;margin-bottom:8px;margin-left:0px;opacity:1;outl=
+ine:rgb(27,28,29) none 0px;padding:0px 0px 0px 4px;quotes:auto;speak:normal=
+;zoom:1;font-family:&quot;Google Sans Text&quot;,sans-serif!important;line-=
+height:1.15!important">Place orders.</p></li><li style=3D"background:none 0=
+% 0%/auto repeat scroll padding-box border-box rgba(0,0,0,0);border:0px non=
+e rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto;direction:ltr;d=
+isplay:list-item;float:none;isolation:auto;margin-top:0px!important;margin-=
+right:0px;margin-bottom:8px;margin-left:0px;opacity:1;outline:rgb(27,28,29)=
+ none 0px;padding:0px 0px 0px 4px;quotes:auto;speak:normal;zoom:1;font-fami=
+ly:&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.15!impor=
+tant"><p style=3D"background:none 0% 0%/auto repeat scroll padding-box bord=
+er-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:none;color:rgb(27,=
+28,29);columns:auto;direction:ltr;display:block;float:none;isolation:auto;m=
+argin-top:0px!important;margin-right:0px;margin-bottom:8px;margin-left:0px;=
+opacity:1;outline:rgb(27,28,29) none 0px;padding:0px 0px 0px 4px;quotes:aut=
+o;speak:normal;zoom:1;font-family:&quot;Google Sans Text&quot;,sans-serif!i=
+mportant;line-height:1.15!important">Process payments.</p></li><li style=3D=
+"background:none 0% 0%/auto repeat scroll padding-box border-box rgba(0,0,0=
+,0);border:0px none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:au=
+to;direction:ltr;display:list-item;float:none;isolation:auto;margin-top:0px=
+!important;margin-right:0px;margin-bottom:8px;margin-left:0px;opacity:1;out=
+line:rgb(27,28,29) none 0px;padding:0px 0px 0px 4px;quotes:auto;speak:norma=
+l;zoom:1;font-family:&quot;Google Sans Text&quot;,sans-serif!important;line=
+-height:1.15!important"><p style=3D"background:none 0% 0%/auto repeat scrol=
+l padding-box border-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:=
+none;color:rgb(27,28,29);columns:auto;direction:ltr;display:block;float:non=
+e;isolation:auto;margin-top:0px!important;margin-right:0px;margin-bottom:8p=
+x;margin-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px 0px =
+0px 4px;quotes:auto;speak:normal;zoom:1;font-family:&quot;Google Sans Text&=
+quot;,sans-serif!important;line-height:1.15!important">Receive order confir=
+mations and potentially shipping updates.</p></li></ol><p style=3D"backgrou=
+nd:none 0% 0%/auto repeat scroll padding-box border-box rgba(0,0,0,0);borde=
+r:0px none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto;direct=
+ion:ltr;display:block;float:none;isolation:auto;margin-top:0px!important;ma=
+rgin-right:0px;margin-bottom:8px;margin-left:0px;opacity:1;outline:rgb(27,2=
+8,29) none 0px;padding:0px;quotes:auto;speak:normal;zoom:1;font-family:&quo=
+t;Google Sans Text&quot;,sans-serif!important;line-height:1.15!important"><=
+b style=3D"background:none 0% 0%/auto repeat scroll padding-box border-box =
+rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:none;color:rgb(27,28,29);=
+columns:auto;direction:ltr;display:inline;float:none;isolation:auto;margin-=
+top:0px!important;margin-right:0px;margin-bottom:0px;margin-left:0px;opacit=
+y:1;outline:rgb(27,28,29) none 0px;padding:0px;quotes:auto;speak:normal;zoo=
+m:1;font-family:&quot;Google Sans Text&quot;,sans-serif!important;line-heig=
+ht:1.15!important">Microservices involved:</b></p><ul style=3D"background:n=
+one 0% 0%/auto repeat scroll padding-box border-box rgba(0,0,0,0);border:0p=
+x none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto;direction:=
+ltr;display:block;float:none;isolation:auto;margin-top:0px!important;margin=
+-right:0px;margin-bottom:16px;margin-left:0px;opacity:1;outline:rgb(27,28,2=
+9) none 0px;padding:0px 0px 0px 27px;quotes:auto;speak:normal;zoom:1;font-f=
+amily:&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.15!im=
+portant"><li style=3D"background:none 0% 0%/auto repeat scroll padding-box =
+border-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:none;color:rgb=
+(27,28,29);columns:auto;direction:ltr;display:list-item;float:none;isolatio=
+n:auto;margin-top:0px!important;margin-right:0px;margin-bottom:8px;margin-l=
+eft:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px 0px 0px 4px;qu=
+otes:auto;speak:normal;zoom:1;font-family:&quot;Google Sans Text&quot;,sans=
+-serif!important;line-height:1.15!important"><p style=3D"background:none 0%=
+ 0%/auto repeat scroll padding-box border-box rgba(0,0,0,0);border:0px none=
+ rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto;direction:ltr;di=
+splay:block;float:none;isolation:auto;margin-top:0px!important;margin-right=
+:0px;margin-bottom:8px;margin-left:0px;opacity:1;outline:rgb(27,28,29) none=
+ 0px;padding:0px 0px 0px 4px;quotes:auto;speak:normal;zoom:1;font-family:&q=
+uot;Google Sans Text&quot;,sans-serif!important;line-height:1.15!important"=
+><b style=3D"background:none 0% 0%/auto repeat scroll padding-box border-bo=
+x rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:none;color:rgb(27,28,29=
+);columns:auto;direction:ltr;display:inline;float:none;isolation:auto;margi=
+n-top:0px!important;margin-right:0px;margin-bottom:0px;margin-left:0px;opac=
+ity:1;outline:rgb(27,28,29) none 0px;padding:0px;quotes:auto;speak:normal;z=
+oom:1;font-family:&quot;Google Sans Text&quot;,sans-serif!important;line-he=
+ight:1.15!important">Order Service:</b> Handles creating, retrieving, and m=
+anaging orders.</p></li><li style=3D"background:none 0% 0%/auto repeat scro=
+ll padding-box border-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear=
+:none;color:rgb(27,28,29);columns:auto;direction:ltr;display:list-item;floa=
+t:none;isolation:auto;margin-top:0px!important;margin-right:0px;margin-bott=
+om:8px;margin-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px=
+ 0px 0px 4px;quotes:auto;speak:normal;zoom:1;font-family:&quot;Google Sans =
+Text&quot;,sans-serif!important;line-height:1.15!important"><p style=3D"bac=
+kground:none 0% 0%/auto repeat scroll padding-box border-box rgba(0,0,0,0);=
+border:0px none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto;d=
+irection:ltr;display:block;float:none;isolation:auto;margin-top:0px!importa=
+nt;margin-right:0px;margin-bottom:8px;margin-left:0px;opacity:1;outline:rgb=
+(27,28,29) none 0px;padding:0px 0px 0px 4px;quotes:auto;speak:normal;zoom:1=
+;font-family:&quot;Google Sans Text&quot;,sans-serif!important;line-height:=
+1.15!important"><b style=3D"background:none 0% 0%/auto repeat scroll paddin=
+g-box border-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:none;col=
+or:rgb(27,28,29);columns:auto;direction:ltr;display:inline;float:none;isola=
+tion:auto;margin-top:0px!important;margin-right:0px;margin-bottom:0px;margi=
+n-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px;quotes:auto=
+;speak:normal;zoom:1;font-family:&quot;Google Sans Text&quot;,sans-serif!im=
+portant;line-height:1.15!important">Payment Service:</b> Manages payment tr=
+ansactions with external payment gateways.</p></li><li style=3D"background:=
+none 0% 0%/auto repeat scroll padding-box border-box rgba(0,0,0,0);border:0=
+px none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto;direction=
+:ltr;display:list-item;float:none;isolation:auto;margin-top:0px!important;m=
+argin-right:0px;margin-bottom:8px;margin-left:0px;opacity:1;outline:rgb(27,=
+28,29) none 0px;padding:0px 0px 0px 4px;quotes:auto;speak:normal;zoom:1;fon=
+t-family:&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.15=
+!important"><p style=3D"background:none 0% 0%/auto repeat scroll padding-bo=
+x border-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:none;color:r=
+gb(27,28,29);columns:auto;direction:ltr;display:block;float:none;isolation:=
+auto;margin-top:0px!important;margin-right:0px;margin-bottom:8px;margin-lef=
+t:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px 0px 0px 4px;quot=
+es:auto;speak:normal;zoom:1;font-family:&quot;Google Sans Text&quot;,sans-s=
+erif!important;line-height:1.15!important"><b style=3D"background:none 0% 0=
+%/auto repeat scroll padding-box border-box rgba(0,0,0,0);border:0px none r=
+gb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto;direction:ltr;disp=
+lay:inline;float:none;isolation:auto;margin-top:0px!important;margin-right:=
+0px;margin-bottom:0px;margin-left:0px;opacity:1;outline:rgb(27,28,29) none =
+0px;padding:0px;quotes:auto;speak:normal;zoom:1;font-family:&quot;Google Sa=
+ns Text&quot;,sans-serif!important;line-height:1.15!important">Notification=
+ Service:</b> Sends email/SMS confirmations.</p></li><li style=3D"backgroun=
+d:none 0% 0%/auto repeat scroll padding-box border-box rgba(0,0,0,0);border=
+:0px none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto;directi=
+on:ltr;display:list-item;float:none;isolation:auto;margin-top:0px!important=
+;margin-right:0px;margin-bottom:8px;margin-left:0px;opacity:1;outline:rgb(2=
+7,28,29) none 0px;padding:0px 0px 0px 4px;quotes:auto;speak:normal;zoom:1;f=
+ont-family:&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.=
+15!important"><p style=3D"background:none 0% 0%/auto repeat scroll padding-=
+box border-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:none;color=
+:rgb(27,28,29);columns:auto;direction:ltr;display:block;float:none;isolatio=
+n:auto;margin-top:0px!important;margin-right:0px;margin-bottom:8px;margin-l=
+eft:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px 0px 0px 4px;qu=
+otes:auto;speak:normal;zoom:1;font-family:&quot;Google Sans Text&quot;,sans=
+-serif!important;line-height:1.15!important"><b style=3D"background:none 0%=
+ 0%/auto repeat scroll padding-box border-box rgba(0,0,0,0);border:0px none=
+ rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto;direction:ltr;di=
+splay:inline;float:none;isolation:auto;margin-top:0px!important;margin-righ=
+t:0px;margin-bottom:0px;margin-left:0px;opacity:1;outline:rgb(27,28,29) non=
+e 0px;padding:0px;quotes:auto;speak:normal;zoom:1;font-family:&quot;Google =
+Sans Text&quot;,sans-serif!important;line-height:1.15!important">Inventory =
+Service:</b> Manages product stock (simplified for this example).</p></li><=
+/ul><p style=3D"background:none 0% 0%/auto repeat scroll padding-box border=
+-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:none;color:rgb(27,28=
+,29);columns:auto;direction:ltr;display:block;float:none;isolation:auto;mar=
+gin-top:0px!important;margin-right:0px;margin-bottom:8px;margin-left:0px;op=
+acity:1;outline:rgb(27,28,29) none 0px;padding:0px;quotes:auto;speak:normal=
+;zoom:1;font-family:&quot;Google Sans Text&quot;,sans-serif!important;line-=
+height:1.15!important"><b style=3D"background:none 0% 0%/auto repeat scroll=
+ padding-box border-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:n=
+one;color:rgb(27,28,29);columns:auto;direction:ltr;display:inline;float:non=
+e;isolation:auto;margin-top:0px!important;margin-right:0px;margin-bottom:0p=
+x;margin-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px;quot=
+es:auto;speak:normal;zoom:1;font-family:&quot;Google Sans Text&quot;,sans-s=
+erif!important;line-height:1.15!important">Spring Cloud Components &amp; Th=
+eir Roles:</b></p><ul style=3D"background:none 0% 0%/auto repeat scroll pad=
+ding-box border-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:none;=
+color:rgb(27,28,29);columns:auto;direction:ltr;display:block;float:none;iso=
+lation:auto;margin-top:0px!important;margin-right:0px;margin-bottom:16px;ma=
+rgin-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px 0px 0px =
+27px;quotes:auto;speak:normal;zoom:1;font-family:&quot;Google Sans Text&quo=
+t;,sans-serif!important;line-height:1.15!important"><li style=3D"background=
+:none 0% 0%/auto repeat scroll padding-box border-box rgba(0,0,0,0);border:=
+0px none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto;directio=
+n:ltr;display:list-item;float:none;isolation:auto;margin-top:0px!important;=
+margin-right:0px;margin-bottom:8px;margin-left:0px;opacity:1;outline:rgb(27=
+,28,29) none 0px;padding:0px 0px 0px 4px;quotes:auto;speak:normal;zoom:1;fo=
+nt-family:&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.1=
+5!important"><p style=3D"background:none 0% 0%/auto repeat scroll padding-b=
+ox border-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:none;color:=
+rgb(27,28,29);columns:auto;direction:ltr;display:block;float:none;isolation=
+:auto;margin-top:0px!important;margin-right:0px;margin-bottom:8px;margin-le=
+ft:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px 0px 0px 4px;quo=
+tes:auto;speak:normal;zoom:1;font-family:&quot;Google Sans Text&quot;,sans-=
+serif!important;line-height:1.15!important"><b style=3D"background:none 0% =
+0%/auto repeat scroll padding-box border-box rgba(0,0,0,0);border:0px none =
+rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto;direction:ltr;dis=
+play:inline;float:none;isolation:auto;margin-top:0px!important;margin-right=
+:0px;margin-bottom:0px;margin-left:0px;opacity:1;outline:rgb(27,28,29) none=
+ 0px;padding:0px;quotes:auto;speak:normal;zoom:1;font-family:&quot;Google S=
+ans Text&quot;,sans-serif!important;line-height:1.15!important">Spring Clou=
+d Eureka (Service Discovery):</b> The &quot;phone book&quot; for all our mi=
+croservices. Each microservice registers itself here.</p></li><li style=3D"=
+background:none 0% 0%/auto repeat scroll padding-box border-box rgba(0,0,0,=
+0);border:0px none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:aut=
+o;direction:ltr;display:list-item;float:none;isolation:auto;margin-top:0px!=
+important;margin-right:0px;margin-bottom:8px;margin-left:0px;opacity:1;outl=
+ine:rgb(27,28,29) none 0px;padding:0px 0px 0px 4px;quotes:auto;speak:normal=
+;zoom:1;font-family:&quot;Google Sans Text&quot;,sans-serif!important;line-=
+height:1.15!important"><p style=3D"background:none 0% 0%/auto repeat scroll=
+ padding-box border-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:n=
+one;color:rgb(27,28,29);columns:auto;direction:ltr;display:block;float:none=
+;isolation:auto;margin-top:0px!important;margin-right:0px;margin-bottom:8px=
+;margin-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px 0px 0=
+px 4px;quotes:auto;speak:normal;zoom:1;font-family:&quot;Google Sans Text&q=
+uot;,sans-serif!important;line-height:1.15!important"><b style=3D"backgroun=
+d:none 0% 0%/auto repeat scroll padding-box border-box rgba(0,0,0,0);border=
+:0px none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto;directi=
+on:ltr;display:inline;float:none;isolation:auto;margin-top:0px!important;ma=
+rgin-right:0px;margin-bottom:0px;margin-left:0px;opacity:1;outline:rgb(27,2=
+8,29) none 0px;padding:0px;quotes:auto;speak:normal;zoom:1;font-family:&quo=
+t;Google Sans Text&quot;,sans-serif!important;line-height:1.15!important">S=
+pring Cloud API Gateway:</b> The single entry point for all client requests=
+. It routes requests to the correct microservice and can handle cross-cutti=
+ng concerns like authentication, rate limiting, etc.</p></li><li style=3D"b=
+ackground:none 0% 0%/auto repeat scroll padding-box border-box rgba(0,0,0,0=
+);border:0px none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto=
+;direction:ltr;display:list-item;float:none;isolation:auto;margin-top:0px!i=
+mportant;margin-right:0px;margin-bottom:8px;margin-left:0px;opacity:1;outli=
+ne:rgb(27,28,29) none 0px;padding:0px 0px 0px 4px;quotes:auto;speak:normal;=
+zoom:1;font-family:&quot;Google Sans Text&quot;,sans-serif!important;line-h=
+eight:1.15!important"><p style=3D"background:none 0% 0%/auto repeat scroll =
+padding-box border-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:no=
+ne;color:rgb(27,28,29);columns:auto;direction:ltr;display:block;float:none;=
+isolation:auto;margin-top:0px!important;margin-right:0px;margin-bottom:8px;=
+margin-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px 0px 0p=
+x 4px;quotes:auto;speak:normal;zoom:1;font-family:&quot;Google Sans Text&qu=
+ot;,sans-serif!important;line-height:1.15!important"><b style=3D"background=
+:none 0% 0%/auto repeat scroll padding-box border-box rgba(0,0,0,0);border:=
+0px none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto;directio=
+n:ltr;display:inline;float:none;isolation:auto;margin-top:0px!important;mar=
+gin-right:0px;margin-bottom:0px;margin-left:0px;opacity:1;outline:rgb(27,28=
+,29) none 0px;padding:0px;quotes:auto;speak:normal;zoom:1;font-family:&quot=
+;Google Sans Text&quot;,sans-serif!important;line-height:1.15!important">Sp=
+ring Cloud Config Server:</b> Centralizes configuration for all microservic=
+es, allowing dynamic updates without restarting services.</p></li><li style=
+=3D"background:none 0% 0%/auto repeat scroll padding-box border-box rgba(0,=
+0,0,0);border:0px none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns=
+:auto;direction:ltr;display:list-item;float:none;isolation:auto;margin-top:=
+0px!important;margin-right:0px;margin-bottom:8px;margin-left:0px;opacity:1;=
+outline:rgb(27,28,29) none 0px;padding:0px 0px 0px 4px;quotes:auto;speak:no=
+rmal;zoom:1;font-family:&quot;Google Sans Text&quot;,sans-serif!important;l=
+ine-height:1.15!important"><p style=3D"background:none 0% 0%/auto repeat sc=
+roll padding-box border-box rgba(0,0,0,0);border:0px none rgb(27,28,29);cle=
+ar:none;color:rgb(27,28,29);columns:auto;direction:ltr;display:block;float:=
+none;isolation:auto;margin-top:0px!important;margin-right:0px;margin-bottom=
+:8px;margin-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px 0=
+px 0px 4px;quotes:auto;speak:normal;zoom:1;font-family:&quot;Google Sans Te=
+xt&quot;,sans-serif!important;line-height:1.15!important"><b style=3D"backg=
+round:none 0% 0%/auto repeat scroll padding-box border-box rgba(0,0,0,0);bo=
+rder:0px none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto;dir=
+ection:ltr;display:inline;float:none;isolation:auto;margin-top:0px!importan=
+t;margin-right:0px;margin-bottom:0px;margin-left:0px;opacity:1;outline:rgb(=
+27,28,29) none 0px;padding:0px;quotes:auto;speak:normal;zoom:1;font-family:=
+&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.15!importan=
+t">Spring Cloud Circuit Breaker (e.g., Resilience4j):</b> Provides fault to=
+lerance by preventing cascading failures when a service is slow or unrespon=
+sive.</p></li><li style=3D"background:none 0% 0%/auto repeat scroll padding=
+-box border-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:none;colo=
+r:rgb(27,28,29);columns:auto;direction:ltr;display:list-item;float:none;iso=
+lation:auto;margin-top:0px!important;margin-right:0px;margin-bottom:8px;mar=
+gin-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px 0px 0px 4=
+px;quotes:auto;speak:normal;zoom:1;font-family:&quot;Google Sans Text&quot;=
+,sans-serif!important;line-height:1.15!important"><p style=3D"background:no=
+ne 0% 0%/auto repeat scroll padding-box border-box rgba(0,0,0,0);border:0px=
+ none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto;direction:l=
+tr;display:block;float:none;isolation:auto;margin-top:0px!important;margin-=
+right:0px;margin-bottom:8px;margin-left:0px;opacity:1;outline:rgb(27,28,29)=
+ none 0px;padding:0px 0px 0px 4px;quotes:auto;speak:normal;zoom:1;font-fami=
+ly:&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.15!impor=
+tant"><b style=3D"background:none 0% 0%/auto repeat scroll padding-box bord=
+er-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:none;color:rgb(27,=
+28,29);columns:auto;direction:ltr;display:inline;float:none;isolation:auto;=
+margin-top:0px!important;margin-right:0px;margin-bottom:0px;margin-left:0px=
+;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px;quotes:auto;speak:nor=
+mal;zoom:1;font-family:&quot;Google Sans Text&quot;,sans-serif!important;li=
+ne-height:1.15!important">Message Broker (e.g., Apache Kafka or RabbitMQ):<=
+/b> Enables asynchronous communication between microservices, decoupling th=
+em and improving resilience.</p></li><li style=3D"background:none 0% 0%/aut=
+o repeat scroll padding-box border-box rgba(0,0,0,0);border:0px none rgb(27=
+,28,29);clear:none;color:rgb(27,28,29);columns:auto;direction:ltr;display:l=
+ist-item;float:none;isolation:auto;margin-top:0px!important;margin-right:0p=
+x;margin-bottom:8px;margin-left:0px;opacity:1;outline:rgb(27,28,29) none 0p=
+x;padding:0px 0px 0px 4px;quotes:auto;speak:normal;zoom:1;font-family:&quot=
+;Google Sans Text&quot;,sans-serif!important;line-height:1.15!important"><p=
+ style=3D"background:none 0% 0%/auto repeat scroll padding-box border-box r=
+gba(0,0,0,0);border:0px none rgb(27,28,29);clear:none;color:rgb(27,28,29);c=
+olumns:auto;direction:ltr;display:block;float:none;isolation:auto;margin-to=
+p:0px!important;margin-right:0px;margin-bottom:8px;margin-left:0px;opacity:=
+1;outline:rgb(27,28,29) none 0px;padding:0px 0px 0px 4px;quotes:auto;speak:=
+normal;zoom:1;font-family:&quot;Google Sans Text&quot;,sans-serif!important=
+;line-height:1.15!important"><b style=3D"background:none 0% 0%/auto repeat =
+scroll padding-box border-box rgba(0,0,0,0);border:0px none rgb(27,28,29);c=
+lear:none;color:rgb(27,28,29);columns:auto;direction:ltr;display:inline;flo=
+at:none;isolation:auto;margin-top:0px!important;margin-right:0px;margin-bot=
+tom:0px;margin-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0p=
+x;quotes:auto;speak:normal;zoom:1;font-family:&quot;Google Sans Text&quot;,=
+sans-serif!important;line-height:1.15!important">Payment System Webhooks:</=
+b> A mechanism for the external Payment Gateway to notify our system about =
+the outcome of a payment transaction (e.g., success/failure).</p></li></ul>=
+<hr style=3D"background:none 0% 0%/auto repeat scroll padding-box border-bo=
+x rgba(0,0,0,0);clear:none;color:rgb(27,28,29);columns:auto;direction:ltr;d=
+isplay:block;float:none;isolation:auto;margin-top:0px!important;margin-righ=
+t:0px;margin-bottom:8px;margin-left:0px;opacity:1;outline:rgb(27,28,29) non=
+e 0px;padding:0px;quotes:auto;speak:normal;zoom:1;font-family:&quot;Google =
+Sans Text&quot;,sans-serif!important;line-height:1.15!important"><p style=
+=3D"background:none 0% 0%/auto repeat scroll padding-box border-box rgba(0,=
+0,0,0);border:0px none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns=
+:auto;direction:ltr;display:block;float:none;isolation:auto;margin-top:0px!=
+important;margin-right:0px;margin-bottom:16px;margin-left:0px;opacity:1;out=
+line:rgb(27,28,29) none 0px;padding:0px;quotes:auto;speak:normal;zoom:1;fon=
+t-family:&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.15=
+!important"></p><h2 style=3D"background:none 0% 0%/auto repeat scroll paddi=
+ng-box border-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:none;co=
+lor:rgb(27,28,29);columns:auto;direction:ltr;display:block;float:none;isola=
+tion:auto;margin-top:0px!important;margin-right:0px;margin-bottom:8px;margi=
+n-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px;quotes:auto=
+;speak:normal;zoom:1;font-family:&quot;Google Sans&quot;,sans-serif!importa=
+nt;line-height:1.15!important">Flow-by-Flow Explanation</h2><p style=3D"bac=
+kground:none 0% 0%/auto repeat scroll padding-box border-box rgba(0,0,0,0);=
+border:0px none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto;d=
+irection:ltr;display:block;float:none;isolation:auto;margin-top:0px!importa=
+nt;margin-right:0px;margin-bottom:16px;margin-left:0px;opacity:1;outline:rg=
+b(27,28,29) none 0px;padding:0px;quotes:auto;speak:normal;zoom:1;font-famil=
+y:&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.15!import=
+ant"></p><p style=3D"background:none 0% 0%/auto repeat scroll padding-box b=
+order-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:none;color:rgb(=
+27,28,29);columns:auto;direction:ltr;display:block;float:none;isolation:aut=
+o;margin-top:0px!important;margin-right:0px;margin-bottom:16px;margin-left:=
+0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px;quotes:auto;speak:=
+normal;zoom:1;font-family:&quot;Google Sans Text&quot;,sans-serif!important=
+;line-height:1.15!important">Let&#39;s trace a user placing an order and co=
+mpleting a payment.</p><p style=3D"background:none 0% 0%/auto repeat scroll=
+ padding-box border-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:n=
+one;color:rgb(27,28,29);columns:auto;direction:ltr;display:block;float:none=
+;isolation:auto;margin-top:0px!important;margin-right:0px;margin-bottom:16p=
+x;margin-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px;quot=
+es:auto;speak:normal;zoom:1;font-family:&quot;Google Sans Text&quot;,sans-s=
+erif!important;line-height:1.15!important"></p><h3 style=3D"background:none=
+ 0% 0%/auto repeat scroll padding-box border-box rgba(0,0,0,0);border:0px n=
+one rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto;direction:ltr=
+;display:block;float:none;isolation:auto;margin-top:0px!important;margin-ri=
+ght:0px;margin-bottom:8px;margin-left:0px;opacity:1;outline:rgb(27,28,29) n=
+one 0px;padding:0px;quotes:auto;speak:normal;zoom:1;font-family:&quot;Googl=
+e Sans&quot;,sans-serif!important;line-height:1.15!important"><b style=3D"b=
+ackground:none 0% 0%/auto repeat scroll padding-box border-box rgba(0,0,0,0=
+);border:0px none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto=
+;direction:ltr;display:inline;float:none;isolation:auto;margin-top:0px!impo=
+rtant;margin-right:0px;margin-bottom:0px;margin-left:0px;opacity:1;outline:=
+rgb(27,28,29) none 0px;padding:0px;quotes:auto;speak:normal;zoom:1;font-fam=
+ily:&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.15!impo=
+rtant">Phase 1: System Initialization and Configuration</b></h3><p style=3D=
+"background:none 0% 0%/auto repeat scroll padding-box border-box rgba(0,0,0=
+,0);border:0px none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:au=
+to;direction:ltr;display:block;float:none;isolation:auto;margin-top:0px!imp=
+ortant;margin-right:0px;margin-bottom:16px;margin-left:0px;opacity:1;outlin=
+e:rgb(27,28,29) none 0px;padding:0px;quotes:auto;speak:normal;zoom:1;font-f=
+amily:&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.15!im=
+portant"></p><p style=3D"padding-top:0px;padding-bottom:0px;font-family:&qu=
+ot;Google Sans Text&quot;,sans-serif!important;line-height:1.15!important;m=
+argin-top:0px!important">1. Config Server Starts Up:</p><p style=3D"padding=
+-top:0px;padding-bottom:0px;font-family:&quot;Google Sans Text&quot;,sans-s=
+erif!important;line-height:1.15!important;margin-top:0px!important">* The C=
+onfig Server (a Spring Boot application with @EnableConfigServer) starts fi=
+rst.</p><p style=3D"padding-top:0px;padding-bottom:0px;font-family:&quot;Go=
+ogle Sans Text&quot;,sans-serif!important;line-height:1.15!important;margin=
+-top:0px!important">* It&#39;s configured to read properties from a Git rep=
+ository (e.g., GitHub, GitLab). This repository holds application.yml or ap=
+plication.properties files for each microservice (e.g., order-service.yml, =
+payment-service.yml, notification-service.yml).</p><p style=3D"padding-top:=
+0px;padding-bottom:0px;font-family:&quot;Google Sans Text&quot;,sans-serif!=
+important;line-height:1.15!important;margin-top:0px!important">* Purpose: C=
+entralized management of configurations. If you want to change a database U=
+RL or an external API key, you change it in one place (Git repo), and servi=
+ces can pick it up.</p><p style=3D"padding-top:0px;padding-bottom:0px;font-=
+family:&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.15!i=
+mportant;margin-top:0px!important">2. Eureka Server Starts Up:</p><p style=
+=3D"padding-top:0px;padding-bottom:0px;font-family:&quot;Google Sans Text&q=
+uot;,sans-serif!important;line-height:1.15!important;margin-top:0px!importa=
+nt">* The Eureka Server (a Spring Boot application with @EnableEurekaServer=
+) starts.</p><p style=3D"padding-top:0px;padding-bottom:0px;font-family:&qu=
+ot;Google Sans Text&quot;,sans-serif!important;line-height:1.15!important;m=
+argin-top:0px!important">* It begins listening for microservices to registe=
+r themselves.</p><p style=3D"padding-top:0px;padding-bottom:0px;font-family=
+:&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.15!importa=
+nt;margin-top:0px!important">* Purpose: The central registry for service di=
+scovery.</p><p style=3D"padding-top:0px;padding-bottom:0px;font-family:&quo=
+t;Google Sans Text&quot;,sans-serif!important;line-height:1.15!important;ma=
+rgin-top:0px!important">3. Microservices Start Up and Register:</p><p style=
+=3D"padding-top:0px;padding-bottom:0px;font-family:&quot;Google Sans Text&q=
+uot;,sans-serif!important;line-height:1.15!important;margin-top:0px!importa=
+nt">* The Order Service, Payment Service, Notification Service, and Invento=
+ry Service (all Spring Boot applications) start up.</p><p style=3D"padding-=
+top:0px;padding-bottom:0px;font-family:&quot;Google Sans Text&quot;,sans-se=
+rif!important;line-height:1.15!important;margin-top:0px!important">* Each o=
+f these services is a Eureka Client (annotated with @EnableDiscoveryClient =
+and configured to point to the Eureka Server).</p><p style=3D"padding-top:0=
+px;padding-bottom:0px;font-family:&quot;Google Sans Text&quot;,sans-serif!i=
+mportant;line-height:1.15!important;margin-top:0px!important">* As they sta=
+rt, they register themselves with the Eureka Server, providing their applic=
+ation name (e.g., order-service, payment-service) and their network locatio=
+n (IP and port).</p><p style=3D"padding-top:0px;padding-bottom:0px;font-fam=
+ily:&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.15!impo=
+rtant;margin-top:0px!important">* Each service also fetches its configurati=
+on from the Config Server upon startup.</p><p style=3D"padding-top:0px;padd=
+ing-bottom:0px;font-family:&quot;Google Sans Text&quot;,sans-serif!importan=
+t;line-height:1.15!important;margin-top:0px!important">* Purpose: Microserv=
+ices become discoverable. They get their necessary configurations from a ce=
+ntral source.</p><p style=3D"padding-top:0px;padding-bottom:0px;font-family=
+:&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.15!importa=
+nt;margin-top:0px!important">4. API Gateway Starts Up and Discovers Routes:=
+</p><p style=3D"padding-top:0px;padding-bottom:0px;font-family:&quot;Google=
+ Sans Text&quot;,sans-serif!important;line-height:1.15!important;margin-top=
+:0px!important">* The Spring Cloud API Gateway (a Spring Boot application w=
+ith @EnableDiscoveryClient and @EnableGateway) starts.</p><p style=3D"paddi=
+ng-top:0px;padding-bottom:0px;font-family:&quot;Google Sans Text&quot;,sans=
+-serif!important;line-height:1.15!important;margin-top:0px!important">* It =
+registers with Eureka and also pulls its routing configuration. This config=
+uration defines rules like: &quot;if a request comes to /api/orders/**, rou=
+te it to the order-service.&quot; The Gateway knows where the order-service=
+ is by querying Eureka.</p><p style=3D"padding-top:0px;padding-bottom:0px;f=
+ont-family:&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.=
+15!important;margin-top:0px!important">* Purpose: The single entry point fo=
+r all external clients, abstracting the underlying microservice architectur=
+e.</p><hr style=3D"background:none 0% 0%/auto repeat scroll padding-box bor=
+der-box rgba(0,0,0,0);clear:none;color:rgb(27,28,29);columns:auto;direction=
+:ltr;display:block;float:none;isolation:auto;margin-top:0px!important;margi=
+n-right:0px;margin-bottom:8px;margin-left:0px;opacity:1;outline:rgb(27,28,2=
+9) none 0px;padding:0px;quotes:auto;speak:normal;zoom:1;font-family:&quot;G=
+oogle Sans Text&quot;,sans-serif!important;line-height:1.15!important"><p s=
+tyle=3D"background:none 0% 0%/auto repeat scroll padding-box border-box rgb=
+a(0,0,0,0);border:0px none rgb(27,28,29);clear:none;color:rgb(27,28,29);col=
+umns:auto;direction:ltr;display:block;float:none;isolation:auto;margin-top:=
+0px!important;margin-right:0px;margin-bottom:16px;margin-left:0px;opacity:1=
+;outline:rgb(27,28,29) none 0px;padding:0px;quotes:auto;speak:normal;zoom:1=
+;font-family:&quot;Google Sans Text&quot;,sans-serif!important;line-height:=
+1.15!important"></p><h3 style=3D"background:none 0% 0%/auto repeat scroll p=
+adding-box border-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:non=
+e;color:rgb(27,28,29);columns:auto;direction:ltr;display:block;float:none;i=
+solation:auto;margin-top:0px!important;margin-right:0px;margin-bottom:8px;m=
+argin-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px;quotes:=
+auto;speak:normal;zoom:1;font-family:&quot;Google Sans&quot;,sans-serif!imp=
+ortant;line-height:1.15!important"><b style=3D"background:none 0% 0%/auto r=
+epeat scroll padding-box border-box rgba(0,0,0,0);border:0px none rgb(27,28=
+,29);clear:none;color:rgb(27,28,29);columns:auto;direction:ltr;display:inli=
+ne;float:none;isolation:auto;margin-top:0px!important;margin-right:0px;marg=
+in-bottom:0px;margin-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;padd=
+ing:0px;quotes:auto;speak:normal;zoom:1;font-family:&quot;Google Sans Text&=
+quot;,sans-serif!important;line-height:1.15!important">Phase 2: User Places=
+ an Order</b></h3><p style=3D"background:none 0% 0%/auto repeat scroll padd=
+ing-box border-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:none;c=
+olor:rgb(27,28,29);columns:auto;direction:ltr;display:block;float:none;isol=
+ation:auto;margin-top:0px!important;margin-right:0px;margin-bottom:16px;mar=
+gin-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px;quotes:au=
+to;speak:normal;zoom:1;font-family:&quot;Google Sans Text&quot;,sans-serif!=
+important;line-height:1.15!important"></p><p style=3D"padding-top:0px;paddi=
+ng-bottom:0px;font-family:&quot;Google Sans Text&quot;,sans-serif!important=
+;line-height:1.15!important;margin-top:0px!important">1. Client Request to =
+API Gateway:</p><p style=3D"padding-top:0px;padding-bottom:0px;font-family:=
+&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.15!importan=
+t;margin-top:0px!important">* A user (via a web browser or mobile app) make=
+s a request to place an order: POST /api/orders</p><p style=3D"padding-top:=
+0px;padding-bottom:0px;font-family:&quot;Google Sans Text&quot;,sans-serif!=
+important;line-height:1.15!important;margin-top:0px!important">* This reque=
+st first hits the Spring Cloud API Gateway.</p><p style=3D"padding-top:0px;=
+padding-bottom:0px;font-family:&quot;Google Sans Text&quot;,sans-serif!impo=
+rtant;line-height:1.15!important;margin-top:0px!important">* API Gateway&#3=
+9;s Role:</p><p style=3D"padding-top:0px;padding-bottom:0px;font-family:&qu=
+ot;Google Sans Text&quot;,sans-serif!important;line-height:1.15!important;m=
+argin-top:0px!important">* Routing: Based on its configuration, the API Gat=
+eway identifies that /api/orders should be routed to the order-service. It =
+looks up order-service in Eureka to find its current address.</p><p style=
+=3D"padding-top:0px;padding-bottom:0px;font-family:&quot;Google Sans Text&q=
+uot;,sans-serif!important;line-height:1.15!important;margin-top:0px!importa=
+nt">* Pre-filters (e.g., Authentication/Authorization): The Gateway might a=
+pply security checks here (e.g., validate JWT token).</p><p style=3D"paddin=
+g-top:0px;padding-bottom:0px;font-family:&quot;Google Sans Text&quot;,sans-=
+serif!important;line-height:1.15!important;margin-top:0px!important">* Rate=
+ Limiting: Prevent too many requests from a single client.</p><p style=3D"p=
+adding-top:0px;padding-bottom:0px;font-family:&quot;Google Sans Text&quot;,=
+sans-serif!important;line-height:1.15!important;margin-top:0px!important">2=
+. Order Service Processes Request:</p><p style=3D"padding-top:0px;padding-b=
+ottom:0px;font-family:&quot;Google Sans Text&quot;,sans-serif!important;lin=
+e-height:1.15!important;margin-top:0px!important">* The request is forwarde=
+d by the API Gateway to the Order Service.</p><p style=3D"padding-top:0px;p=
+adding-bottom:0px;font-family:&quot;Google Sans Text&quot;,sans-serif!impor=
+tant;line-height:1.15!important;margin-top:0px!important">* The Order Servi=
+ce:</p><p style=3D"padding-top:0px;padding-bottom:0px;font-family:&quot;Goo=
+gle Sans Text&quot;,sans-serif!important;line-height:1.15!important;margin-=
+top:0px!important">* Receives the order details (items, user ID, shipping a=
+ddress, etc.).</p><p style=3D"padding-top:0px;padding-bottom:0px;font-famil=
+y:&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.15!import=
+ant;margin-top:0px!important">* Interacts with the Inventory Service (via E=
+ureka for discovery) to check product availability and reserve stock. This =
+communication might use Feign Client or RestTemplate, which are also often =
+integrated with Eureka for service lookup.</p><p style=3D"padding-top:0px;p=
+adding-bottom:0px;font-family:&quot;Google Sans Text&quot;,sans-serif!impor=
+tant;line-height:1.15!important;margin-top:0px!important">* Creates a new O=
+rder record in its database with a &quot;PENDING_PAYMENT&quot; status.</p><=
+p style=3D"padding-top:0px;padding-bottom:0px;font-family:&quot;Google Sans=
+ Text&quot;,sans-serif!important;line-height:1.15!important;margin-top:0px!=
+important">* Returns a response (e.g., 201 Created with order details) to t=
+he API Gateway.</p><p style=3D"padding-top:0px;padding-bottom:0px;font-fami=
+ly:&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.15!impor=
+tant;margin-top:0px!important">3. Response back to Client:</p><p style=3D"p=
+adding-top:0px;padding-bottom:0px;font-family:&quot;Google Sans Text&quot;,=
+sans-serif!important;line-height:1.15!important;margin-top:0px!important">*=
+ The API Gateway receives the response from the Order Service and sends it =
+back to the user.</p><hr style=3D"background:none 0% 0%/auto repeat scroll =
+padding-box border-box rgba(0,0,0,0);clear:none;color:rgb(27,28,29);columns=
+:auto;direction:ltr;display:block;float:none;isolation:auto;margin-top:0px!=
+important;margin-right:0px;margin-bottom:8px;margin-left:0px;opacity:1;outl=
+ine:rgb(27,28,29) none 0px;padding:0px;quotes:auto;speak:normal;zoom:1;font=
+-family:&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.15!=
+important"><p style=3D"background:none 0% 0%/auto repeat scroll padding-box=
+ border-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:none;color:rg=
+b(27,28,29);columns:auto;direction:ltr;display:block;float:none;isolation:a=
+uto;margin-top:0px!important;margin-right:0px;margin-bottom:16px;margin-lef=
+t:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px;quotes:auto;spea=
+k:normal;zoom:1;font-family:&quot;Google Sans Text&quot;,sans-serif!importa=
+nt;line-height:1.15!important"></p><h3 style=3D"background:none 0% 0%/auto =
+repeat scroll padding-box border-box rgba(0,0,0,0);border:0px none rgb(27,2=
+8,29);clear:none;color:rgb(27,28,29);columns:auto;direction:ltr;display:blo=
+ck;float:none;isolation:auto;margin-top:0px!important;margin-right:0px;marg=
+in-bottom:8px;margin-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;padd=
+ing:0px;quotes:auto;speak:normal;zoom:1;font-family:&quot;Google Sans&quot;=
+,sans-serif!important;line-height:1.15!important"><b style=3D"background:no=
+ne 0% 0%/auto repeat scroll padding-box border-box rgba(0,0,0,0);border:0px=
+ none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto;direction:l=
+tr;display:inline;float:none;isolation:auto;margin-top:0px!important;margin=
+-right:0px;margin-bottom:0px;margin-left:0px;opacity:1;outline:rgb(27,28,29=
+) none 0px;padding:0px;quotes:auto;speak:normal;zoom:1;font-family:&quot;Go=
+ogle Sans Text&quot;,sans-serif!important;line-height:1.15!important">Phase=
+ 3: Initiating Payment</b></h3><p style=3D"background:none 0% 0%/auto repea=
+t scroll padding-box border-box rgba(0,0,0,0);border:0px none rgb(27,28,29)=
+;clear:none;color:rgb(27,28,29);columns:auto;direction:ltr;display:block;fl=
+oat:none;isolation:auto;margin-top:0px!important;margin-right:0px;margin-bo=
+ttom:16px;margin-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:=
+0px;quotes:auto;speak:normal;zoom:1;font-family:&quot;Google Sans Text&quot=
+;,sans-serif!important;line-height:1.15!important"></p><p style=3D"padding-=
+top:0px;padding-bottom:0px;font-family:&quot;Google Sans Text&quot;,sans-se=
+rif!important;line-height:1.15!important;margin-top:0px!important">1. Clien=
+t Initiates Payment:</p><p style=3D"padding-top:0px;padding-bottom:0px;font=
+-family:&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.15!=
+important;margin-top:0px!important">* The user&#39;s client application, up=
+on successful order creation, directs to a payment page.</p><p style=3D"pad=
+ding-top:0px;padding-bottom:0px;font-family:&quot;Google Sans Text&quot;,sa=
+ns-serif!important;line-height:1.15!important;margin-top:0px!important">* W=
+hen the user clicks &quot;Pay,&quot; the client sends a request to the API =
+Gateway: POST /api/payments/initiate with order details and payment method =
+(e.g., credit card info).</p><p style=3D"padding-top:0px;padding-bottom:0px=
+;font-family:&quot;Google Sans Text&quot;,sans-serif!important;line-height:=
+1.15!important;margin-top:0px!important">2. API Gateway Routes to Payment S=
+ervice:</p><p style=3D"padding-top:0px;padding-bottom:0px;font-family:&quot=
+;Google Sans Text&quot;,sans-serif!important;line-height:1.15!important;mar=
+gin-top:0px!important">* The API Gateway routes this request to the Payment=
+ Service after looking it up in Eureka.</p><p style=3D"padding-top:0px;padd=
+ing-bottom:0px;font-family:&quot;Google Sans Text&quot;,sans-serif!importan=
+t;line-height:1.15!important;margin-top:0px!important">3. Payment Service I=
+nteracts with External Gateway (Circuit Breaker in action):</p><p style=3D"=
+padding-top:0px;padding-bottom:0px;font-family:&quot;Google Sans Text&quot;=
+,sans-serif!important;line-height:1.15!important;margin-top:0px!important">=
+* The Payment Service receives the request.</p><p style=3D"padding-top:0px;=
+padding-bottom:0px;font-family:&quot;Google Sans Text&quot;,sans-serif!impo=
+rtant;line-height:1.15!important;margin-top:0px!important">* It constructs =
+a payment request payload for an external Payment Gateway (e.g., Stripe, Ra=
+zorpay).</p><p style=3D"padding-top:0px;padding-bottom:0px;font-family:&quo=
+t;Google Sans Text&quot;,sans-serif!important;line-height:1.15!important;ma=
+rgin-top:0px!important">* Circuit Breaker&#39;s Role: When the Payment Serv=
+ice makes the outbound call to the external Payment Gateway, it wraps this =
+call with a Circuit Breaker.</p><p style=3D"padding-top:0px;padding-bottom:=
+0px;font-family:&quot;Google Sans Text&quot;,sans-serif!important;line-heig=
+ht:1.15!important;margin-top:0px!important">* Normal State (CLOSED): The ca=
+ll goes through.</p><p style=3D"padding-top:0px;padding-bottom:0px;font-fam=
+ily:&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.15!impo=
+rtant;margin-top:0px!important">* Failure Threshold: If the external Paymen=
+t Gateway starts responding with errors or timeouts frequently (e.g., 50% f=
+ailures in 10 seconds), the Circuit Breaker &quot;opens.&quot;</p><p style=
+=3D"padding-top:0px;padding-bottom:0px;font-family:&quot;Google Sans Text&q=
+uot;,sans-serif!important;line-height:1.15!important;margin-top:0px!importa=
+nt">* Open State: While open, subsequent calls to the external Payment Gate=
+way are immediately failed (or routed to a fallback method) without even at=
+tempting the actual call. This prevents the Payment Service from getting ov=
+erloaded and allows the external Payment Gateway to recover.</p><p style=3D=
+"padding-top:0px;padding-bottom:0px;font-family:&quot;Google Sans Text&quot=
+;,sans-serif!important;line-height:1.15!important;margin-top:0px!important"=
+>* Half-Open State: After a configured time, the Circuit Breaker allows a f=
+ew test requests to see if the external Payment Gateway has recovered. If t=
+hey succeed, it closes; otherwise, it remains open.</p><p style=3D"padding-=
+top:0px;padding-bottom:0px;font-family:&quot;Google Sans Text&quot;,sans-se=
+rif!important;line-height:1.15!important;margin-top:0px!important">* The Pa=
+yment Service then directs the user to the Payment Gateway&#39;s secure pag=
+e (or handles it directly if it&#39;s an API integration).</p><hr style=3D"=
+background:none 0% 0%/auto repeat scroll padding-box border-box rgba(0,0,0,=
+0);clear:none;color:rgb(27,28,29);columns:auto;direction:ltr;display:block;=
+float:none;isolation:auto;margin-top:0px!important;margin-right:0px;margin-=
+bottom:8px;margin-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding=
+:0px;quotes:auto;speak:normal;zoom:1;font-family:&quot;Google Sans Text&quo=
+t;,sans-serif!important;line-height:1.15!important"><p style=3D"background:=
+none 0% 0%/auto repeat scroll padding-box border-box rgba(0,0,0,0);border:0=
+px none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto;direction=
+:ltr;display:block;float:none;isolation:auto;margin-top:0px!important;margi=
+n-right:0px;margin-bottom:16px;margin-left:0px;opacity:1;outline:rgb(27,28,=
+29) none 0px;padding:0px;quotes:auto;speak:normal;zoom:1;font-family:&quot;=
+Google Sans Text&quot;,sans-serif!important;line-height:1.15!important"></p=
+><h3 style=3D"background:none 0% 0%/auto repeat scroll padding-box border-b=
+ox rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:none;color:rgb(27,28,2=
+9);columns:auto;direction:ltr;display:block;float:none;isolation:auto;margi=
+n-top:0px!important;margin-right:0px;margin-bottom:8px;margin-left:0px;opac=
+ity:1;outline:rgb(27,28,29) none 0px;padding:0px;quotes:auto;speak:normal;z=
+oom:1;font-family:&quot;Google Sans&quot;,sans-serif!important;line-height:=
+1.15!important"><b style=3D"background:none 0% 0%/auto repeat scroll paddin=
+g-box border-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:none;col=
+or:rgb(27,28,29);columns:auto;direction:ltr;display:inline;float:none;isola=
+tion:auto;margin-top:0px!important;margin-right:0px;margin-bottom:0px;margi=
+n-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px;quotes:auto=
+;speak:normal;zoom:1;font-family:&quot;Google Sans Text&quot;,sans-serif!im=
+portant;line-height:1.15!important">Phase 4: Payment Completion &amp; Async=
+hronous Notifications (Webhooks &amp; Message Broker)</b></h3><p style=3D"b=
+ackground:none 0% 0%/auto repeat scroll padding-box border-box rgba(0,0,0,0=
+);border:0px none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto=
+;direction:ltr;display:block;float:none;isolation:auto;margin-top:0px!impor=
+tant;margin-right:0px;margin-bottom:16px;margin-left:0px;opacity:1;outline:=
+rgb(27,28,29) none 0px;padding:0px;quotes:auto;speak:normal;zoom:1;font-fam=
+ily:&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.15!impo=
+rtant"></p><p style=3D"padding-top:0px;padding-bottom:0px;font-family:&quot=
+;Google Sans Text&quot;,sans-serif!important;line-height:1.15!important;mar=
+gin-top:0px!important">1. External Payment Gateway Processes Payment:</p><p=
+ style=3D"padding-top:0px;padding-bottom:0px;font-family:&quot;Google Sans =
+Text&quot;,sans-serif!important;line-height:1.15!important;margin-top:0px!i=
+mportant">* The user completes the payment on the external Payment Gateway&=
+#39;s page.</p><p style=3D"padding-top:0px;padding-bottom:0px;font-family:&=
+quot;Google Sans Text&quot;,sans-serif!important;line-height:1.15!important=
+;margin-top:0px!important">* The external Payment Gateway processes the tra=
+nsaction.</p><p style=3D"padding-top:0px;padding-bottom:0px;font-family:&qu=
+ot;Google Sans Text&quot;,sans-serif!important;line-height:1.15!important;m=
+argin-top:0px!important">2. Payment Gateway Sends Webhook:</p><p style=3D"p=
+adding-top:0px;padding-bottom:0px;font-family:&quot;Google Sans Text&quot;,=
+sans-serif!important;line-height:1.15!important;margin-top:0px!important">*=
+ Once the payment is successful (or failed), the external Payment Gateway s=
+ends a webhook (an HTTP POST request) to a pre-configured endpoint in our s=
+ystem. This endpoint is typically exposed directly by our Payment Service o=
+r via the API Gateway.</p><p style=3D"padding-top:0px;padding-bottom:0px;fo=
+nt-family:&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.1=
+5!important;margin-top:0px!important">* Example Webhook URL: <a href=3D"htt=
+ps://our-ecommerce.com/api/payments/webhook-callback" target=3D"_blank">htt=
+ps://our-ecommerce.com/api/payments/webhook-callback</a></p><p style=3D"pad=
+ding-top:0px;padding-bottom:0px;font-family:&quot;Google Sans Text&quot;,sa=
+ns-serif!important;line-height:1.15!important;margin-top:0px!important">3. =
+Payment Service Receives Webhook:</p><p style=3D"padding-top:0px;padding-bo=
+ttom:0px;font-family:&quot;Google Sans Text&quot;,sans-serif!important;line=
+-height:1.15!important;margin-top:0px!important">* The Payment Service (or =
+API Gateway routing to it) receives the webhook notification.</p><p style=
+=3D"padding-top:0px;padding-bottom:0px;font-family:&quot;Google Sans Text&q=
+uot;,sans-serif!important;line-height:1.15!important;margin-top:0px!importa=
+nt">* It validates the webhook (e.g., by checking a signature to ensure it&=
+#39;s from the legitimate Payment Gateway).</p><p style=3D"padding-top:0px;=
+padding-bottom:0px;font-family:&quot;Google Sans Text&quot;,sans-serif!impo=
+rtant;line-height:1.15!important;margin-top:0px!important">* It updates its=
+ internal records for the payment status.</p><p style=3D"padding-top:0px;pa=
+dding-bottom:0px;font-family:&quot;Google Sans Text&quot;,sans-serif!import=
+ant;line-height:1.15!important;margin-top:0px!important">4. Payment Service=
+ Publishes Message to Message Broker:</p><p style=3D"padding-top:0px;paddin=
+g-bottom:0px;font-family:&quot;Google Sans Text&quot;,sans-serif!important;=
+line-height:1.15!important;margin-top:0px!important">* Instead of directly =
+calling the Order Service or Notification Service, the Payment Service publ=
+ishes a &quot;Payment Completed&quot; or &quot;Payment Failed&quot; event m=
+essage to the Message Broker (e.g., a Kafka topic like payment-events).</p>=
+<p style=3D"padding-top:0px;padding-bottom:0px;font-family:&quot;Google San=
+s Text&quot;,sans-serif!important;line-height:1.15!important;margin-top:0px=
+!important">* The message would contain the orderId, paymentStatus, transac=
+tionId, etc.</p><p style=3D"padding-top:0px;padding-bottom:0px;font-family:=
+&quot;Google Sans Text&quot;,sans-serif!important;line-height:1.15!importan=
+t;margin-top:0px!important">* Message Broker&#39;s Role:</p><p style=3D"pad=
+ding-top:0px;padding-bottom:0px;font-family:&quot;Google Sans Text&quot;,sa=
+ns-serif!important;line-height:1.15!important;margin-top:0px!important">* D=
+ecoupling: The Payment Service doesn&#39;t need to know who needs to know a=
+bout the payment status. It just publishes the event.</p><p style=3D"paddin=
+g-top:0px;padding-bottom:0px;font-family:&quot;Google Sans Text&quot;,sans-=
+serif!important;line-height:1.15!important;margin-top:0px!important">* Asyn=
+chronous: It doesn&#39;t wait for other services to process the event.</p><=
+p style=3D"padding-top:0px;padding-bottom:0px;font-family:&quot;Google Sans=
+ Text&quot;,sans-serif!important;line-height:1.15!important;margin-top:0px!=
+important">* Reliability: The Message Broker ensures the message is deliver=
+ed to all subscribers, even if they are temporarily down.</p><p style=3D"pa=
+dding-top:0px;padding-bottom:0px;font-family:&quot;Google Sans Text&quot;,s=
+ans-serif!important;line-height:1.15!important;margin-top:0px!important">5.=
+ Order Service Consumes Message:</p><p style=3D"padding-top:0px;padding-bot=
+tom:0px;font-family:&quot;Google Sans Text&quot;,sans-serif!important;line-=
+height:1.15!important;margin-top:0px!important">* The Order Service has a c=
+onsumer configured to listen to the payment-events topic on the Message Bro=
+ker.</p><p style=3D"padding-top:0px;padding-bottom:0px;font-family:&quot;Go=
+ogle Sans Text&quot;,sans-serif!important;line-height:1.15!important;margin=
+-top:0px!important">* When it receives a &quot;Payment Completed&quot; mess=
+age for a specific orderId, it updates the order status from &quot;PENDING_=
+PAYMENT&quot; to &quot;PROCESSING&quot; (or &quot;PAID&quot;).</p><p style=
+=3D"padding-top:0px;padding-bottom:0px;font-family:&quot;Google Sans Text&q=
+uot;,sans-serif!important;line-height:1.15!important;margin-top:0px!importa=
+nt">* If it receives a &quot;Payment Failed&quot; message, it updates the o=
+rder status to &quot;PAYMENT_FAILED.&quot;</p><p style=3D"padding-top:0px;p=
+adding-bottom:0px;font-family:&quot;Google Sans Text&quot;,sans-serif!impor=
+tant;line-height:1.15!important;margin-top:0px!important">6. Notification S=
+ervice Consumes Message:</p><p style=3D"padding-top:0px;padding-bottom:0px;=
+font-family:&quot;Google Sans Text&quot;,sans-serif!important;line-height:1=
+.15!important;margin-top:0px!important">* Similarly, the Notification Servi=
+ce also listens to the payment-events topic on the Message Broker.</p><p st=
+yle=3D"padding-top:0px;padding-bottom:0px;font-family:&quot;Google Sans Tex=
+t&quot;,sans-serif!important;line-height:1.15!important;margin-top:0px!impo=
+rtant">* When it receives a &quot;Payment Completed&quot; message, it sends=
+ an order confirmation email/SMS to the user.</p><p style=3D"padding-top:0p=
+x;padding-bottom:0px;font-family:&quot;Google Sans Text&quot;,sans-serif!im=
+portant;line-height:1.15!important;margin-top:0px!important">* If it receiv=
+es a &quot;Payment Failed&quot; message, it might send a notification to th=
+e user about the failed payment and instructions to retry.</p><hr style=3D"=
+background:none 0% 0%/auto repeat scroll padding-box border-box rgba(0,0,0,=
+0);clear:none;color:rgb(27,28,29);columns:auto;direction:ltr;display:block;=
+float:none;isolation:auto;margin-top:0px!important;margin-right:0px;margin-=
+bottom:8px;margin-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding=
+:0px;quotes:auto;speak:normal;zoom:1;font-family:&quot;Google Sans Text&quo=
+t;,sans-serif!important;line-height:1.15!important"><p style=3D"background:=
+none 0% 0%/auto repeat scroll padding-box border-box rgba(0,0,0,0);border:0=
+px none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto;direction=
+:ltr;display:block;float:none;isolation:auto;margin-top:0px!important;margi=
+n-right:0px;margin-bottom:16px;margin-left:0px;opacity:1;outline:rgb(27,28,=
+29) none 0px;padding:0px;quotes:auto;speak:normal;zoom:1;font-family:&quot;=
+Google Sans Text&quot;,sans-serif!important;line-height:1.15!important"></p=
+><h3 style=3D"background:none 0% 0%/auto repeat scroll padding-box border-b=
+ox rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:none;color:rgb(27,28,2=
+9);columns:auto;direction:ltr;display:block;float:none;isolation:auto;margi=
+n-top:0px!important;margin-right:0px;margin-bottom:8px;margin-left:0px;opac=
+ity:1;outline:rgb(27,28,29) none 0px;padding:0px;quotes:auto;speak:normal;z=
+oom:1;font-family:&quot;Google Sans&quot;,sans-serif!important;line-height:=
+1.15!important"><b style=3D"background:none 0% 0%/auto repeat scroll paddin=
+g-box border-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:none;col=
+or:rgb(27,28,29);columns:auto;direction:ltr;display:inline;float:none;isola=
+tion:auto;margin-top:0px!important;margin-right:0px;margin-bottom:0px;margi=
+n-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px;quotes:auto=
+;speak:normal;zoom:1;font-family:&quot;Google Sans Text&quot;,sans-serif!im=
+portant;line-height:1.15!important">Summary of Flow and Component Interacti=
+on:</b></h3><p style=3D"background:none 0% 0%/auto repeat scroll padding-bo=
+x border-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:none;color:r=
+gb(27,28,29);columns:auto;direction:ltr;display:block;float:none;isolation:=
+auto;margin-top:0px!important;margin-right:0px;margin-bottom:16px;margin-le=
+ft:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px;quotes:auto;spe=
+ak:normal;zoom:1;font-family:&quot;Google Sans Text&quot;,sans-serif!import=
+ant;line-height:1.15!important"></p><u></u><u></u><div style=3D"display:blo=
+ck;background:none 0% 0%/auto repeat scroll padding-box border-box rgba(0,0=
+,0,0);border:0px none rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:=
+auto;direction:ltr;float:none;isolation:auto;margin-top:0px!important;margi=
+n-right:0px;margin-bottom:16px;margin-left:0px;opacity:1;outline:rgb(27,28,=
+29) none 0px;padding:0px;quotes:auto;speak:normal;zoom:1;font-family:&quot;=
+Google Sans Text&quot;,sans-serif!important;line-height:1.15!important"><di=
+v style=3D"background:none 0% 0%/auto repeat scroll padding-box border-box =
+rgb(240,244,249);border:0px none rgb(27,28,29);clear:none;color:rgb(27,28,2=
+9);columns:auto;direction:ltr;display:block;float:none;isolation:auto;margi=
+n-top:0px!important;margin-right:0px;margin-bottom:0px;margin-left:0px;opac=
+ity:1;outline:rgb(27,28,29) none 0px;padding:0px;quotes:auto;speak:normal;z=
+oom:1;font-family:&quot;Google Sans Text&quot;,sans-serif!important;line-he=
+ight:1.15!important"><div style=3D"background:none 0% 0%/auto repeat scroll=
+ padding-box border-box rgba(0,0,0,0);border:0px none rgb(27,28,29);clear:n=
+one;color:rgb(27,28,29);columns:auto;direction:ltr;display:block;float:none=
+;isolation:auto;margin-top:0px!important;margin-right:0px;margin-bottom:0px=
+;margin-left:0px;opacity:1;outline:rgb(27,28,29) none 0px;padding:0px;quote=
+s:auto;speak:normal;zoom:1;font-family:&quot;Google Sans Text&quot;,sans-se=
+rif!important;line-height:1.15!important"><pre style=3D"background:none 0% =
+0%/auto repeat scroll padding-box border-box rgba(0,0,0,0);border:0px none =
+rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto;direction:ltr;dis=
+play:block;float:none;isolation:auto;margin-top:0px!important;margin-right:=
+0px;margin-bottom:0px;margin-left:0px;opacity:1;outline:rgb(27,28,29) none =
+0px;padding:0px;quotes:auto;speak:normal;zoom:1;font-family:&quot;Google Sa=
+ns Text&quot;,sans-serif!important;line-height:1.15!important"><code role=
+=3D"text" style=3D"background:none 0% 0%/auto repeat scroll padding-box bor=
+der-box rgba(0,0,0,0);border:0px none rgb(87,91,95);clear:none;color:rgb(87=
+,91,95);columns:auto;direction:ltr;display:block;float:none;font-style:norm=
+al;font-variant:normal;font-size-adjust:none;font-kerning:auto;font-feature=
+-settings:normal;font-weight:normal;font-stretch:normal;font-size:14px;line=
+-height:1.15!important;font-family:&quot;Google Sans Text&quot;,sans-serif!=
+important;isolation:auto;margin-top:0px!important;margin-right:0px;margin-b=
+ottom:0px;margin-left:0px;opacity:1;outline:rgb(87,91,95) none 0px;padding:=
+16px;quotes:auto;speak:normal;zoom:1">[Client (Web/Mobile)]
+       | (1. POST /api/orders)
+       V
+[Spring Cloud API Gateway] ----- (Routes based on Eureka) ----&gt; [Order S=
+ervice]
+       ^                                  |
+       |                                  | (Checks stock via Eureka)
+       |                                  V
+       |                            [Inventory Service]
+       |                                  |
+       |                                  V
+       |                               (Saves Order: PENDING_PAYMENT)
+       |                                  |
+       &lt;----------------------------------
+       | (2. POST /api/payments/initiate)
+       V
+[Spring Cloud API Gateway] ----- (Routes based on Eureka) ----&gt; [Payment=
+ Service]
+       ^                                  |
+       |                                  | (Wraps with Circuit Breaker)
+       |                                  V
+       |                            [External Payment Gateway (Stripe/Razor=
+pay)]
+       |                                  |
+       |                                  V (Webhooks - HTTP POST)
+       |                            [Payment Service] &lt;-----------------=
+--------
+       |                                  |
+       |                                  | (Publishes &quot;Payment Comple=
+ted&quot; event)
+       |                                  V
+       |                            [Message Broker (Kafka/RabbitMQ)]
+       |                                  |       |
+       |                                  V       V
+       |                            [Order Service] [Notification Service]
+       | (Consumes and updates Order)   (Consumes and sends email/SMS)
+       |
+[Config Server] &lt;---- (Provides dynamic configs to all services &amp; Ga=
+teway)
+       ^
+       | (Fetches configs from)
+       |
+[Git Repository (YAML files)]
+
+
+[Eureka Server] &lt;---- (Registers and provides lookup for all services &a=
+mp; Gateway)
+</code></pre></div></div></div><u></u><u></u><p style=3D"background:none 0%=
+ 0%/auto repeat scroll padding-box border-box rgba(0,0,0,0);border:0px none=
+ rgb(27,28,29);clear:none;color:rgb(27,28,29);columns:auto;direction:ltr;di=
+splay:block;float:none;isolation:auto;margin-top:0px!important;margin-right=
+:0px;margin-bottom:16px;margin-left:0px;opacity:1;outline:rgb(27,28,29) non=
+e 0px;padding:0px;quotes:auto;speak:normal;zoom:1;font-family:&quot;Google =
+Sans Text&quot;,sans-serif!important;line-height:1.15!important">This compr=
+ehensive example shows how these Spring Cloud components work together to b=
+uild a robust, scalable, and resilient microservices architecture for an e-=
+commerce application.</p></div>
+
+--000000000000e27a2b063917772d--

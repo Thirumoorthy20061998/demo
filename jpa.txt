@@ -1,0 +1,374 @@
+
+Setting Up and Initializing
+git init
+
+Usage: git init
+
+Description: Initializes a new Git repository in the current directory.
+
+git clone
+
+Usage: git clone <repository-url>
+
+Description: Downloads an existing repository from a remote source (like GitHub) to your local machine.
+
+git config
+
+Usage: git config --global user.name "Your Name" and git config --global user.email "your.email@example.com"
+
+Description: Sets your user name and email for all future commits (the --global flag makes it apply to all your repos).
+
+📝 Tracking Changes (The Workflow)
+git status
+
+Usage: git status
+
+Description: Shows the status of changes as untracked, modified, or staged.
+
+git add
+
+Usage: git add <file-name> or git add .
+
+Description: Stages changes from the working directory. The dot (.) stages all modified files.
+
+git commit
+
+Usage: git commit -m "Your commit message"
+
+Description: Records the staged changes into the local repository with a descriptive message.
+
+git diff
+
+Usage: git diff or git diff --staged
+
+Description: Shows the difference between the working directory and the staging area, or between the staging area and the last commit.
+
+git log
+
+Usage: git log
+
+Description: Displays the history of commits for the current branch.
+
+🌳 Branching and Merging
+git branch
+
+Usage: git branch (lists branches) or git branch <new-branch-name> (creates a branch)
+
+Description: Lists all local branches, or creates a new one.
+
+git checkout
+
+Usage: git checkout <branch-name> or git checkout -b <new-branch-name>
+
+Description: Switches to another branch. The -b option both creates and switches to a new branch.
+
+git switch
+
+Usage: git switch <branch-name>
+
+Description: A newer, clearer alternative to git checkout for switching branches.
+
+git merge
+
+Usage: git merge <branch-name>
+
+Description: Integrates changes from the specified branch into the current branch.
+
+git branch -d
+
+Usage: git branch -d <branch-name>
+
+Description: Deletes the specified local branch (after it has been merged).
+
+🔗 Collaborating (Remote Repositories)
+git remote
+
+Usage: git remote add origin <repository-url>
+
+Description: Connects your local repository to a remote server, usually named origin.
+
+git push
+
+Usage: git push -u origin <branch-name>
+
+Description: Uploads your local branch commits to the remote repository.
+
+git pull
+
+Usage: git pull origin <branch-name>
+
+Description: Fetches and merges changes from the remote repository to your current local branch.
+
+git fetch
+
+Usage: git fetch origin
+
+Description: Downloads commits, files, and refs from a remote repository into the local repository without merging them.
+
+⏪ Undoing and Rewriting History
+git reset
+
+Usage: git reset <file-name> (unstage) or git reset --hard <commit-hash> (undo commits)
+
+Description: Unstages a file, or completely undoes commits and discards all changes since that commit.
+
+git revert
+
+Usage: git revert <commit-hash>
+
+Description: Creates a new commit that undoes the changes introduced by the target commit (safer for shared history).
+
+git restore
+
+Usage: git restore <file-name>
+
+Description: Discards changes in the working directory for a specific file, returning it to its last committed state.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+The @Modifying annotation tells Spring Data JPA that a method's @Query is for data modification (UPDATE, DELETE, INSERT), not just selecting data.It requires the method to be used within a transaction.TypeExampleKey DetailBulk Update@Modifying @Transactional @Query("UPDATE Product p SET p.price = :newPrice WHERE p.id = :id") int updatePrice(Long id, double newPrice);Returns the number of rows updated.Bulk Delete@Modifying @Transactional @Query("DELETE FROM User u WHERE u.lastActive < :cutoff") int deleteOldUsers(LocalDate cutoff);Returns the number of rows deleted.Cache Handling@Modifying(clearAutomatically = true)Use this to clear the JPA cache after the modification to avoid stale data.
+
+
+Answer: Using @Modifying annotation with @Query.
+
+Java
+
+@Modifying
+@Transactional
+@Query("UPDATE User u SET u.status = :newStatus WHERE u.id = :userId")
+int updateStatus(@Param("newStatus") String newStatus, @Param("userId") Long userId);
+
+@Modifying
+@Transactional
+@Query("DELETE FROM User u WHERE u.status = :status")
+int deleteByStatus(@Param("status") String status);
+
+
+
+CascadeType.PERSISTWhen the parent entity is persisted, the associated child entities are also persisted.CascadeType.MERGEWhen the parent entity is merged, the associated child entities are also merged (changes are propagated).CascadeType.REMOVEWhen the parent entity is removed, the associated child entities are also removed (deleted). This is often used for dependent objects.CascadeType.DETACHWhen the parent entity is detached (e.g., from the persistence context), the child entities are also detached.CascadeType.ALLPropagates all four standard operations (PERSIST, MERGE, REMOVE, DETACH) from the parent to the child.
+
+
+
+How do you handle pagination and sorting with Spring Data JPA?
+
+Answer: By passing a Pageable object to your repository methods. The return type should be Page<YourEntity>.
+
+Java
+
+Page<User> findByStatus(String status, Pageable pageable);
+
+// In service:
+Pageable pageable = PageRequest.of(0, 10, Sort.by("lastName").descending());
+Page<User> usersPage = userRepository.findByStatus("ACTIVE", pageable);
+List<User> users = usersPage.getContent();
+long totalElements = usersPage.getTotalElements();
+int totalPages = usersPage.getTotalPages();
+
+
+@Query("SELECT u FROM User u WHERE u.email = :email")
+User findByEmailAddress(@Param("email") String email);
+
+
+@Query(value = "SELECT * FROM users u WHERE u.is_active = true", nativeQuery = true)
+List<User> findAllActiveUsersNative();
+
+@Query("SELECT d FROM Department d JOIN FETCH d.employees WHERE d.id = :id")
+Department findByIdWithEmployees(Long id);
+
+
+
+
+
+
+
+
+
+orphanRemoval=true:
+
+Definition: This property is specifically used with @OneToMany and @OneToOne relationships. When set to true, if a child entity is removed from its parent's collection (i.e., it becomes "orphaned" because no parent references it), JPA will automatically delete that child entity from the database. It implies CascadeType.REMOVE for that specific scenario.
+
+
+CascadeType.ALL:
+
+Definition: This cascade type means that all persistence operations (like PERSIST, MERGE, REMOVE, REFRESH, DETACH) performed on the parent entity will automatically be applied to its associated child entities.
+
+
+
+
+
+
+
+
+
+
+
+junit:
+
+These are intermediate, real-time JUnit 5 questions that focus on modern features, integration, and best practices.
+
+Intermediate JUnit 5 Questions & Answers
+Q1: Exception Testing vs. Grouped Assertions (assertAll)
+Question: You have a method that performs several validations. How would you use JUnit 5 to test a scenario where you expect multiple validation errors to occur, and you want your test to report all of them in a single run, rather than failing on the first one?
+
+Answer:
+
+You'd use the assertAll() method (Grouped Assertions).
+
+Mechanism: assertAll() takes a list of executable lambdas. It executes all of them, even if some fail. If any assertion fails, assertAll() throws a single MultipleFailuresErr
+
+These are intermediate, real-time JUnit 5 questions that focus on modern features, integration, and best practices.
+
+
+@Test
+void testMultipleValidations() {
+    User user = new User("invalid-email", -5);
+    
+    // assertAll executes both assertions and collects failures
+    assertAll("User Validation",
+        () -> assertTrue(isValidEmail(user.getEmail()), "Email should be valid"),
+        () -> assertTrue(user.getAge() > 0, "Age must be positive")
+    );
+}
+Q2: Conditional Test Execution
+Question: How can you use JUnit 5 to prevent a specific integration test from running if the current environment is production or if the current operating system is Windows?
+
+Answer:
+
+You use the Conditional Test Execution annotations:
+
+Environment (Production): Use @EnabledIfSystemProperty or @DisabledIfEnvironmentVariable
+
+Operating System (Windows): Use @DisabledOnOs.
+
+Question: You have a service method that returns a CompletableFuture<String>. How do you write a JUnit 5 test for this asynchronous method to ensure it completes successfully and within a 1-second timeout?
+
+Answer:
+
+You use the assertTimeout assertion combined with the get() or join() method of the CompletableFuture.
+
+
+
+
+Question: What is the primary advantage of using @MethodSource over other parameterized sources like @ValueSource or @CsvSource? Provide a scenario.
+
+Answer:
+
+The primary advantage of @MethodSource is its type safety and ability to supply complex, multiple arguments.
+
+
+What is the AAA pattern?It's a best practice for structuring a test method: Arrange (set up objects/data), Act (call the method being tested), and Assert (verify the result).What is the difference between @BeforeEach and @BeforeAll?@BeforeEach runs before every test method in the class. @BeforeAll runs once before all test methods in the class (must be a static method).Why is setting up before each test 
+
+(@BeforeEach) usually better than before all (@BeforeAll)?Using @BeforeEach ensures test isolation. Each test method starts with a fresh, clean set of objects, preventing one test from affecting the outcome of another (avoiding side effects).
+
+
+
+
+What is the difference between assertEquals() and assertSame()?	assertEquals() checks if two objects have the same value (e.g., two strings with the same characters). assertSame() checks if two references point to the exact sapoint to the exact same object in memory.
+
+
+
+
+What is assertThrows() for?	It is a critical JUnit 5 assertion used to verify that a method call throws a specific exception. It often uses a lambda to isolate the exact code that should cause the error.
+
+
+How do you verify a Mockito method call?	You use the Mockito.verify() method
+
+
+Why do we use Mocking?	We use mocking to isolate the code we are testing. If a class relies on a complex dependency (like a database or external service), we replace that dependency with a Mock object to control its behavior and simplify the test.
+
+
+
+What are the four entity lifecycle states?	1. Transient: A new object, never persisted, not associated with a context, has no ID. 2. Managed (Persistent): The entity is in the context; changes are tracked and saved to the DB upon transaction commit (dirty checking). 3. Detached: The entity was once managed but its context/session is closed. Changes are not tracked. 4. Removed: The entity is managed but scheduled for deletion from the database.
+
+
+
+. What is Eventual Consistency and how do you handle it?	Eventual Consistency is a data consistency model where data replicas across distributed services will eventually converge to the same value, though a delay is possible. It is handled by Event-Driven Architecture (EDA), where every service publishes domain events upon state change, ensuring all interested parties can update their local data copy.
+
+
+
+What is an Assertion?	An assertion is a method that checks if an actual result matches the expected result. If they don't match, the assertion fails, and the test fails. (e.g.,
+
+
+
+ Payment System Design with KafkaThe system is structured around an Event-Driven Architecture (EDA), where Kafka serves as the central nervous system for all financial transactions.1. The Core Components (Services & Topics)ComponentRole in Payment FlowKafka Topic 
+
+
+(Example)Payment Service (Producer)Initiates a payment request and publishes the initial event.payments-requestsFraud Service (Consumer/Producer)Consumes requests. Checks for fraud. Publishes a result.payments-fraud-statusAcquirer/Bank Service (Consumer/Producer)Consumes requests (if approved). Processes the actual bank transaction. Publishes final status.payments-bank-statusLedger/Accounting Service (Consumer)Consumes all final status events. Records the transaction for auditing.(Consumes from final topics)Notification Service (Consumer)Consumes final status events. Sends emails/SMS to the user.(Consumes from final topics
+
+
+
+
+initialize array
+Direct Initialization (Most Common)
+Allocation by Size (Default Values)
+
+initialize hashmap:
+. Standard Initialization (All Versions)
+Initialization with Elements
+. Java 9+ Map.of() (Immutable) 🔒
+Java 9+ Map.ofEntries() (Immutable, > 10 entries)
+
+
+
+
+git add .
+
+git commit -m "Completed feature X"
+
+git pull (To ensure your local branch is up-to-date)
+
+git push
+
+
+
+
+
+
+
+
+
+What is SLF4J and why is it preferred over using Log4j or Logback directly in a Spring Boot application?	SLF4J is a logging facade (an abstraction layer), not an actual logging implementation. It allows you to write logging code that is implementation-agnostic. Spring Boot prefers it because you can swap out the actual logging framework (like Logback, Log4j2, or JUL) at any time by changing a dependency, without needing to modify a single line of application code.
+
+
+
+
+When using Spring Boot starters, which logging implementation is used by default?	Spring Boot starters (like spring-boot-starter-web) include Logback by default. The starter dependencies handle all the necessary bridging, meaning your code uses org.slf4j.Logger, but the messages are processed and output by Logback.
+
+What is the standard Logback configuration file name, and what happens if it's missing?	The standard file name is logback-spring.xml (or just logback.xml). If it's missing, Spring Boot uses its default logging configuration provided by the starters, which logs to the console at the INFO level and includes th
+
+Explain the purpose of placeholders ({}) in SLF4J logging and why they are better than string concatenation.	Placeholders are used for parameterized logging, like logger.info("User {} logged in from IP {}", userId, ipAddress);. This is superior because the message concatenation (and associated performance overhead) only happens if the log level is active. If the level is WARN and the message is
+
+How do you implement Distributed Tracing (e.g., using a Correlation ID) in your logs for a microservice architecture?	1. Interceptor/Filter: Use a Spring HandlerInterceptor or Filter (usually placed at the API Gateway or entry service). 2. Context: Generate a unique Correlation ID (UUID) and place it in a logging context, typically using MDC (Mapped Diagnostic Context). 3. Log Configuration: Configure Logback's pattern to include the MDC value (e.g., %X{correlationId}). This ensures every log line generated during the request process includes that
+
+Describe the trade-off between using DEBUG logs vs. TRACE logs in development/testing.	DEBUG is used for showing important variable values, internal states, and flow control. TRACE is the most granular level, often used to log every single method entry/exit or intricate loop step. The trade-off is performance and log volume. While TRACE provides maximum detail, it generates an enormous volume of logs, severely impacting application performance and di
+
+
+How should exceptions be logged in SLF4J, and what common mistake should be avoided?	Exceptions should be passed as the last argument to the logger method (e.g., logger.error("Failed to process order", e);). Common Mistake to Avoid: Concatenating the stack trace into the message string: logger.error("Error: " + e.getMessage(), e);. SLF4J automatically includes the full stack trace when the exception is passed as a separate

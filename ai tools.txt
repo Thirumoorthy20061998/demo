@@ -1,0 +1,9 @@
+AI for Code Review & Quality
+ToolWhat It DoesSourcegraph CodyAI code search + review across large codebasesCodeRabbitAutomated AI PR reviews on GitHub/GitLabSonarQube + AIBug detection, code smell analysisSnykAI-powered security vulnerability scanning in your dependencies
+
+🧪 AI for Testing
+ToolWhat It DoesDiffblue CoverAuto-generates JUnit tests for your Java codeCodiumAISuggests test cases based on your method logicPostman AIGenerates API test collections from your OpenAPI spec
+
+📄 AI for Documentation & APIs
+ToolWhat It DoesMintlifyAuto-generates docs from your code commentsSwimmLiving documentation synced with your codebaseReadme.io + AIAPI documentation with AI-assisted content
+

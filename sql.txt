@@ -1,0 +1,60 @@
+
+SELECT Name, Salary
+FROM Employee
+WHERE Salary = (SELECT MAX(Salary) FROM Employee);
+
+SELECT Name, Salary
+FROM Employee
+ORDER BY Salary DESC
+LIMIT 1;
+
+
+
+SELECT
+    o.order_id,
+    o.item,
+    o.amount,
+    o.customer_id,
+    s.shipping_id, -- New: Shipping ID from Shippings table
+    s.status       -- New: Status from Shippings table
+FROM
+    Orders AS o
+JOIN
+    Shippings AS s ON o.customer_id = s.customer_id
+ORDER BY
+    o.order_id DESC
+LIMIT {page_size} OFFSET {offset_value};
+
+-- Example for getting the first 5 orders (Page 1) with shipping info:
+-- In this case, page_size = 5, and offset_value = (1 - 1) * 5 = 0
+SELECT
+    o.order_id,
+    o.item,
+    o.amount,
+    o.customer_id,
+    s.shipping_id,
+    s.status
+FROM
+    Orders AS o
+JOIN
+    Shippings AS s ON o.customer_id = s.customer_id
+ORDER BY
+    o.order_id DESC
+LIMIT 5 OFFSET 0;
+
+-- Example for getting the next 5 orders (Page 2) with shipping info:
+-- In this case, page_size = 5, and offset_value = (2 - 1) * 5 = 5
+SELECT
+    o.order_id,
+    o.item,
+    o.amount,
+    o.customer_id,
+    s.shipping_id,
+    s.status
+FROM
+    Orders AS o
+JOIN
+    Shippings AS s ON o.customer_id = s.customer_id
+ORDER BY
+    o.order_id DESC
+LIMIT 5 OFFSET 5;

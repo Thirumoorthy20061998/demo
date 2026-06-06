@@ -1,4 +1,61 @@
 
+public class StandardPyramid {
+    public static void main(String[] args) {
+        int rows = 5;
+
+        for (int i = 1; i <= rows; i++) {
+            // 1. Print leading spaces
+            for (int j = 1; j <= rows - i; j++) {
+                System.out.print(" ");
+            }
+            
+            // 2. Print stars
+            for (int k = 1; k <= (2 * i - 1); k++) {
+                System.out.print("*");
+            }
+            
+            // 3. Move to the next line
+            System.out.println();
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+public class ReversePyramid {
+    public static void main(String[] args) {
+        int rows = 5; // You can change this value to make the pyramid larger or smaller
+
+        for (int i = rows; i >= 1; i--) {
+            // 1. Print leading spaces
+            for (int j = 1; j <= rows - i; j++) {
+                System.out.print(" ");
+            }
+            
+            // 2. Print stars
+            for (int k = 1; k <= (2 * i - 1); k++) {
+                System.out.print("*");
+            }
+            
+            // 3. Move to the next line
+            System.out.println();
+        }
+    }
+}
+
+
+
+
+
+
+
 public class ArrayMergeExample {
     public static void main(String[] args) {
         int[] arr1 = {1, 7};

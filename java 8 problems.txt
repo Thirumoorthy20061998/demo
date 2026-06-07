@@ -1,3 +1,252 @@
+int n = 764786578;
+        int sum = 0;
+        
+        while (n > 0) {
+            sum += n % 10;  // Add last digit
+            n = n / 10;     // Remove last digit
+        }
+        
+        System.out.println("Sum of digits: " + sum);
+        // Output: Sum of digits: 58
+    }
+
+
+
+
+
+
+
+
+string input="hhh 9898 jjh 898"
+
+
+
+
+
+print strings and sum numbers and print it
+
+public class StringAndNumberProcessor {
+    public static void main(String[] args) {
+        String input = "hhh 9898 jjh 898";
+        
+        // Split the string by one or more spaces
+        String[] tokens = input.split("\\s+");
+        
+        StringBuilder textParts = new StringBuilder();
+        int sum = 0;
+        
+        for (String token : tokens) {
+            // Check if the token consists only of digits
+            if (token.matches("\\d+")) {
+                sum += Integer.parseInt(token);
+            } else {
+                                textParts.append(token).append(" ");
+            }
+        }
+        
+        // Print the final outputs
+// Just add .trim() at the end
+System.out.println("Strings: " + textParts.toString().trim());        System.out.println("Sum of numbers: " + sum);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+nt num = 12345;
+
+        // Way 1 : String.valueOf()
+        String s1 = String.valueOf(num);
+        System.out.println("String.valueOf()    
+
+
+
+  int num = Integer.parseInt("abc123"); 
+
+
+
+
+{
+  "studentId": "STU-8821",
+  "name": "Thirumoorthy M",
+  "metadata": {
+    "status": "ACTIVE",
+    "joinedYear": 2022
+  },
+  "enrollments": [
+    {
+      "courseId": "CS-201",
+      "title": "Data Structures & Algorithms",
+      "credits": 4,
+      "instructor": {
+        "id": "INS-401",
+        "name": "Dr. Alan Turing"
+      }
+    },
+    {
+      "courseId": "CS-204",
+      "title": "Software Architecture Patterns",
+      "credits": 3,
+      "instructor": {
+        "id": "INS-102",
+        "name": "Martin Fowler"
+      }
+    }
+  ]
+}
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+public class JacksonMediumComplicatedTree {
+    public static void main(String[] args) {
+        String jsonString = getJsonInput();
+        ObjectMapper mapper = new ObjectMapper();
+
+        try {
+            // Parse payload into a dynamic tree structure
+            JsonNode rootNode = mapper.readTree(jsonString);
+
+            // Q1: Print Student Name and Status (Using .path() chaining)
+            String studentName = rootNode.path("name").asText();
+            String status = rootNode.path("metadata").path("status").asText();
+            
+            System.out.println("Student Name: " + studentName);
+            System.out.println("Account Status: " + status);
+
+            // Fetch the "enrollments" array node
+            JsonNode enrollmentsNode = rootNode.path("enrollments");
+
+            // Q2 & Q3: Extract details from the first element of the array
+            if (enrollmentsNode.isArray() && enrollmentsNode.size() > 0) {
+                JsonNode firstCourseNode = enrollmentsNode.get(0); // target index 0
+
+                // Q2: Print First Course Title
+                String courseTitle = firstCourseNode.path("title").asText();
+                System.out.println("First Course: " + courseTitle);
+
+                // Q3: Print Instructor Name from nested object within the array element
+                String instructorName = firstCourseNode.path("instructor").path("name").asText();
+                System.out.println("Instructor: " + instructorName);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static String getJsonInput() {
+        return "{\"studentId\":\"STU-8821\",\"name\":\"Thirumoorthy M\",\"metadata\":{\"status\":\"ACTIVE\",\"joinedYear\":2022},\"enrollments\":[{\"courseId\":\"CS-201\",\"title\":\"Data Structures & Algorithms\",\"credits\":4,\"instructor\":{\"id\":\"INS-401\",\"name\":\"Dr. Alan Turing\"}},{\"courseId\":\"CS-204\",\"title\":\"Software Architecture Patterns\",\"credits\":3,\"instructor\":{\"id\":\"INS-102\",\"name\":\"Martin Fowler\"}}]}";
+    }
+}
+
+
+
+
+
+
+
+public static void main(String[] args) {
+        String jsonString = getJsonInput();
+        ObjectMapper mapper = new ObjectMapper();
+
+        try {
+            // Map JSON String directly to root Java POJO
+            StudentPayload student = mapper.readValue(jsonString, StudentPayload.class);
+
+            // Q1: Print Student Name and Status (Nested Object)
+            System.out.println("Student Name: " + student.name);
+            if (student.metadata != null) {
+                System.out.println("Account Status: " + student.metadata.status);
+            }
+
+            // Q2 & Q3: Accessing the First Element in the Array and its Inner Objects
+            if (student.enrollments != null && !student.enrollments.isEmpty()) {
+                Enrollment firstEnrollment = student.enrollments.get(0);
+                
+                // Q2: Print First Course Title
+                System.out.println("First Course: " + firstEnrollment.title);
+                
+                // Q3: Print Instructor Name (Deep Nested Object inside Array Element)
+                if (firstEnrollment.instructor != null) {
+                    System.out.println("Instructor: " + firstEnrollment.instructor.name);
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+paranthesis program:
+import java.util.Stack;
+
+public class Main {
+    public static void main(String[] args) {
+
+        String s = "{[()]}";
+        Stack<Character> stack = new Stack<>();
+
+        for (char c : s.toCharArray()) {
+            if (c == '(' || c == '{' || c == '[') {
+                stack.push(c);
+            } else {
+                if (!stack.isEmpty()) stack.pop();
+            }
+        }
+
+        if (stack.isEmpty()) {
+            System.out.println("Valid");
+        } else {
+            System.out.println("Invalid");
+        }
+    }
+}
+
+
+
+
+
+
+
+
 
 public class StandardPyramid {
     public static void main(String[] args) {
@@ -19,6 +268,39 @@ public class StandardPyramid {
         }
     }
 }
+
+
+
+
+  String f = "hhjitkk";
+        
+        // Convert to char array and add to LinkedHashSet (removes duplicates, preserves order)
+        LinkedHashSet<Character> set = new LinkedHashSet<>();
+        for (char c : f.toCharArray()) {
+            set.add(c);
+        }
+        
+        // Build result string
+        StringBuilder result = new StringBuilder();
+        for (char c : set) {
+            result.append(c);
+        }
+        
+        System.out.println("Original: " + f);
+        System.out.println("After removing duplicates: " + result.toString());
+
+
+
+
+ String f = "hhjitkk";
+        
+        String result = f.chars()
+            .distinct()
+            .mapToObj(c -> String.valueOf((char) c))
+            .collect(Collectors.joining());
+        
+        System.out.println("Original: " + f);
+        System.out.println("After removing duplicates: " + result);
 
 
 
@@ -49,6 +331,126 @@ public class ReversePyramid {
         }
     }
 }
+
+
+
+
+
+import java.util.regex.*;
+
+public class Main {
+    public static void main(String[] args) {
+        String str = "iphone11ipadiphone12iphone13macbook";
+        
+        // Pattern to match iphone11, iphone12, iphone13
+        Pattern pattern = Pattern.compile("iphone(11|12|13)");
+        Matcher matcher = pattern.matcher(str);
+        
+        int count11 = 0, count12 = 0, count13 = 0;
+        
+        while (matcher.find()) {
+            String match = matcher.group(1);
+            switch (match) {
+                case "11": count11++; break;
+                case "12": count12++; break;
+                case "13": count13++; break;
+            }
+        }
+        
+        System.out.println("iPhone 11: " + count11);
+        System.out.println("iPhone 12: " + count12);
+        System.out.println("iPhone 13: " + count13);
+        System.out.println("Total: " + (count11 + count12 + count13));
+    }
+}
+
+
+
+
+
+public class Main {
+    public static void main(String[] args) {
+        String str = "iphone11ipadiphone12iphone13macbook";
+        
+        // Find and count iPhone variants
+        int count11 = 0;
+        int count12 = 0;
+        int count13 = 0;
+        
+        // Using indexOf to find each variant
+        int index = 0;
+        while (index < str.length()) {
+            if (str.startsWith("iphone11", index)) {
+                count11++;
+                index += "iphone11".length();
+            } else if (str.startsWith("iphone12", index)) {
+                count12++;
+                index += "iphone12".length();
+            } else if (str.startsWith("iphone13", index)) {
+                count13++;
+                index += "iphone13".length();
+            } else {
+                index++;
+            }
+        }
+        
+        // Print results
+        System.out.println("iPhone 11: " + count11);
+        System.out.println("iPhone 12: " + count12);
+        System.out.println("iPhone 13: " + count13);
+        System.out.println("Total iPhones: " + (count11 + count12 + count13));
+    }
+}
+
+
+
+public class VeryEasyInsertArray {
+
+    public static void main(String[] args) {
+
+        // 1. Define an existing array
+        int[] originalArray = {10, 20, 30, 40, 50};
+        System.out.println("Original Array: " + Arrays.toString(originalArray));
+
+        // 2. Define the element to insert and its position
+        int elementToInsert = 25;
+        int position = 2; // Insert at index 2 (between 20 and 30)
+
+        // Basic validation (optional but good practice)
+        if (position < 0 || position > originalArray.length) {
+            System.out.println("Error: Invalid position for insertion.");
+            return;
+        }
+
+        // 3. Create a new array that is one element larger
+        int[] newArray = new int[originalArray.length + 1];
+
+        // 4. Copy elements and insert the new element
+        for (int i = 0; i < newArray.length; i++) {
+            if (i < position) {
+                // Copy elements before the insertion point directly
+                newArray[i] = originalArray[i];
+            } else if (i == position) {
+                // Insert the new element at the specified position
+                newArray[i] = elementToInsert;
+            } else {
+                // Copy elements from the original array, shifted one position to the right
+                newArray[i] = originalArray[i - 1];
+            }
+        }
+
+        // 5. Print the new array
+        System.out.println("Element to insert: " + elementToInsert);
+        System.out.println("Position to insert at: " + position);
+        System.out.println("Array after insertion: " + Arrays.toString(newArray));
+    }
+}
+
+
+
+
+
+
 
 
 
@@ -222,7 +624,24 @@ System.out.println("Reversed Sentence: " + result.toString());
 
 
 
+import java.util.*;
+import java.util.stream.*;
 
+public class Main {
+    public static void main(String[] args) {
+        String s = "Hello world of Java";
+        
+        String reversed = Arrays.stream(s.split(" "))
+                .collect(Collectors.collectingAndThen(
+                        Collectors.toList(),
+                        list -> { Collections.reverse(list); return list; }
+                ))
+                .stream()
+                .collect(Collectors.joining(" "));
+        
+        System.out.println("Reversed Sentence: " + reversed);
+    }
+}
 
 
 
@@ -1048,7 +1467,7 @@ public class TwoStringAnagramCheckerJava8 {
         // 3. Convert to a character stream (IntStream)
         // 4. Sort the characters
         // 5. Collect the sorted characters back into a single String (the canonical key)
-        var createCanonicalKey = (String s) -> s.toLowerCase()
+         Function<String, String> createCanonicalKey = (String s) -> s.toLowerCase()
                 .replaceAll("\\s", "") // Remove all whitespace
                 .chars()               // IntStream of character codes
                 .sorted()              // Sorts the character codes (A < B < C...)
@@ -4166,7 +4585,7 @@ Given a `List<String>`, determine if it contains any duplicate elements. Return 
 
 **Answer 2 (Direct in main):**
 
-```java
+```javah
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;

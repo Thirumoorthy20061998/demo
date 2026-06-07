@@ -204,3 +204,132 @@ atomicintegar class
 The Traditional Way: synchronized Keyword
 The Modern Way: Explicit ReentrantLock
 
+
+
+
+public	Access modifier	JVM needs to call it from outside the class 
+static	Method modifier	JVM can call it without creating an object of the class 
+void	Return type	Main doesn't return anything to JVM 
+main	Method name	Predefined name JVM recognizes as entry point 
+String[] args	Parameter	Takes command-line arguments (can also use String... args) 
+
+
+Remove public	JVM can't access → Runtime Error 
+Remove static	JVM can't call without object → Runtime Error 
+Change void to int	Return type must be void → Runtime Error 
+Change main to something	JVM can't find entry point → Runtime Error 
+
+
+
+
+
+The Spring Boot application lifecycle has 6 main stages:
+
+Bootstrap – Application starts from main() with @SpringBootApplication
+
+Context Creation – Spring loads ApplicationContext and registers beans
+
+Bean Definition & DI – Beans are created and dependencies injected (constructor/field injection)
+
+Initialization – @PostConstruct or InitializingBean runs to set up resources
+
+Ready – Embedded server (Tomcat/Jetty) starts; app serves requests
+
+Shutdown – @PreDestroy or DisposableBean cleans up resources; context closes gracefully
+
+
+
+
+
+
+
+
+What is Pagination?
+Pagination is the technique of splitting large datasets into smaller chunks (pages) for efficient data retrieval and display.
+
+
+Page Number	Which page you're viewing (0-based or 1-based) 
+Page Size	Number of items per page (e.g., 10, 20, 50) 
+Offset	Starting position in the result set 
+Total Count	Total number of records in the database
+Total Pages	ceil(totalCount / pageSize) 
+
+
+Type	Description	Use Case
+Offset-based	LIMIT pageSize OFFSET (page-1)*pageSize 
+Traditional pagination
+Cursor-based	Use last ID from previous page	Infinite scroll, large datasets
+Keyset Pagination	WHERE id > lastSeenId ORDER BY id LIMIT pageSize	High-performance pagination
+
+
+
+
+interface	Purpose	COUNT Query	Use Case
+Pageable	Interface for pagination parameters	N/A	Creates PageRequest 
+Page<T>	Returns content + total count	✅ Yes	When you need total pages 
+Slice<T>	Returns content + hasNext()	❌ No	Infinite scroll, better performance 
+
+
+
+
+Aspect	Offset-based	Cursor-based
+Implementation	LIMIT 10 OFFSET 20	WHERE id > lastId LIMIT 10
+Performance	Slow on large offsets 
+Fast (uses index)
+Consistency	Can miss/duplicate records	Stable for real-time data
+Use Case	Traditional pagination	Infinite scroll, live data
+"Offset-based" uses OFFSET which becomes slow on large offsets. Cursor-based uses last ID from previous page, which is faster and more consistent for live data."
+
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.repository.*;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+
+// 1. Repository Interface
+public interface ProductRepository extends JpaRepository<Product, Long>, 
+                                            PagingAndSortingRepository<Product, Long> {  // [web:100]
+    
+    // Custom query with pagination
+    Page<Product> findByCategory(String category, Pageable pageable);
+    
+    // With sorting
+    Page<Product> findByPriceGreaterThan(double price, Pageable pageable);
+}
+
+// 2. Service Layer
+@Service
+public class ProductService {
+    
+    @Autowired
+    private ProductRepository productRepository;
+    
+    public Page<Product> getProducts(int page, int size, String sortBy) {
+        // Page number is 0-based in Spring Data JPA [web:100]
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(sortBy));  // [web:100][web:104]
+        
+        return productRepository.findAll(pageable);
+    }
+    
+    public Page<Product> searchProducts(String category, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        return productRepository.findByCategory(category, pageable);
+    }
+}
+
+// 3. Controller
+@RestController
+@RequestMapping("/api/products")
+public class ProductController {
+    
+    @Autowired
+    private ProductService productService;
+    
+    @GetMapping
+    public Page<Product> getAllProducts(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy) {
+        
+        return productService.getProducts(page, size, sortBy);
+    }
+}

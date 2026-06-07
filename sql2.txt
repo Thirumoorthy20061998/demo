@@ -421,3 +421,58 @@ WHERE NOT EXISTS (
     FROM Orders o 
     WHERE o.CustomerID = c.CustomerID
 );
+
+
+
+
+duplicate email
+
+SELECT 
+    email, 
+    COUNT(email) AS email_count
+FROM 
+    Users
+GROUP BY 
+    email
+HAVING 
+    COUNT(email) > 1;
+
+
+
+
+nth highest salary without using limit, top
+SELECT e1.salary
+FROM Employee e1
+WHERE 1 = (
+    SELECT COUNT(DISTINCT e2.salary)
+    FROM Employee e2
+    WHERE e2.salary > e1.salary
+);
+
+
+
+
+
+
+
+
+
+
+
+
+
+Find employees with salary > department average slary
+SELECT 
+    e1.employee_id,
+    e1.name,
+    e1.salary,
+    e1.department_id
+FROM 
+    Employees e1
+WHERE 
+    e1.salary > (
+        SELECT AVG(e2.salary)
+        FROM Employees e2
+        WHERE e2.department_id = e1.department_id
+    );
+

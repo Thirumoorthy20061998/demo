@@ -333,3 +333,57 @@ public class ProductController {
         return productService.getProducts(page, size, sortBy);
     }
 }
+
+
+
+What is the Spring IoC container? Name the two main types.
+basic
+The Spring IoC container manages beans (objects), their lifecycle, and wiring. The two main types are:
+• BeanFactory — lightweight, lazy init, suitable for resource-constrained environments.
+• ApplicationContext — extends BeanFactory, adds AOP, event publishing, i18n, eager init. Most commonly used (e.g. AnnotationConfigApplicationContext, SpringApplication).
+
+
+
+Why BeanFactory fits perfectly here:
+
+Lazy Initialization: BeanFactory does not instantiate beans until you specifically call getBean().
+
+ApplicationContext: The E-Commerce Web Backend
+The Scenario: You are building the backend for a large e-commerce platform (like Amazon or Shopify) using Spring Boot.
+
+AOP & Transactions:
+Event Publishing
+
+
+
+
+
+
+
+What is @Bean and how does it differ from @Component?
+@Bean is used inside a @Configuration class to manually declare a bean. @Component is class-level and needs to be on the class itself (usually your own class). @Bean is used when:
+• You don't own the class (e.g., third-party lib).
+• You need runtime logic to configure the bean.
+
+
+
+When Bean A is being constructed:
+• Spring puts a factory into singletonFactories for A.
+• If Bean B is requested during A's creation and B needs A, Spring calls the factory, moves the early ref to earlySingletonObjects, and gives it to B.
+• A finishes construction and moves to singletonObjects.
+
+
+Why constructor injection breaks: The factory can only be registered AFTER the constructor runs. If A's constructor requires B, and B's constructor requires A, neither can finish its constructor — there is no early ref to hand out. Spring throws BeanCurrentlyInCreationException immediately.
+
+
+Spring maintains three maps inside DefaultSingletonBeanRegistry:
+singletonObjects 
+earlySingletonObjects 
+singletonFactories 
+
+
+
+The Spring ApplicationContext Lifecycle
+Initialization / Refresh
+Active / Running:  he container is fully up, serving bean requests, managing scopes, and handling events.
+Stop / Close (close()): Triggered on application shutdown. It gracefully destroys all singleton beans

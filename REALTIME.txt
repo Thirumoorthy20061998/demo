@@ -1,0 +1,1699 @@
+
+OAUTH2
+
+"In my logistics platform, I implemented OAuth2 Resource Server with JWT by creating a /api/auth/login endpoint that validates credentials and returns a JWT token. Drivers store that token and send it in every API call (like updating POD). Spring Security validates the JWT signature on each request without storing session state, and I used @PreAuthorize to restrict endpoints by role (only drivers can update POD)."
+
+
+OAuth2 is a protocol (framework for delegated authorization), while JWT is a token format (compact, signed way to carry user data).
+
+spect	OAuth2	JWT
+What is it?	Protocol/framework for access delegation 
+Token format for secure data transmission 
+Purpose	Allows third-party apps to access resources without password 
+Carries user identity + permissions in a signed token 
+Can you use alone?	No — OAuth2 needs some token (JWT or opaque) 
+Yes — JWT can work without OAuth2 
+Main use case	Third-party login (Google, GitHub), SSO, multi-client apps 
+Stateless auth, microservices, simple apps 
+Token management	Identity provider generates + validates tokens 
+App generates + validates toke
+
+
+"Yes, OAuth2 supports role-based access control. In my logistics platform, the JWT token includes a role claim (DRIVER/ADMIN). When a driver calls /api/orders/{id}/pod, Spring Security extracts the role from JWT using JwtAuthenticationConverter, then checks @PreAuthorize("hasRole('DRIVER')") to grant or deny access."
+
+
+
+
+
+REDIS:
+
+Order Status Caching (POB/ATD/POD)
+Scenario: Drivers frequently check order status updates (Proof of Boarding, Actual Time of Departure, Proof of Delivery)
+
+First request: 200ms (DB query)
+
+Subsequent requests: 30ms (Redis cache)
+
+Reduced DB load by 80% for order status endpoints
+
+
+
+ Driver Assigned Orders Cache
+Scenario: Driver mobile app shows all assigned orders on home screen
+
+Why Redis?
+
+Driver logs in → fetches 10-15 orders → cached in Redis
+
+App refreshes every 2 mins → returns cached data in 30ms instead of 200ms
+
+80% cache hit rate for driver order lookups
+
+
+
+Admin dashboard shows daily order count, POD completion rate
+
+Why Redis?
+
+Complex SQL query: 500ms → 50ms (cached)
+
+Admin dashboard refreshes every 5 mins → cache matches refresh interval
+
+90% reduction in database query count
+
+
+ UK deployment needs delivery routes for MULTIDROP orders
+
+Why Redis?
+
+Route data rarely changes (once/day updates)
+
+1-hour expiry → always fresh data
+
+Sub-millisecond route lookups for UK drivers
+
+
+
+Cache-Aside (Lazy Loading) 💤
+Most common strategy - used when data is read frequently, updated rarely
+
+Aspect	Details
+How It Works	Application checks cache first → if missing, fetch from DB, store in cache, return data 
+Cache Update	Cache is "passive" - app decides when to update 
+Invalidation	Manual delete when data changes 
+
+
+Order status updates (POB/ATD/POD)
+
+✅ Driver order assignments
+
+
+
+
+. Read-Through Cache 🔍
+Automated cache-aside - cache layer handles DB fetching
+
+Aspect	Details
+How It Works	Cache layer auto-fetches from DB on miss, stores, returns 
+Cache Update	Automatically managed by cache provider 
+Use Case	High-traffic systems (Netflix metadata) 
+
+
+
+ Route master (IFM-UK deployment)
+
+✅ High-traffic metadata lookups
+
+
+Write-Through Cache ✍️
+Update cache AND DB simultaneously - always consistent
+
+Aspect	Details
+How It Works	Write updates cache + DB at same time 
+Cache Update	Automatic sync on every write 
+Use Case	Banking apps, e-commerce stock updates 
+
+
+
+. Write-Through Cache ✍️
+Update cache AND DB simultaneously - always consistent
+
+Aspect	Details
+How It Works	Write updates cache + DB at same time 
+Cache Update	Automatic sync on every write 
+Use Case	Banking apps, e-commerce stock updates 
+
+Write-Behind Cache (Write-Back) 🔄
+Write to cache first, DB later in batches - fastest writes
+
+Aspect	Details
+How It Works	Write to cache first → DB updated asynchronously/batched 
+Cache Update	Background sync, eventual consistency 
+Use Case	Social media, IoT sensor data 
+
+
+
+
+ TTL Expiration (Time-Based) ⏳
+Auto-expire cache after time - backup strategy
+
+Aspect	Details
+How It Works	Data expires after TTL → fresh data on next read 
+Cache Update	Auto-expire + manual invalidate 
+Use Case	Dynamic content, short-lived data 
+
+
+
+. Cache-Delete (Invalidation) 🗑️
+Delete cache when data changes - simplest
+
+Aspect	Details
+How It Works	Delete cache → next read fetches fresh DB data 
+Cache Update	Manual delete on write 
+Use Case	Most common, simple pattern 
+
+
+
+When to use:
+
+✅ POD status changes (infrequent updates)
+
+✅ Order deletion
+
+✅ Simple, most common pattern
+
+
+
+Distributed Caching 🗂️
+Cache across multiple servers - scalable
+
+Aspect	Details
+How It Works	Cache distributed across servers, consistent hashing 
+Cache Update	Replicate across regions, fault tolerance 
+Use Case	Global platforms (YouTube, Fortnite) 
+
+
+ Your logistics platform (multiple microservices)
+
+✅ IFM-UK + IEX deployments (global)
+
+✅ Need scalability + fault tolerance
+
+
+
+Kafka:
+
+1. Order Status Updates (POB → ATD → POD)
+WebSockets (Real-Time for Driver)
+
+
+Why WebSockets?
+
+✅ Driver sees instant update (POD status → 50ms latency)
+
+✅ Bidirectional: Driver can send acknowledgment
+
+✅ No polling: Server pushes updates → no HTTP requests
+
+✅ Low latency: 50ms vs 500ms for HTTP polling
+
+
+
+
+
+
+
+Driver drives to pickup location
+  ↓
+Driver's mobile app sends GPS location every 5 seconds
+  ↓
+WebSocket sends location to admin dashboard
+  ↓
+Admin sees driver marker move on map (real-time)
+  ↓
+Admin: "Driver is 500m away from pickup"
+
+
+
+
+
+
+
+
+ Multi-service: Order event → Analytics + Notifications + Tracking
+
+Order Autogrouping for MULTIDROP (Bidding Microservice)
+What happens:
+
+Kafka	1	POD completion → Analytics + SMS + Billing + Tracking	Background multi-service 
+
+ext
+Admin creates 100 new orders (MULTIDROP request)
+  ↓
+Kafka publishes "Order Grouping Event" to topic "order-autogrouping"
+  ↓
+┌─────────────────────────────────────────┐
+│  Kafka Consumers (background processing):│
+│  1. Autogrouping Service → clusters orders │
+│  2. Bidding Service → sends to drivers for bid │
+│  3. Assignment Service → assigns best driver │
+└─────────────────────────────────────────┘
+Background code:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Spring Cloud Resilience4j - All Concepts
+1. Circuit Breaker 🔌
+Most important pattern - stops calling failing service, returns fallback
+
+Aspect	Details
+What it does	When service fails → circuit opens → stop sending requests 
+States	CLOSED (normal) → OPEN (failing) → HALF_OPEN (testing) 
+Why use	Prevent cascading failures in microservices 
+Real-Time Usage (Your Project):
+
+java
+// Configuration
+@Configuration
+public class ResilienceConfig {
+
+    @Bean
+    public CircuitBreakerFactory circuitBreakerFactory() {
+        return new Resilience4JCircuitBreakerFactory();
+    }
+}
+
+// Service with Circuit Breaker
+@Service
+public class DriverNotificationService {
+
+    @Autowired
+    private PushNotificationService pushService;
+
+    @CircuitBreaker(name = "push-notification", fallbackMethod = "fallbackNotification")
+    public void sendToDriver(String driverId, String message) {
+        // Call push notification service (may fail)
+        pushService.sendPush(driverId, message);
+    }
+
+    // Fallback method when circuit opens
+    public void fallbackNotification(String driverId, String message, Exception ex) {
+        // Use SMS instead when push fails
+        smsService.sendToDriver(driverId, message);
+    }
+}
+Scenario 1: Push Notification Service Failure
+
+text
+Driver logs in → needs notification
+  ↓
+DriverNotificationService calls PushNotificationService
+  ↓
+Push service returns 500 error (database down)
+  ↓
+Circuit Breaker detects failure → opens circuit
+  ↓
+Next 10 requests → Circuit Breaker returns fallback (SMS)
+  ↓
+After 30 sec → HALF_OPEN → test request
+  ↓
+Push service returns 200 → Circuit closes (normal)
+Why Circuit Breaker?
+
+✅ Prevents cascading failure: Push service down → doesn't block entire system
+
+✅ Fallback: SMS instead of push notification
+
+✅ Auto-recovers: Circuit closes when service returns
+
+2. Retry 🔄
+Automatically retry failed request - useful for transient errors
+
+Aspect	Details
+What it does	Failed request → retry N times with delay 
+Why use	Transient errors (network timeout) → retry succeeds 
+Config	Max retries, retry interval, exception filter 
+Real-Time Usage (Your Project):
+
+java
+// Configuration
+@Bean
+public RetryRegistry retryRegistry() {
+    RetryConfig config = RetryConfig.custom()
+        .maxAttempts(3)
+        .waitDuration(Duration.ofSeconds(2))
+        .retryOn(exception -> exception instanceof HttpRequestTimeoutException)
+        .build();
+    return RetryRegistry.of(config);
+}
+
+// Service with Retry
+@Service
+public class OrderStatusService {
+
+    @Autowired
+    private TrackingService trackingService;
+
+    @Retry(name = "tracking-service")
+    public void updateOrderStatus(String orderId, String status) {
+        // Call tracking service (may timeout)
+        trackingService.updateStatus(orderId, status);
+    }
+}
+Scenario 2: Tracking Service Timeout
+
+text
+Admin updates order status to "POD"
+  ↓
+OrderStatusService calls TrackingService
+  ↓
+Tracking service returns 504 timeout (network slow)
+  ↓
+Retry detects timeout → retries after 2 seconds
+  ↓
+Retry 2: Tracking service returns 200 (success)
+  ↓
+Order status updated successfully
+Why Retry?
+
+✅ Transient errors: Network timeout → retry succeeds
+
+✅ Max 3 retries: Avoid infinite loop
+
+✅ 2-second delay: Give service time to recover
+
+3. Rate Limiter 🚦
+Limit request rate - prevent system overload
+
+Aspect	Details
+What it does	Limit requests per second (token bucket algorithm) 
+Why use	Prevent system overload during peak traffic 
+Config	Requests per second, timeout, limit refresh period 
+Real-Time Usage (Your Project):
+
+java
+// Configuration
+@Bean
+public RateLimiterRegistry rateLimiterRegistry() {
+    RateLimiterConfig config = RateLimiterConfig.custom()
+        .limitRefreshPeriod(Duration.ofSeconds(1))
+        .limitForPeriod(100) // 100 requests per second
+        .timeoutDuration(Duration.ofMillis(500))
+        .build();
+    return RateLimiterRegistry.of(config);
+}
+
+// Service with Rate Limiter
+@Service
+public class DriverAssignmentService {
+
+    @Autowired
+    private BiddingService biddingService;
+
+    @RateLimiter(name = "bidding-service")
+    public void assignOrderToDriver(String orderId, String driverId) {
+        // Call bidding service (rate limited)
+        biddingService.submitBid(orderId, driverId);
+    }
+}
+Scenario 3: Peak Hours - 1000 Orders/Minute
+
+text
+Peak hours: 1000 orders/min → 16 orders/sec
+  ↓
+DriverAssignmentService calls BiddingService
+  ↓
+Rate Limiter allows 100 requests/sec
+  ↓
+16 orders/sec < 100/sec → all requests allowed
+  ↓
+During spike: 200 orders/sec
+  ↓
+Rate Limiter blocks 100 requests/sec → 100 allowed
+  ↓
+Blocked requests → timeout (500ms) → retry
+Why Rate Limiter?
+
+✅ Prevents overload: 100 requests/sec max
+
+✅ Peak traffic: 1000 orders/min → system doesn't crash
+
+✅ Fair distribution: All drivers get equal bidding chances
+
+4. Timeout ⏱️
+Set maximum time for request - avoid waiting forever
+
+Aspect	Details
+What it does	Request fails if takes longer than timeout 
+Why use	Slow services → don't block entire system 
+Config	Timeout duration, cancel running on timeout 
+Real-Time Usage (Your Project):
+
+java
+// Configuration
+@Bean
+public TimeoutRegistry timeoutRegistry() {
+    TimeoutConfig config = TimeoutConfig.custom()
+        .timeoutDuration(Duration.ofSeconds(5)) // 5 sec timeout
+        .cancelRunningOnTimeout(true)
+        .build();
+    return TimeoutRegistry.of(config);
+}
+
+// Service with Timeout
+@Service
+public class RouteMasterService {
+
+    @Autowired
+    private RouteService routeService;
+
+    @Timeout(name = "route-service")
+    public Route getRouteMaster(String routeId) {
+        // Call route service (may be slow)
+        return routeService.getRoute(routeId);
+    }
+}
+Scenario 4: Route Service Slow Response
+
+text
+IFM-UK admin fetches route master
+  ↓
+RouteMasterService calls RouteService
+  ↓
+Route service returns after 8 seconds (slow database)
+  ↓
+Timeout detects 8 sec > 5 sec → throws exception
+  ↓
+Circuit Breaker opens → fallback returns cached route
+  ↓
+Next request → timeout succeeds (5 sec)
+Why Timeout?
+
+✅ Avoid blocking: 5 sec max → system doesn't wait forever
+
+✅ Slow services: Route service returns in 8 sec → timeout handles it
+
+✅ Cancel running: Stop slow request → don't waste resources
+
+5. Bulkhead (Isolation) 🚧
+Isolate service calls - prevent one failure affecting others
+
+Aspect	Details
+What it does	Limit concurrent calls per service (thread pool/semaphore) 
+Why use	Prevent cascade: one service failure → system crash 
+Config	Max concurrent calls, max wait duration 
+Real-Time Usage (Your Project):
+
+java
+// Configuration
+@Bean
+public BulkheadRegistry bulkheadRegistry() {
+    BulkheadConfig config = BulkheadConfig.custom()
+        .maxConcurrentCalls(100) // 100 concurrent calls
+        .maxWaitDuration(Duration.ofMillis(500))
+        .build();
+    return BulkheadRegistry.of(config);
+}
+
+// Service with Bulkhead
+@Service
+public class OrderAnalyticsService {
+
+    @Autowired
+    private AnalyticsService analyticsService;
+
+    @Bulkhead(name = "analytics-service")
+    public void aggregateOrderStats(String date) {
+        // Call analytics service (bulkhead protected)
+        analyticsService.aggregateStats(date);
+    }
+}
+Scenario 5: Analytics Service Under Load
+
+text
+Admin dashboard loads → 50 concurrent requests
+  ↓
+OrderAnalyticsService calls AnalyticsService
+  ↓
+Bulkhead allows 100 concurrent calls
+  ↓
+50 requests < 100 → all allowed
+  ↓
+During peak: 150 concurrent requests
+  ↓
+Bulkhead blocks 50 requests → 100 allowed
+  ↓
+Blocked requests → timeout (500ms) → retry
+Why Bulkhead?
+
+✅ Isolate failures: Analytics service slow → doesn't block order service
+
+✅ Max 100 calls: Prevent system overload
+
+✅ Fair distribution: All requests get equal processing
+
+6. Caching 💾
+Cache request results - avoid repeated calls
+
+Aspect	Details
+What it does	Cache successful response → return cached for same request 
+Why use	Repeated calls → cached result (faster) 
+Config	Cache key, expiration, max size 
+Real-Time Usage (Your Project):
+
+java
+// Service with Caching
+@Service
+public class DriverPerformanceService {
+
+    @Autowired
+    private PerformanceService performanceService;
+
+    @Cache(name = "driver-performance", key = "#driverId")
+    public DriverStats getDriverStats(String driverId) {
+        // Call performance service (cached)
+        return performanceService.getStats(driverId);
+    }
+}
+Scenario 6: Driver Stats Dashboard
+
+text
+Admin opens driver dashboard → 10 drivers shown
+  ↓
+DriverPerformanceService calls PerformanceService for each driver
+  ↓
+First request: 200ms (database query)
+  ↓
+Cache stores result for driverId
+  ↓
+Next request for same driverId: 10ms (cached)
+  ↓
+Dashboard refreshes → 10 drivers → 10 cached results
+Why Caching?
+
+✅ Repeated calls: Same driver stats → cached result
+
+✅ Faster: 10ms vs 200ms (cached vs database)
+
+✅ Reduce DB load: 10 dashboard refreshes → 1 database query
+
+📊 Summary Table
+Concept	Purpose	Real-Time Scenario	Why This?
+Circuit Breaker	Stop failing service, return fallback	Push notification service down → SMS fallback 
+Prevent cascading failure 
+Retry	Retry failed request	Tracking service timeout → retry succeeds 
+Transient errors succeed 
+Rate Limiter	Limit request rate	Peak hours: 1000 orders/min → block 100/sec 
+Prevent system overload 
+Timeout	Max time for request	Route service 8 sec → timeout (5 sec) 
+Avoid blocking forever 
+Bulkhead	Isolate service calls	Analytics service: 100 concurrent max 
+Prevent cascade failure 
+Caching	Cache repeated results	Driver stats: 10 dashboard refreshes → 1 DB query 
+Faster, reduce DB load 
+🎤 Interview Example Statement
+"In my logistics platform, I used Resilience4j for fault tolerance across 6 concepts: Circuit Breaker for push notification service - when push service returned 500 error, circuit opened and fallback returned SMS instead. Retry for tracking service - when network timeout occurred, retry succeeded after 2 seconds. Rate Limiter for bidding service during peak hours - 1000 orders/min → 100 allowed/sec, blocked 100. Timeout for route service - 8 sec slow response → timeout (5 sec) returns cached route. Bulkhead for analytics service - 100 concurrent calls max, blocked 50 during peak. Caching for driver performance stats - 10 dashboard refreshes → 1 database query, cached results (10ms vs 200ms). This ensured fault tolerance and system resilience across microservices."
+
+
+
+
+
+
+
+
+
+
+
+Scenario 1: Driver Mobile App Logs In
+Load Balancer (Distributes Traffic)
+text
+Driver opens mobile app → 1000 concurrent drivers
+  ↓
+AWS NLB (Load Balancer) distributes:
+  - Driver 1, 2, 3 → Server A
+  - Driver 4, 5, 6 → Server B
+  - Driver 7, 8, 9 → Server C
+  ↓
+All 1000 drivers → distributed across 50 servers
+  ↓
+Each server handles ~20 drivers (balanced load)
+Why Load Balancer?
+
+✅ 1000 drivers → distributed across 50 servers
+
+✅ High availability: If Server A fails, LB routes to B/C
+
+✅ Scalability: Add more servers → LB distributes automatically
+
+
+
+
+
+
+API Gateway (Manages API)
+text
+Driver logs in → API Gateway intercepts request
+  ↓
+┌─────────────────────────────────────────┐
+│  API Gateway Steps:                     │
+│  1. Auth Check → Validate JWT token     │
+│  2. Rate Limit → 100 req/sec max        │
+│  3. Route Mapping → /driver/login       │
+│     → Driver Service                    │
+│  4. Transform → Merge driver + orders   │
+└─────────────────────────────────────────┘
+  ↓
+API Gateway routes to Driver Service
+  ↓
+Driver Service returns: { driverId, orders, location }
+Request Flow:
+
+
+
+
+
+Scenario 2: Admin Dashboard Fetches Orders
+Load Balancer (Distributes)
+text
+Admin opens dashboard → 500 concurrent admins
+  ↓
+AWS ALB (Load Balancer) distributes:
+  - Admin 1, 2, 3 → Server D
+  - Admin 4, 5, 6 → Server E
+  ↓
+All 500 admins → distributed across 20 servers
+Why Load Balancer?
+
+✅ 500 admins → distributed across 20 servers
+
+✅ Balanced load: Each server handles ~25 admins
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Complete Architecture Overview
+text
+┌────────────────────────────────────────────────────────────────────────┐
+│                         CLIENT LAYER                                    │
+│  [Driver Mobile App]  [Admin Dashboard]  [Customer Portal]  [IFM-UK]   │
+└──────────────────────────────┬─────────────────────────────────────────┘
+                               │ HTTP Requests
+                               ↓
+┌────────────────────────────────────────────────────────────────────────┐
+│                    LOAD BALANCER (AWS NLB/ALB)                          │
+│                  Distributes traffic across servers                     │
+└──────────────────────────────┬─────────────────────────────────────────┘
+                               │
+                               ↓
+┌────────────────────────────────────────────────────────────────────────┐
+│                  SPRING CLOUD API GATEWAY                               │
+│  ┌──────────────────────────────────────────────────────────────────┐  │
+│  │  1. SPRING SECURITY (JWT Validation)                              │  │
+│  │  2. RATE LIMITER (Redis) - 100 req/sec                           │  │
+│  │  3. RESILIENCE4J (Circuit Breaker)                               │  │
+│  │  4. ROUTING (/api/driver/* → Driver Service)                     │  │
+│  │  5. MONITORING (Request logging)                                 │  │
+│  └──────────────────────────────────────────────────────────────────┘  │
+│                         Port: 8080                                      │
+└──────────────────────────────┬─────────────────────────────────────────┘
+                               │
+                               ↓ Routes to Service Name
+┌────────────────────────────────────────────────────────────────────────┐
+│                    EUREKA SERVICE DISCOVERY                             │
+│  ┌──────────────────────────────────────────────────────────────────┐  │
+│  │  Service Registry (stores all microservice instances)             │  │
+│  │  driver-service → 50 instances (8080-8089)                       │  │
+│  │  order-service → 20 instances (8090-8099)                        │  │
+│  │  analytics-service → 10 instances (8100-8109)                    │  │
+│  └──────────────────────────────────────────────────────────────────┘  │
+│                         Port: 8761                                      │
+└──────────────────────────────┬─────────────────────────────────────────┘
+                               │ Service Discovery
+                               ↓
+┌────────────────────────────────────────────────────────────────────────┐
+│                 SPRING CLOUD LOAD BALANCER                              │
+│  ┌──────────────────────────────────────────────────────────────────┐  │
+│  │  Client-side Load Balancer (selects instance)                     │  │
+│  │  Strategy: Round-Trip, Least-Connections                         │  │
+│  └──────────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────┬─────────────────────────────────────────┘
+                               │
+                               ↓ Routes to Specific Instance
+┌────────────────────────────────────────────────────────────────────────┐
+│                         MICROSERVICES LAYER                             │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌────────────┐  │
+│  │ DRIVER       │  │ ORDER        │  │ ANALYTICS    │  │ BIDDING    │  │
+│  │ SERVICE      │  │ SERVICE      │  │ SERVICE      │  │ SERVICE    │  │
+│  │ (50 instances│  │ (20 instances│  │ (10 instances│  │ (5 instances│  │
+│  │ )            │  │ )            │  │ )            │  │ )            │  │
+│  │ Ports:       │  │ Ports:       │  │ Ports:       │  │ Ports:     │  │
+│  │ 8080-8089    │  │ 8090-8099    │  │ 8100-8109    │  │ 8110-8114  │  │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  └──────┬─────┘  │
+│         │                 │                 │                 │         │
+│         │  RESILIENCE4J   │  RESILIENCE4J   │  RESILIENCE4J   │         │
+│         │ (Circuit Breaker│ (Retry, Timeout)│ (Bulkhead)      │         │
+│         │ , Rate Limiter) │                 │                 │         │
+│         └─────────────────┴─────────────────┴─────────────────┘         │
+└──────────────────────────────┬─────────────────────────────────────────┘
+                               │
+                               ↓ Apache Kafka Events
+                               ↓
+┌────────────────────────────────────────────────────────────────────────┐
+│                    APACHE KAFKA (Event Bus)                             │
+│  ┌──────────────────────────────────────────────────────────────────┐  │
+│  │  Topics:                                                          │  │
+│  │  - order-lifecycle (POB/ATD/POD events)                          │  │
+│  │  - driver-assignments (driver assignment events)                 │  │
+│  │  - order-autogrouping (autogrouping events)                      │  │
+│  │  - notifications (SMS/email events)                               │  │
+│  └──────────────────────────────────────────────────────────────────┘  │
+│                         Port: 9092                                      │
+└──────────────────────────────┬─────────────────────────────────────────┘
+                               │ Event Streaming
+                               ↓
+┌────────────────────────────────────────────────────────────────────────┐
+│                         DATA LAYER                                      │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐                 │
+│  │  POSTGRESQL  │  │  REDIS       │  │  KAFKA       │                 │
+│  │  (DB)        │  │  (Cache)     │  │  (Storage)   │                 │
+│  │  - orders    │  │  - sessions  │  │  - events    │                 │
+│  │  - drivers   │  │  - rate limit│  │              │                 │
+│  │  - locations │  └──────────────┘  └──────────────┘                 │
+│  └──────────────┘                                                         │
+└────────────────────────────────────────────────────────────────────────┘
+📚 Flow Diagram 1: Driver Login (Entire Flow)
+text
+┌─────────────┐
+│ DRIVER APP  │
+│ (Mobile)    │
+└──────┬──────┘
+       │ POST /api/driver/login
+       │ Headers: { X-REGION: "IEX" }
+       ↓
+┌──────────────────────┐
+│ AWS LOAD BALANCER    │
+│ Distributes:         │
+│ 1000 drivers → 5     │
+│ gateway servers      │
+└──────┬───────────────┘
+       ↓
+┌──────────────────────┐
+│ SPRING CLOUD         │
+│ API GATEWAY          │
+│ Port: 8080           │
+│ ┌────────────────┐  │
+│ │ 1. SPRING      │  │
+│ │    SECURITY    │  │
+│ │    - JWT Check │  │
+│ │    - Validate  │  │
+│ │    signature   │  │
+│ └────────┬───────┘  │
+│          ↓          │
+│ ┌────────────────┐  │
+│ │ 2. RATE LIMIT  │  │
+│ │    (Redis)     │  │
+│ │    - driverA   │  │
+│ │    - 150 req   │  │
+│ │    - 100 ok    │  │
+│ │    - 50 block  │  │
+│ └────────┬───────┘  │
+│          ↓          │
+│ ┌────────────────┐  │
+│ │ 3. ROUTING     │  │
+│ │    /api/driver │  │
+│ │    → eureka    │  │
+│ └────────┬───────┘  │
+└──────┬───────────────┘
+       │
+       ↓ Request to Service Name
+┌──────────────────────┐
+│ EUREKA SERVER        │
+│ Service Discovery    │
+│ Port: 8761           │
+│ ┌────────────────┐  │
+│ │ Find: driver   │  │
+│ │ -service       │  │
+│ │ → 50 instances │  │
+│ │ [8080-8089]    │  │
+│ └────────┬───────┘  │
+└──────┬───────────────┘
+       │
+       ↓ Returns Instance List
+┌──────────────────────┐
+│ SPRING CLOUD         │
+│ LOAD BALANCER        │
+│ Client-side LB       │
+│ ┌────────────────┐  │
+│ │ Strategy:      │  │
+│ │ Round-Trip     │  │
+│ │ Select:        │  │
+│ │ driver-8083    │  │
+│ └────────┬───────┘  │
+└──────┬───────────────┘
+       │
+       ↓ Request to Specific Instance
+┌──────────────────────┐
+│ DRIVER SERVICE       │
+│ Port: 8083           │
+│ ┌────────────────┐  │
+│ │ RESILIENCE4J   │  │
+│ │ - Circuit      │  │
+│ │   Breaker      │  │
+│ │   (fallback:   │  │
+│ │   SMS)         │  │
+│ │ - Retry        │  │
+│ │   (3 attempts) │  │
+│ │ - Timeout      │  │
+│ │   (5 sec)      │  │
+│ └────────┬───────┘  │
+│          ↓          │
+│ ┌────────────────┐  │
+│ │ Validate JWT   │  │
+│ │ Extract driver │  │
+│ │ ID, location   │  │
+│ └────────┬───────┘  │
+│          ↓          │
+│ ┌────────────────┐  │
+│ │ PostgreSQL     │  │
+│ │ Query: driver  │  │
+│ │ WHERE id=123   │  │
+│ └────────┬───────┘  │
+└──────┬───────────────┘
+       │
+       ↓ DB Response
+┌──────────────────────┐
+│ DRIVER SERVICE       │
+│ Response: {          │
+│   driverId: 123,     │
+│   name: "John",      │
+│   location: {...}    │
+│ }                    │
+└──────┬───────────────┘
+       │
+       ↓
+┌──────────────────────┐
+│ SPRING CLOUD         │
+│ API GATEWAY          │
+│ ┌────────────────┐  │
+│ │ MONITORING     │  │
+│ │ - Log: req-123 │  │
+│ │ - Path: /login │  │
+│ │ - Status: 200  │  │
+│ │ - Latency:     │  │
+│ │   180ms        │  │
+│ └────────┬───────┘  │
+└──────┬───────────────┘
+       │
+       ↓ Response to Client
+┌─────────────┐
+│ DRIVER APP  │
+│ { driverId, │
+│   name,     │
+│   location }│
+└─────────────┘
+│ Logged in ✅
+📚 Flow Diagram 2: Order Creation with Kafka (Entire Flow)
+text
+┌─────────────┐
+│ ADMIN DASH  │
+│ (Dashboard) │
+└──────┬──────┘
+       │ POST /api/orders/create
+       │ Body: { location, pickup, delivery }
+       ↓
+┌──────────────────────┐
+│ SPRING CLOUD         │
+│ API GATEWAY          │
+│ ┌────────────────┐  │
+│ │ SPRING SECURITY│  │
+│ │ JWT Valid ✅   │  │
+│ └────────┬───────┘  │
+│          ↓          │
+│ ┌────────────────┐  │
+│ │ RATE LIMIT     │  │
+│ │ (Redis)        │  │
+│ │ Admin: 50/sec  │  │
+│ └────────┬───────┘  │
+│          ↓          │
+│ ┌────────────────┐  │
+│ │ ROUTING        │  │
+│ │ /api/orders →  │  │
+│ │ eureka         │  │
+│ └────────┬───────┘  │
+└──────┬───────────────┘
+       │
+       ↓
+┌──────────────────────┐
+│ EUREKA SERVER        │
+│ ┌────────────────┐  │
+│ │ Find: order    │  │
+│ │ -service       │  │
+│ │ → 20 instances │  │
+│ │ [8090-8099]    │  │
+│ └────────┬───────┘  │
+└──────┬───────────────┘
+       │
+       ↓
+┌──────────────────────┐
+│ SPRING CLOUD         │
+│ LOAD BALANCER        │
+│ ┌────────────────┐  │
+│ │ Select:        │  │
+│ │ order-8092     │  │
+│ │ (least conn)   │  │
+│ └────────┬───────┘  │
+└──────┬───────────────┘
+       │
+       ↓
+┌──────────────────────┐
+│ ORDER SERVICE        │
+│ Port: 8092           │
+│ ┌────────────────┐  │
+│ │ RESILIENCE4J   │  │
+│ │ - Retry        │  │
+│ │   (DB timeout) │  │
+│ │ - Timeout      │  │
+│ │   (5 sec)      │  │
+│ └────────┬───────┘  │
+│          ↓          │
+│ ┌────────────────┐  │
+│ │ PostgreSQL     │  │
+│ │ INSERT order   │  │
+│ └────────┬───────┘  │
+│          ↓          │
+│ ┌────────────────┐  │
+│ │ PUBLISH TO     │  │
+│ │ KAFKA          │  │
+│ │ Topic:         │  │
+│ │ order-lifecycle│  │
+│ │ Event:         │  │
+│ │ CREATED        │  │
+│ └────────┬───────┘  │
+└──────┬───────────────┘
+       │
+       ↓ Apache Kafka Event
+┌──────────────────────┐
+│ APACHE KAFKA         │
+│ Broker: 9092         │
+│ ┌────────────────┐  │
+│ │ Topic: order   │  │
+│ │ -lifecycle     │  │
+│ │ Store Event:   │  │
+│ │ orderId=12345  │  │
+│ │ status=CREATED │  │
+│ └────────┬───────┘  │
+└──────┬───────────────┘
+       │
+       ├──→ Consumer 1: ANALYTICS SERVICE
+       │
+       ├──→ Consumer 2: NOTIFICATION SERVICE
+       │
+       └──→ Consumer 3: BIDDING SERVICE
+       
+┌─────────────────────────────────────────────────────┐
+│        KAFKA CONSUMERS (Background Syncup)          │
+├─────────────────────────────────────────────────────┤
+│ ANALYTICS SERVICE (Port: 8102)                      │
+│ ┌───────────────────────────────────────────────┐  │
+│ │ @KafkaListener(topics="order-lifecycle")      │  │
+│ │ handleCREATED(event) {                        │  │
+│ │   incrementOrderCount();                      │  │
+│ │   updateDashboardCache(); (Redis)             │  │
+│ │ }                                              │  │
+│ └───────────────────────────────────────────────┘  │
+├─────────────────────────────────────────────────────┤
+│ NOTIFICATION SERVICE (Port: 8112)                   │
+│ ┌───────────────────────────────────────────────┐  │
+│ │ @KafkaListener(topics="order-lifecycle")      │  │
+│ │ handleCREATED(event) {                        │  │
+│ │   sendSMS(customerId, "Order Created");       │  │
+│ │   sendEmail(customerId, "Order #12345");      │  │
+│ │ }                                              │  │
+│ └───────────────────────────────────────────────┘  │
+├─────────────────────────────────────────────────────┤
+│ BIDDING SERVICE (Port: 8110)                        │
+│ ┌───────────────────────────────────────────────┐  │
+│ │ @KafkaListener(topics="order-lifecycle")      │  │
+│ │ handleCREATED(event) {                        │  │
+│ │   publishForBidding(event);                   │  │
+│ │   // Send to drivers for bid (your bidding)   │  │
+│ │ }                                              │  │
+│ └───────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────┘
+📚 Flow Diagram 3: Order Status Update (WebSockets + Kafka)
+text
+┌─────────────┐
+│ ADMIN DASH  │
+│ Update POD  │
+└──────┬──────┘
+       │ POST /api/orders/12345/status
+       │ Body: { status: "POD" }
+       ↓
+┌──────────────────────┐
+│ SPRING CLOUD         │
+│ API GATEWAY          │
+│ ┌────────────────┐  │
+│ │ SPRING SECURITY│  │
+│ │ JWT Valid ✅   │  │
+│ └────────┬───────┘  │
+│          ↓          │
+│ ┌────────────────┐  │
+│ │ ROUTING        │  │
+│ │ /api/orders →  │  │
+│ │ order-service  │  │
+│ └────────┬───────┘  │
+└──────┬───────────────┘
+       │
+       ↓
+┌──────────────────────┐
+│ EUREKA SERVER        │
+│ ┌────────────────┐  │
+│ │ order-service  │  │
+│ │ → 20 instances │  │
+│ └────────┬───────┘  │
+└──────┬───────────────┘
+       │
+       ↓
+┌──────────────────────┐
+│ SPRING CLOUD         │
+│ LOAD BALANCER        │
+│ Select: order-8093   │
+└──────┬───────────────┘
+       │
+       ↓
+┌──────────────────────┐
+│ ORDER SERVICE        │
+│ Port: 8093           │
+│ ┌────────────────┐  │
+│ │ RESILIENCE4J   │  │
+│ │ - Circuit      │  │
+│ │   Breaker      │  │
+│ │ - Timeout      │  │
+│ └────────┬───────┘  │
+│          ↓          │
+│ ┌────────────────┐  │
+│ │ UPDATE DB      │  │
+│ │ status = POD   │  │
+│ └────────┬───────┘  │
+│          ↓          │
+│ ┌────────────────┐  │
+│ │ 1. WEBSOCKET   │  │
+│ │    (Real-time) │  │
+│ │    Send to:    │  │
+│ │    driver mobile│  │
+│ │    → 50ms      │  │
+│ └────────┬───────┘  │
+│          ↓          │
+│ ┌────────────────┐  │
+│ │ 2. KAFKA       │  │
+│ │    (Background)│  │
+│ │    Topic:      │  │
+│ │    order-      │  │
+│ │    lifecycle   │  │
+│ │    Event: POD  │  │
+│ └────────┬───────┘  │
+└──────┬───────────────┘
+       │
+       ├─→ WEBSOCKET PATH (Real-Time)
+       │
+       └─→ KAFKA PATH (Background)
+
+┌─────────────────────────────────────────────────────┐
+│         WEBSOCKET PATH (Real-Time Update)           │
+├─────────────────────────────────────────────────────┤
+│ WEBSOCKET SERVER (Port: 8093)                       │
+│ ┌───────────────────────────────────────────────┐  │
+│ │ @ServerEndpoint("/ws/order/{orderId}")        │  │
+│ │ sendPOD(driverId, orderId) {                  │  │
+│ │   Session session = sessions.get(driverId);   │  │
+│ │   session.send("POD Updated");                │  │
+│ │   // Driver mobile gets instant notification  │  │
+│ │ }                                              │  │
+│ └───────────────────────────────────────────────┘  │
+│          ↓          │
+│ ┌────────────────┐  │
+│ │ DRIVER APP     │  │
+│ │ Pop-up: "POD   │  │
+│ │   Updated"     │  │
+│ │ (50ms latency) │  │
+│ └────────────────┘  │
+└─────────────────────────────────────────────────────┘
+       
+┌─────────────────────────────────────────────────────┐
+│          KAFKA PATH (Background Syncup)             │
+├─────────────────────────────────────────────────────┤
+│ APACHE KAFKA (Broker: 9092)                         │
+│ ┌───────────────────────────────────────────────┐  │
+│ │ Topic: order-lifecycle                        │  │
+│ │ Event: POD                                    │  │
+│ │ orderId: 12345                              │  │
+│ │ status: POD                                 │  │
+│ └───────────────────────────────────────────────┘  │
+│          ↓          │
+│ ┌───────────────────────────────────────────────┐  │
+│ │ NOTIFICATION SERVICE (Consumer)               │  │
+│ │ @KafkaListener(topics="order-lifecycle")      │  │
+│ │ handlePOD(event) {                            │  │
+│ │   sendSMS(customer, "Order Delivered!");      │  │
+│ │   sendEmail(customer, "POD Complete");        │  │
+│ │   // Background: SMS + Email sent             │  │
+│ │ }                                              │  │
+│ └───────────────────────────────────────────────┘  │
+│          ↓          │
+│ ┌───────────────────────────────────────────────┐  │
+│ │ ANALYTICS SERVICE (Consumer)                  │  │
+│ │ @KafkaListener(topics="order-lifecycle")      │  │
+│ │ handlePOD(event) {                            │  │
+│ │   incrementPODCount();                        │  │
+│ │   updateDashboardCache(); (Redis)             │  │
+│ │ }                                              │  │
+│ └───────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────┘
+📚 Flow Diagram 4: Autogrouping Orders (Bidding Microservice)
+text
+┌─────────────┐
+│ ADMIN DASH  │
+│ Create 100  │
+│ Orders      │
+└──────┬──────┘
+       │ POST /api/orders/batch-create
+       ↓
+┌──────────────────────┐
+│ SPRING CLOUD         │
+│ API GATEWAY          │
+│ ┌────────────────┐  │
+│ │ SPRING SECURITY│  │
+│ │ JWT Valid ✅   │  │
+│ └────────┬───────┘  │
+│          ↓          │
+│ ┌────────────────┐  │
+│ │ ROUTING        │  │
+│ │ /api/orders →  │  │
+│ │ order-service  │  │
+│ └────────┬───────┘  │
+└──────┬───────────────┘
+       │
+       ↓
+┌──────────────────────┐
+│ ORDER SERVICE        │
+│ Port: 8092           │
+│ ┌────────────────┐  │
+│ │ Loop 100 times │  │
+│ │ Create order   │  │
+│ │   → DB         │  │
+│ │   → KAFKA      │  │
+│ └────────┬───────┘  │
+└──────┬───────────────┘
+       │
+       ↓ 100 Kafka Events
+┌──────────────────────┐
+│ APACHE KAFKA         │
+│ ┌────────────────┐  │
+│ │ Topic: order   │  │
+│ │ -autogrouping  │  │
+│ │ Events: 100    │  │
+│ │ orders         │  │
+│ └────────┬───────┘  │
+└──────┬───────────────┘
+       │
+       ↓
+┌─────────────────────────────────────────────────────┐
+│        KAFKA CONSUMER: BIDDING SERVICE              │
+├─────────────────────────────────────────────────────┤
+│ BIDDING SERVICE (Port: 8110)                        │
+│ ┌───────────────────────────────────────────────┐  │
+│ │ @KafkaListener(topics="order-autogrouping")   │  │
+│ │ handleOrderForGrouping(event) {               │  │
+│ │   // 1. Group nearby orders                   │  │
+│ │   List<OrderGroup> groups =                   │  │
+│ │     groupingService.groupNearbyOrders();      │  │
+│ │   // 100 orders → 10 groups (500ms)           │  │
+│ │                                                │  │
+│ │   // 2. Publish grouped orders                │  │
+│ │   publishForBidding(groups);                  │  │
+│ │                                                │  │
+│ │   // 3. Send to drivers for bid (your bidding)│  │
+│ │   sendToDrivers(groups);                      │  │
+│ │ }                                              │  │
+│ │                                                │  │
+│ │ RESILIENCE4J:                                  │  │
+│ │ - Bulkhead (100 concurrent)                    │  │
+│ │ - Retry (3 attempts)                          │  │
+│ │ - Timeout (5 sec)                             │  │
+│ └───────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────┘
+       │
+       ↓ Bid Notifications
+┌─────────────────────────────────────────────────────┐
+│        KAFKA PUBLISHER: BIDDING RESULT              │
+├─────────────────────────────────────────────────────┤
+│ APACHE KAFKA                                        │
+│ ┌───────────────────────────────────────────────┐  │
+│ │ Topic: bidding-results                        │  │
+│ │ Event: BID_SUBMITTED                          │  │
+│ │ groups: [group1, group2, ...]                │  │
+│ │ bids: [driver1: 500, driver2: 450, ...]      │  │
+│ └───────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────┘
+       │
+       ↓
+┌─────────────────────────────────────────────────────┐
+│        KAFKA CONSUMER: ORDER SERVICE                │
+├─────────────────────────────────────────────────────┤
+│ ORDER SERVICE (Consumer)                            │
+│ ┌───────────────────────────────────────────────┐  │
+│ │ @KafkaListener(topics="bidding-results")      │  │
+│ │ handleBidResult(event) {                      │  │
+│ │   // Assign best driver to each group         │  │
+│ │   assignBestDriver(event);                      │  │
+│ │   // Update order status: ASSIGNED            │  │
+│ │ }                                              │  │
+│ └───────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────┘
+📋 Component Summary Table
+Component	Purpose	Port	Real-Time Usage
+Component	Purpose	Port	Real-Time Usage
+Spring Cloud API Gateway	Route, Auth, Rate Limit, Monitor	8080	Driver login, order creation 
+Spring Security	JWT Validation	-	Validate token for all requests 
+Rate Limiter (Redis)	100 req/sec max	Redis	Prevent service overload 
+Resilience4J	Circuit Breaker, Retry, Timeout	-	Driver service fallback (SMS) 
+Eureka Service Discovery	Service Registry	8761	Find microservice instances 
+Spring Cloud Load Balancer	Client-side LB	-	Select instance (round-trip) 
+Apache Kafka	Event Bus	9092	Order lifecycle, autogrouping 
+Redis	Cache, Rate Limit	Redis	Dashboard cache, rate limit 
+T
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Design a URL Shortener (Like Bitly)
+Answer:
+text
+┌────────────────────────────────────────────────────────┐
+│  REQUIREMENTS:                                           │
+│  - Generate short URL from long URL                      │
+│  - Redirect short URL → long URL                         │
+│  - Track click count                                       │
+│  - Handle 1M requests/day, 100K URLs/day                 │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│  HIGH-LEVEL DESIGN:                                      │
+│  ┌────────────┐    ┌──────────────┐    ┌────────────┐  │
+│  │  CLIENT    │ →  │  API GATEWAY │ →  │  SERVICE   │  │
+│  │ (Mobile/Web)│    │              │    │            │  │
+│  └────────────┘    └──────────────┘    └─────┬──────┘  │
+│                                               │          │
+│  ┌────────────────────────────────────────────▼──────┐  │
+│  │  SERVICES:                                           │  │
+│  │  - URL Generation Service                           │  │
+│  │  - Redirect Service                                 │  │
+│  │  - Analytics Service                                │  │
+│  └────────────────────────────────────────────────────┘  │
+│                                               │          │
+│  ┌────────────────────────────────────────────▼──────┐  │
+│  │  DATA LAYER:                                         │  │
+│  │  - PostgreSQL (store long URL, short URL)          │  │
+│  │  - Redis (cache redirects, fast lookup)             │  │
+│  └────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│  KEY COMPONENTS:                                         │
+│  1. URL Generation:                                      │
+│     - Input: long URL                                    │
+│     - Generate: 6-char hash (e.g., aB3xY9)              │
+│     - Algorithm: Base62(encoding) + MD5(hash)           │
+│     - DB: INSERT (long_url, short_code, created_at)      │
+│  2. Redirect:                                            │
+│     - Input: short_code                                  │
+│     - Redis Cache: GET short_code → long_url (5ms)       │
+│     - DB Fallback: SELECT long_url WHERE short_code      │
+│     - Response: HTTP 301 Redirect → long_url            │
+│  3. Analytics:                                           │
+│     - Track: click_count, timestamp, user_id             │
+│     - Kafka: Async event → Analytics Service             │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│  SCALABILITY:                                            │
+│  - Horizontal: Add more URL service instances (50+)      │
+│  - Sharding: PostgreSQL by short_code hash               │
+│  - Caching: Redis (1 hour TTL) → 100ms → 5ms            │
+│  - Load Balancer: 1M requests → 5 gateway servers       │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│  MY IMPLEMENTATION (Logistics Platform):                 │
+│  Similar to: Order auto-grouping (generate group ID)     │
+│  - Input: 100 orders → Generate group_code (6 chars)     │
+│  - DB: INSERT (orders, group_code)                       │
+│  - Redis: Cache group_code → 500ms → 5ms                 │
+│  (Same pattern: generate short ID, cache, fast lookup)   │
+└───────────────────────────
+
+
+
+
+
+
+
+
+. Design a Rate Limiter
+Answer:
+text
+┌────────────────────────────────────────────────────────┐
+│  REQUIREMENTS:                                           │
+│  - Limit: 100 requests/sec per user                      │
+│  - Track: user_id, request_count                         │
+│  - Block: if exceeds limit → 429 Too Many Requests       │
+│  - Handle 1M users, 100K requests/sec                    │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│  HIGH-LEVEL DESIGN:                                      │
+│  ┌────────────┐    ┌──────────────┐    ┌────────────┐  │
+│  │  CLIENT    │ →  │  API GATEWAY │ →  │  SERVICE   │  │
+│  └────────────┘    └──────────────┘    └─────┬──────┘  │
+│          │                                   │          │
+│          └────────────────────────────────────│          │
+│                                               │          │
+│  ┌────────────────────────────────────────────▼──────┐  │
+│  │  RATE LIMITER (Spring Cloud Gateway):              │  │
+│  │  ┌──────────────────────────────────────────────┐  │  │
+│  │  │ 1. Extract user_id from JWT                   │  │  │
+│  │  │ 2. Check Redis: GET user_id → count           │  │  │
+│  │  │ 3. If count > 100 → Block (429)               │  │  │
+│  │  │ 4. If count ≤ 100 → Increment (INCR)          │  │  │
+│  │  │ 5. Allow request → Forward to service         │  │  │
+│  │  └──────────────────────────────────────────────┘  │  │
+│  └────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│  KEY COMPONENTS:                                         │
+│  Algorithm: Token Bucket (Redis)                          │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  Key: rate_limit:{user_id}                            │  │
+│  │  Value: request_count (integer)                       │  │
+│  │  TTL: 1 second (auto-reset)                           │  │
+│  │  ┌────────────────────────────────────────────────┐  │  │
+│  │  │ IF GET user_id → count > 100:                   │  │  │
+│  │  │   Return 429 Too Many Requests                   │  │  │
+│  │  │ ELSE:                                            │  │  │
+│  │  │   INCR user_id → count + 1                       │  │  │
+│  │  │   SETEX user_id 1 count                          │  │  │
+│  │  │   Allow request                                   │  │  │
+│  │  └────────────────────────────────────────────────┘  │  │
+│  └──────────────────────────────────────────────────────┘  │
+│  High Performance:                                           │
+│  - Redis: 10ms latency → 100K requests/sec                 │
+│  - Distributed: 10 Redis nodes (sharded by user_id)        │
+│  - Cache: Local cache (user_id → count) → 1ms              │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│  SCALABILITY:                                            │
+│  - Horizontal: Add more Redis nodes (10 → 100)           │
+│  - Sharding: Redis by user_id hash                        │
+│  - Caching: Local cache → 10ms → 1ms                     │
+│  - Load Balancer: 100K requests → 5 gateway servers     │
+└────────────────────────────────────────────────────────┘
+
+
+
+
+
+ Design a Ride-Sharing System (Uber-like)
+Answer:
+text
+┌────────────────────────────────────────────────────────┐
+│  REQUIREMENTS:                                           │
+│  - Driver: Update location (real-time)                   │
+│  - User: Request ride → get driver → track              │
+│  - Match: Nearest driver → user (500ms)                 │
+│  - Handle: 1M users, 100K drivers, 10K concurrent rides │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│  HIGH-LEVEL DESIGN:                                      │
+│  ┌────────────┐    ┌──────────────┐    ┌────────────┐  │
+│  │  USER APP  │ →  │  API GATEWAY │ →  │  RIDE SVC  │  │
+│  └────────────┘    └───┬──────────┘    └─────┬──────┘  │
+│                          │                      │          │
+│  ┌────────────┐          │        ┌────────────▼──────┐  │
+│  │ DRIVER APP │ → API GATEWAY │  DRIVER SERVICE    │  │
+│  └────────────┘               └────────────────────┘  │
+│                          │                      │          │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  SERVICES:                                               │  │
+│  │  - Location Service (driver location, real-time)       │  │
+│  │  - Matching Service (nearest driver → user)            │  │
+│  │  - Ride Service (create ride, track status)            │  │
+│  │  - Notification Service (SMS, WebSockets)              │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                          │                      │          │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  DATA LAYER:                                             │  │
+│  │  - PostgreSQL (rides, users, drivers)                   │  │
+│  │  - Redis (driver location cache, 100ms TTL)             │  │
+│  │  - Kafka (ride events, async notifications)              │  │
+│  │  - WebSockets (real-time driver tracking)              │  │
+│  └──────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│  KEY COMPONENTS:                                         │
+│  1. Location Tracking:                                    │
+│     - Driver: Update location every 5 sec                │
+│     - Redis: SET driver_id → {lat, lng, speed}            │
+│     - TTL: 100ms (auto-refresh)                         │
+│  2. Matching:                                            │
+│     - User: Request ride → location {lat, lng}           │
+│     - Query: Find nearest 10 drivers (500ms)             │
+│     - Algorithm: Geohash (lat{lng) → filter distance    │
+│     - Response: driver_id, distance, eta                  │
+│  3. Ride Lifecycle:                                     │
+│     - CREATE → REQUESTED → ACCEPTED → IN_PROGRESS → DONE│
+│     - Kafka: Async event → Notification Service          │
+│  4. Real-Time Tracking:                                   │
+│     - WebSockets: user → driver location (50ms)          │
+│     - Kafka: Async event → analytics                    │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│  SCALABILITY:                                            │
+│  - Horizontal: 100 matching service instances            │
+│  - Sharding: PostgreSQL by user_id hash                  │
+│  - Caching: Redis (driver location, 100ms TTL)           │
+│  - Load Balancer: 10K concurrent → 50 service instances │
+└────────────────────────────────────────────────────────┘
+
+
+
+
+
+8. Design an E-commerce Platform (Amazon-like)
+Answer:
+text
+┌────────────────────────────────────────────────────────┐
+│  REQUIREMENTS:                                           │
+│  - User: Browse products → order → pay                   │
+│  - Store: Product catalog, inventory, orders              │
+│  - Scale: 100M products, 1M orders/day, 10M QPS          │
+│  - Handle: 10M concurrent users                           │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│  HIGH-LEVEL DESIGN:                                      │
+│  ┌────────────┐    ┌──────────────┐    ┌────────────┐  │
+│  │  USER      │ →  │  API GATEWAY │ →  │  PRODUCT   │  │
+│  └────────────┘    └───┬──────────┘    │  SERVICE   │  │
+│                          │                      └─────┬──────┘  │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  SERVICES:                                               │  │
+│  │  - Product Service (catalog, search, details)          │  │
+│  │  - Order Service (create, track, status)                │  │
+│  │  - Inventory Service (stock, reserve)                    │  │
+│  │  - Payment Service (process, refund)                     │  │
+│  │  - Recommendation Service (personalized)                 │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                          │                      │          │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  DATA LAYER:                                             │  │
+│  │  - PostgreSQL (products, orders, inventory)              │  │
+│  │  - Redis (product cache, 5 min TTL)                      │  │
+│  │  - Kafka (order events, async processing)                 │  │
+│  │  - Elasticsearch (product search, 10ms)                  │  │
+│  └──────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│  KEY COMPONENTS:                                         │
+│  1. Product Browse:                                         │
+│     - User: Search → {keyword, category}                 │
+│     - Elasticsearch: Query → 10ms                          │
+│     - Redis: Cache results (5 min TTL) → 100ms → 5ms     │
+│  2. Create Order:                                          │
+│     - User: Order → {products, quantity, location}        │
+│     - Inventory: Reserve stock → check availability        │
+│     - DB: INSERT order                                     │
+│     - Kafka: event = ORDER_CREATED                          │
+│  3. Payment:                                             │
+│     - User: Pay → {amount, method}                        │
+│     - Payment: Process → success/fail                      │
+│     - DB: Update order status → PAYED                      │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│  SCALABILITY:                                            │
+│  - Horizontal: 100 product service instances              │
+│  - Sharding: PostgreSQL by product_id hash                 │
+│  - Caching: Redis (product cache, 5 min TTL)              │
+│  - Search: Elasticsearch (100M products, 10ms)             │
+│  - Load Balancer: 10M QPS → 100 product service instances│  │
+└────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+igh-Volume Asynchronous Item Validation Flow
+This flowchart illustrates a scalable and error-resilient architecture for validating 100 items, each requiring 1,500 backend validations over 5 minutes. The core principle is asynchronous processing using a message queue.
+
+
+
+
+
+
+
+┌─────────────────────────────────────────────────────────┐
+│  1. CLIENT (Bulk Submission)                              │
+│     POST /api/items/bulk-validate → 100 items            │
+└───────────────────┬─────────────────────────────────────┘
+                    │
+┌───────────────────▼─────────────────────────────────────┐
+│  2. ORCHESTRATOR (Task Publisher)                        │
+│     - Split 100 items → 10 batches × 10 items            │
+│     - Publish 150,000 tasks → Kafka (async, 10ms)       │
+│     - Return 200 OK → 200ms (Non-blocking)               │
+└───────────────────┬─────────────────────────────────────┘
+                    │ Kafka Events (150,000 tasks)
+┌───────────────────▼─────────────────────────────────────┐
+│  3. VALIDATION WORKERS (100 Parallel Workers)            │
+│     - Each worker: 1,500 validations (3 sec)             │
+│     - 100 workers × 1,500 = 150,000 validations          │
+│     - Publish results → Kafka (async, 10ms)              │
+└───────────────────┬─────────────────────────────────────┘
+                    │ Kafka Results (150,000 results)
+┌───────────────────▼─────────────────────────────────────┐
+│  4. RESULT AGGREGATORS (10 Parallel Aggregators)         │
+│     - Each aggregator: 15,000 results (1 sec)            │
+│     - Aggregate by item → Redis (5 min TTL)              │
+│     - Save to DB (100ms)                                 │
+│     - Publish progress → Kafka                           │
+└───────────────────┬─────────────────────────────────────┘
+                    │ Progress Updates
+┌───────────────────▼─────────────────────────────────────┐
+│  5. PROGRESS TRACKER (Real-Time Dashboard)              │
+│     - WebSocket Push (50ms)                              │
+│     - Client shows: 0% → 100% in 5 minutes               │
+└─────────────────────────────────────────────────────────┘
+
+
+
+STEP 1: Workers finish validation
+┊
+└─→ 100 workers send 150,000 results to Kafka
+    Example result: {itemId: "item-1", status: "SUCCESS"}
+    Example result: {itemId: "item-1", status: "FAILED"}
+    Example result: {itemId: "item-2", status: "SUCCESS"}
+    ... (150,000 total results)
+
+STEP 2: 10 Aggregators count results (parallel)
+┊
+└─→ Aggregator 1 gets: 15,000 results (item-1 to item-10)
+┊   Aggregator 2 gets: 15,000 results (item-11 to item-20)
+┊   ...
+┊   Aggregator 10 gets: 15,000 results (item-91 to item-100)
+    ^ Each takes 1 second (15,000 results)
+
+STEP 3: Aggregator counts pass/fail per item
+┊
+└─→ For item-1:
+    Redis Cache: {item-1: {total: 1500, passed: 1475, failed: 25}}
+    ^ Store in Redis (5 min TTL)
+    DB: Save to PostgreSQL (100ms)
+
+STEP 4: Aggregator sends progress update
+┊
+└─→ Publish to Kafka: {taskId: "task-123", progress: "10/150000"}
+    ^ "10 validations done out of 150,000"
+
+STEP 5: Progress Tracker shows dashboard
+┊
+└─→ Tracker gets Kafka message: {progress: "10/150000"}
+    WebSocket → Client Dashboard (50ms)
+    Client shows: ████████░░░░ 10% complete
+    ^ Real-time update every 1 second
+
+
+
+Start (0:00 min):
+┌────────────────────────────────────────────────┐
+│ Progress: ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%  │
+│ Validated: 0 / 150,000                          │
+│ Time: 0:00 minutes                              │
+└────────────────────────────────────────────────┘
+
+After 1 minute (1:00 min):
+┌────────────────────────────────────────────────┐
+│ Progress: ████████████████████████░░░░░░░░░░  50%  │
+│ Validated: 75,000 / 150,000                     │
+│ Time: 1:00 minutes                              │
+└────────────────────────────────────────────────┘
+
+End (5:00 min):
+┌────────────────────────────────────────────────┐
+│ Progress: ████████████████████████████████████ 100%  │
+│ Validated: 150,000 / 150,000                    │
+│ Time: 5:00 minutes                              │
+│ Success Rate: 98.5% (147,750 passed)            │
+└────────────────────────────────────────────────┘
+

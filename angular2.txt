@@ -1,0 +1,270 @@
+. How do you secure a Spring Boot application with JWT?
+A:
+
+Use Spring Security with JWT (JSON Web Tokens)
+
+Create an authentication filter that validates JWT from the Authorization header
+
+Store JWT in Angular's localStorage or sessionStorage after login
+
+Add JWT interceptor in Angular to attach token to every API request
+
+ How do you consume REST APIs in Angular and handle errors?
+A:
+
+Use HttpClient for GET/POST/PUT/DELETE
+
+Handle errors via HttpInterceptor and RxJS catchError
+
+
+
+ How do you manage state in Angular?
+A:
+
+Small apps: Service-based state with BehaviorSubject
+
+Large apps: NgRx or Akita store management
+
+
+
+ What are Route Guards and how do you implement authentication?
+A:
+
+Route Guards control access to routes (authentication/authorization)
+
+Implement CanActivate interface
+
+
+
+Q10. What is the difference between Observables and Promises?
+Aspect	Observable (RxJS)	Promise
+Values	Emits multiple values over time	Resolves once
+Cancellation	Can unsubscribe	Cannot cancel
+Lazy	Executes only when subscribed	Executes immediately
+Operators	map, filter, retry, catchError	None
+
+
+
+. How do you optimize Angular app performance?
+A:
+
+Lazy loading modules
+
+Use OnPush change detection strategy
+
+Use trackBy with *ngFor
+
+Minimize bundle size with production builds
+
+
+4. How do you deploy a full stack Angular + Spring Boot app?
+A:
+Two approaches:
+
+Angular bundled in Spring Boot JAR: Angular dist/ copied to src/main/resources/static
+
+Separate deployment:
+
+Spring Boot deployed as JAR/WAR
+
+Angular deployed as static files on Nginx or Docker
+
+
+
+ What is your CI/CD pipeline setup for Java + Angular?
+A:
+
+CI: GitHub Actions/Jenkins (testing, scanning, building)
+
+CD: Docker image creation, Kubernetes deployment with approvals
+
+
+
+7. What real-time scenario would you use RxJS switchMap vs mergeMap?
+A:
+
+switchMap: Cancel previous HTTP call when new one comes (e.g., search autocomplete)
+
+mergeMap: Process all requests concurrently (e.g., batch delete operations)
+
+
+
+
+ How do you handle API versioning in microservices?
+A:
+
+Use URI versioning: /api/v1/users, /api/v2/users
+
+Ensures backward compatibility
+
+
+
+An API works locally but fails after deployment. What do you check first?
+A:
+
+Check environment configuration (application-prod.yml)
+
+Verify database connection and credentials
+
+Check CORS configuration
+
+Review logs (Splunk/ELK) for stack trace
+
+
+
+
+Why is a REST API slow only in production?
+A:
+
+Check database connection pool exhaustion
+
+Look for N+1 query problem in JPA
+
+Analyze network latency between services
+
+Check if caching is enabled
+
+
+
+ How do you prevent memory leaks in Angular?
+A:
+
+Unsubscribe from Observables in ngOnDestroy
+
+Use async pipe in templates (auto-unsubscribes)
+
+Use takeUntil operator
+
+typescript
+
+
+
+How do you handle errors globally in Angular when calling Spring Boot?
+A: Use HttpInterceptor with RxJS catchError
+
+
+
+
+How do you avoid CORS issues during local Angular development?
+A: Use proxy.conf.json in Angular
+
+
+
+
+How do you handle pagination between Angular and Spring Boot?
+A:
+
+typescript
+// Angular Service with pagination
+getProducts(page: number, size: number): Observable<ProductPage> {
+  return this.http.get<ProductPage>(`http://localhost:8080/api/products?page=${page}&size=${size}`);
+}
+java
+// Spring Boot Controller with pagination
+@GetMapping("/products")
+public Page<Product> getProducts(
+    @RequestParam int page, 
+    @RequestParam int size) {
+    return productRepository.findAll(PageRequest.of(page, size));
+}
+
+
+
+
+What is the difference between Observables and Promises in Angular API calls?
+A:
+
+Aspect	Observable (HttpClient)	Promise
+Multiple values	✅ Emits multiple values	❌ Single value
+Cancellation	✅ Can unsubscribe	❌ Cannot cancel
+Lazy execution	✅ Only on subscribe	❌ Executes immediately
+Operators	✅ map, filter, retry	❌ None
+
+
+
+
+5. How do you handle errors when Angular calls Java API?
+Answer: Angular uses an HTTP Interceptor that catches all errors. If user gets 401 (unauthorized), redirect to login. If 500 (server error), show error message. This happens in one place for all API calls.
+
+
+
+What is an HTTP Interceptor in Angular?
+Answer: It's like a security guard for all HTTP requests. Every request from Angular passes through it. You can add tokens, log requests, handle errors, or modify headers in one place instead of writing code everywhere.
+
+
+
+
+
+
+What happens when JWT token expires?
+Answer: Angular detects 401 error from expired token, clears the token, and redirects to login. User must login again to get a new token. Some apps use refresh tokens to get new access token silently.
+
+
+Q14. How do you store tokens securely in Angular?
+Answer: Store JWT in localStorage or sessionStorage. localStorage persists after browser close, sessionStorage clears when tab closes. For better security, use httpOnly cookies instead of localStorage.
+
+
+How do you prevent CSRF attacks?
+Answer: Spring Boot generates CSRF token. Angular includes it in every request header. Server validates the token. This prevents malicious sites from making requests on behalf of the user.
+
+
+
+
+. How do you optimize Angular when loading large data from Java?
+Answer: Use pagination (load 50 items at a time), lazy loading (load modules only when needed), and virtual scrolling (only render visible items). This keeps the app fast even with thousands of records.
+
+
+
+. What is lazy loading in Angular?
+Answer: Instead of loading all modules at startup, load them only when user navigates to that route. Makes initial page load faster. For example, admin module loads only when user clicks admin menu.
+
+
+How do you cache API responses in Angular?
+Answer: Store API responses in memory for a short time. If user requests same data again within cache time, return cached data instead of calling Java backend again. Reduces server load and makes app faster.
+
+
+How do you handle slow API calls in Angular?
+Answer: Show loading spinner while waiting. Use debounce to wait until user stops typing before searching. Implement timeout so request doesn't hang forever. Show error if API takes too long.
+
+Q20. What is debouncing and where do you use it?
+Answer: Debouncing waits for user to stop typing before making API call. Used in search boxes - if user types "Java", wait 300ms after they stop typing, then search. Prevents calling API on every keystroke.
+
+Q21. How do you optimize change detection in Angular?
+Answer: Use OnPush change detection strategy. Angular only checks for updates when input data changes, not on every event. This makes the app faster, especially with many components.
+
+
+
+ow do you handle multiple API calls that depend on each other?
+Answer: Use RxJS operators like switchMap or concatMap. For example, first call gets user ID, then use that ID to get user details. switchMap cancels previous call if user types again quickly.
+
+Q25. What is forkJoin and when do you use it?
+Answer: forkJoin calls multiple APIs in parallel and waits for all to complete. Use when loading dashboard that needs data from user API, product API, and order API simultaneously. Returns all results together.
+
+
+
+Q30. How do you handle concurrent requests for same data?
+Answer: Use switchMap - it cancels previous request when new one comes. If user searches "J", then quickly types "Ja", the first request is cancelled and only the second one runs.
+
+
+
+ What happens when Spring Boot microservice is down?
+Answer: Angular receives 503 error. Implement fallback - show cached data, show friendly error message, or retry after delay. Circuit breaker pattern prevents repeated failed calls.
+
+
+
+ How do you monitor API calls in production?
+Answer: Angular interceptor logs all requests (URL, status, time). Spring Boot logs show server-side processing. Use tools like ELK stack or Splunk to collect logs. Track API performance and errors.
+
+. How do you handle rate limiting?
+Answer: Spring Boot limits requests per user (e.g., 100 requests per minute). When limit exceeded, returns 429 error. Angular shows message "Too many requests, try again later" and prevents user from spamming.
+
+
+How do you configure different environments (dev, test, prod)?
+Answer: Angular has environment files for each environment with different API URLs. Spring Boot has application properties files for each profile. Build process picks the right configuration.
+
+
+ How do you implement search with autocomplete?
+Answer: User types in search box. Angular waits 300ms (debounce), sends request to Spring Boot. Spring Boot searches database and returns matching results. Angular shows dropdown with suggestions.
+
+6. How do you implement real-time features?
+Answer: Use WebSockets. Angular opens a WebSocket connection to Spring Boot. Server can push messages to Angular anytime (like notifications, chat messages). Different from HTTP where client must request first.

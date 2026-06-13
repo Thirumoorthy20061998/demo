@@ -26,9 +26,78 @@ Auto
 
 
 
+"A shallow copy creates a new object, but copies references to nested objects instead of creating new copies. This means the original and copied object share the same address space in memory. So if you modify a nested object in one, it affects both."
 
 
 
+difference between list and arraylist and their functions.  in short and sweat
+
+What is it?	Interface (contract)	Class (implementation) 
+Can create instance?	❌ No (new List() won't work)	✅ Yes (new ArrayList()) 
+Relationship	Parent interface	Implements List interface 
+Usage	List<String> list = new ArrayList<>();	ArrayList<String> list = new ArrayList<>();
+
+
+// Adding
+add(element)           // Add at end
+add(index, element)    // Add at index
+
+// Removing
+remove(element)        // Remove by object
+remove(index)          // Remove by index
+
+// Getting/Setting
+get(index)             // Get element
+set(index, element)    // Replace element
+
+// Size & Check
+size()                 // Get count
+isEmpty()              // Check if empty
+contains(element)      // Check existence
+
+// Other
+indexOf(element)       // Find index
+clear()                // Remove all
+
+
+
+ArrayList-Specific Functions
+java
+listIterator
+spliterator
+removeIf(condition)
+replaceAll(operation)     // Custom iterator
+
+sort(Comparator)
+
+
+
+
+
+
+ How does Spring Boot decide which auto-configuration to apply?
+Answer:
+Spring Boot uses @EnableAutoConfiguration which loads auto-configuration classes from spring.factories file inside spring-boot-autoconfigure.jar. It reads META-INF/spring.factories containing org.springframework.boot.autoconfigure.EnableAutoConfiguration entries. Then it applies conditional annotations (@ConditionalOnClass, @ConditionalOnProperty, @ConditionalOnMissingBean) to decide which configurations to activate based on:
+
+Dependencies present in project
+
+Properties set in application.properties
+
+Beans already defined
+
+2. What happens internally when you add spring-boot-starter-web?
+Answer:
+When you add spring-boot-starter-web:
+
+Transitive dependencies are pulled: spring-boot-starter, spring-web, spring-webmvc, tomcat-embed-core
+
+Auto-configuration classes for web are enabled (WebMvcAutoConfiguration)
+
+Embedded Tomcat is detected and configured
+
+DispatcherServlet is automatically registered
+
+View resolvers, message converters are configured
 
 
 

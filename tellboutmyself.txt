@@ -2,15 +2,15 @@
 
 
 self intro
-Hi, my name is (your name). I'm a java developer with over three years of experience in the software industry. I have a strong background in Java development, with extensive hands-on experience using frameworks like Spring Boot in micoservice and tools using Spring mvc , spring datajpa, spring core, spring security, spring cloud, asynchronous communication, apache kafka , sping webflux, resttemplate
+Hi, my name is (your name). I'm a java developer with over 4.8 years of experience in the software industry. I have a strong background in Java development, with extensive hands-on experience using frameworks like Spring Boot in micoservice and tools using Spring mvc , spring datajpa, spring core, spring security, spring cloud, asynchronous communication, apache kafka , sping webflux, resttemplate i have working experience in banking and logistic product.
 
-In my most recent role,  iam worked in banking domain I worked on a fintech product of loan orgination system and gained experience with SQL, APIs integrations from multiple banks with vendors, workflow development of different loan applications and Sngle sign on now  I'm looking for a new challenge and opportunities where i can grow simultaneously.
+In my most recent role,  iam worked in  logistic domain worked on a  product of IEX and IFM and gained experience with QUERY OPTIMIZATION, external APIs integrations , workflow development for different clients , Module development, building scalable backend system and I also worked on multi-order type handling, full order lifecycle management, and extended the platform for a UK deployment with region-specific configurations and business rules  on now  I'm looking for a new challenge and opportunities where i can grow simultaneously.
 
 
 
 tell about your experience?
 
-"I'm a Java backend specialist with over four years of experience, primarily using the Spring Boot framework. My most recent work involves designing and scaling microservices and high-performance RESTful APIs in a critical banking environment. I focus on database optimization using MS SQL and Oracle with Hibernate/JPA, ensuring system security, and integrating complex external systems. I love translating business needs into clean, robust technical solutions."
+"I'm a Java backend engineer with over four.8 years of experience, primarily using the Spring Boot framework. My most recent work involves designing and scaling microservices and high-performance RESTful APIs in a critical logistic environment. I focus on database optimization using MS SQL and Oracle with Hibernate/JPA, ensuring system security, and integrating complex external systems. I love translating business needs into clean, robust technical solutions."
 
 
 recent project:
@@ -18,9 +18,7 @@ recent project:
 
 
 
-
-I’m switching because my consulting contract with TVSCS for this client ended after 7 months, and while my parent company is arranging a new client placement, I’m currently on a temporary internal support project. I’m looking for a permanent role where I can grow long-term, and this opportunity aligns well with my career goals in logistics and backend systems—so I applied to build stability and continue learning in one place.
-
+I’m switching because my consulting contract with TVSCS for this client ended  on 2 days ago, and while my parent company is arranging a new client placement,me currently have no active project, I’m currently on a temporary internal support project. I’m looking for a permanent role where I can grow long-term, and this opportunity aligns well with my career goals—so I applied to build stability and continue learning in one place.
 
 
 
@@ -29,6 +27,9 @@ I’m switching because my consulting contract with TVSCS for this client ended 
 
 
 
+
+
+ 
 
 
 
@@ -46,11 +47,11 @@ full auditability via Datadog traces
 
 BEST FEATURE
 
-The best feature I implemented was the auto-grouping system that automatically groups multiple orders into batches for delivery.
+The best feature I implemented was the auto-grouping system that automatically groups multiple orders into batches at every day night 10 pm
 
-It groups orders based on route master, entity, and various business conditions (like pickup/drop location, time window, vehicle capacity). A scheduler runs this process daily as part of standard operations, so dispatchers don’t have to group orders manually.
+It groups orders based on route master, entity, drop type  and various business conditions (like pickup/drop location, time window, vehicle capacity). A scheduler runs this process daily as part of standard operations, so dispatchers don’t have to group orders manually.
 
-Result: Orders are grouped correctly every day, dispatch time is reduced, drivers get optimized routes, and operations run smoothly without manual effort.
+Result: Orders are grouped correctly every day, dispatch time is reduced, drivers get optimized routes , and operations run smoothly without manual effort.
 
 
 
@@ -156,7 +157,7 @@ public class AutoClearingReportCache {
 
 
 Describe in detail about your last performance improvement task.
-Problem statement: The "Pending Applications" dashboard was loading very slowly (5-15 seconds) because a critical database query was inefficient, causing a full table scan instead of a quick index lookup.
+Problem statement: The "Pending orders" dashboard was loading very slowly (5-15 seconds) because a critical database query was inefficient, causing a full table scan instead of a quick index lookup.
 
 Solution: 
 

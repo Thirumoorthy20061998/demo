@@ -1,3 +1,17 @@
+
+
+rg.springframework.dao.DataAccessResourceFailureException: Unable to acquire JDBC Connection; 
+...
+Caused by: java.sql.SQLTransientConnectionException: HikariPool-1 - Connection is not available, request timed out after 30005ms.
+
+
+
+
+
+
+
+
+
 @Primary - Setting a Default Service
 Imagine you have an application that sends notifications. You have two implementations of a NotificationService interface: one for Email and one for SMS. Most of your application should use the Email service by default.
 
@@ -591,7 +605,6 @@ Can @Transactional be used on private methods? Why or why not?
 
 Answer: No, typically not directly. Spring's @Transactional works by creating a proxy around the bean. For this proxy to intercept method calls, the method must be public. If a private method within the same object calls another private transactional method, the proxy is bypassed.
 @Modifying queries do not interact with the persistence context; they directly execute SQL. You often need to clear the persistence context (entityManager.clear()) after such operations to avoid stale data.
-In Spring Boot, the @Modifying annotation is used whenever you want to perform a database operation that changes data (like UPDATE, DELETE, or INSERT) using custom JPQL or SQL queries.
 
 
 

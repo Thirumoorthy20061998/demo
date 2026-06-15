@@ -7,6 +7,83 @@ A Stream in Java is a sequence of elements that supports functional-style operat
 
 
 
+Is it possible to store a null key or a null value in a HashMap in Java, and what are some potential issues that can arise when working with null values in a HashMap?
+
+Type	How Many
+Null Key	Only ONE null key allowed 
+Null Value	Multiple null values allowed (many keys can have null value) 
+Internally: Null key is stored in bucket 0 (Java skips hashCode() for null).
+
+
+
+
+What are Design Patterns in Java?
+Design patterns are reusable, proven solutions to common software design problems that developers face repeatedly. They encapsulate best practices and established techniques for solving specific design challenges.
+
+ Singleton Pattern (C
+Use Case: Database connections, Spring @Autowired beans, logging
+
+
+Factory Pattern (
+Use Case: Object creation, dependency injection, Spring @Bean
+
+Builder Pattern 
+Use Case: Your Uber Order object with many parameters, HTTP requests
+
+
+
+Observer Pattern (Behavioral)
+Use Case: WebSockets for real-time updates, Kafka listeners, event handling
+
+
+
+5. Strategy Pattern (Beha
+Use Case: Payment methods, algorithm selection, sorting strategies
+
+
+Decorator Pattern (Structural)
+Use Case: Java Streams (BufferedInputStream), logging, caching layers
+
+
+
+Adapter Pattern (Structural)
+Use Case: Legacy system integration, REST API wrappers
+
+. Facade Pattern (Structural)
+Use Case: Spring MVC controllers, API gateways
+
+
+
+
+
+
+
+
+
+
+"Java 21 is an LTS version with major improvements:
+
+Virtual Threads - Lightweight threads for high-concurrency (millions of threads vs 10K platform threads)
+
+Pattern Matching for Switch - Cleaner code, no casting needed
+
+Sequenced Collections - getFirst() and getLast() methods
+
+Generational ZGC - 99% faster garbage collection
+
+Record Patterns - Destructure records in pattern matching
+
+Virtual threads are the biggest feature - perfect for microservices like real-time bidding systems where we need high concurrency. This makes Java competitive with Go for high-performance applications."**
+
+
+
+
+
+
+
+
+
+
 
 
 Aspect	Agile	Traditional (Waterfall)

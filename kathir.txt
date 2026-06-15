@@ -1,3 +1,152 @@
+What are Java Streams and how do they provide a more functional approach to processing collections of data in Java?
+
+
+A Stream in Java is a sequence of elements that supports functional-style operations like filtering, mapping, and reducing. Introduced in Java 8, the Stream API allows you to process collections (Lists, Sets, Maps) in a declarative way instead of using loops.
+
+
+
+
+
+
+
+Aspect	Agile	Traditional (Waterfall)
+Approach	Adaptive — flexible planning, changes welcomed 
+Predictive — fixed plan, rigid sequence 
+Structure	Iterative — multiple small cycles (planning → design → code → test) 
+Sequential — linear phases (requirements → design → implement → test → deploy) 
+Flexibility	Changes allowed at any stage 
+Changes difficult after phase completes 
+Documentation	Lightweight 
+Comprehensive 
+
+
+
+
+
+
+What is the Builder Pattern in Java?
+The Builder Pattern is a creational design pattern (Gang of Four) that constructs complex objects step by step using a dedicated Builder class, separating the construction logic from the object's representation
+
+
+
+
+
+
+
+
+
+
+Serialization vs Externalization
+
+Serialization: Serializable (marker interface, no methods)
+
+Externalization: Externalizable (has writeExternal() and readExternal() methods)
+
+Control Level
+
+Serialization: JVM automatically controls (no manual coding)
+
+Externalization: You have full manual control (write custom logic)
+
+
+Implementation Effort
+
+Serialization: Easy — just add implements Serializable
+
+Externalization: Hard — must override two methods
+
+4. Performance
+
+Serialization: Slower (uses reflection)
+
+Externalization: Faster (no reflection overhead)
+
+
+
+Hash collision 
+Hash collision (or hash clash) occurs when two different inputs produce the same hash value in a hash table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+difference  between Runnable Callable
+Package	java.lang 
+java.util.concurrent 
+Method	run() 
+call() 
+Return Value	No (void) 
+Yes (returns V type) 
+Exceptions	Cannot throw checked exceptions 
+Can throw checked exceptions 
+Execution	Thread class or ExecutorService 
+Only ExecutorService 
+Future Result	Returns null from Future.get() 
+Returns actual result from Future.get() 
+
+
+
+
+Garbage Collection (GC) is Java's automatic memory management process that removes unused objects from heap memory to prevent memory leaks.
+
+How it works (3 steps):
+Object created → Java creates objects in heap memory
+
+No reference → When an object has no active references, it becomes eligible for GC
+
+GC cleans → A Daemon Thread (low-priority background thread) finds and deletes these unreferenced objects
+
+
+
+
+
+
+HashMap works using hashing to store key-value pairs. Internally it's an array of buckets, where each bucket holds key-value nodes.
+
+How it works:
+
+When you call put(key, value), it calculates key.hashCode() → finds a bucket index
+
+Stores the key-value pair in that bucket
+
+If two keys get the same index (collision), it uses a linked list (Java 7) or linked list + Red-Black Tree (Java 8+) to store multiple entries
+
+get(key) calculates the hash, finds the bucket, traverses the list/tree, and returns the value using equals()
+
+
+
+
+
+
+
+
+
+
+How it's achieved:
+Abstraction is achieved in Java through:
+
+Abstract Classes – Use the abstract keyword; can contain abstract methods (no body) and concrete methods
+
+Interfaces – Contains only abstract methods (by default); provides full abstraction
+
+
+
+Generics in Java let you write one class/method that works with any data type without repeating code.
+
+Code Reusability	Write once, use with String, Integer, Double, etc. 
+Type Safety
+
+
 
 
 

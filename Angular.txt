@@ -1,3 +1,24 @@
+
+
+Why choose Angular over React or Vue?
+Answer: Angular is a full framework, not a library. It includes routing, forms, and HTTP clients out-of-the-box. This creates a highly standardized ecosystem, making it ideal for consistency across large enterprise teams.
+
+
+
+Setting standalone: false turns the component into a classic component that cannot live on its own.
+
+Here is exactly what happens in two bullet points:
+
+It requires an NgModule: You must manually add the component to an NgModule's declarations array, or Angular won't recognize its selector and will throw an error ('app-component' is not a known element).
+
+The imports array breaks: You can no longer import other components or modules directly inside the @Component decorator. All dependencies must be moved to the parent NgModule instead.
+
+
+
+
+
+
+
 What is Angular?
 Angular is a powerful, open-source front-end framework primarily used for building dynamic and robust single-page applications (SPAs). Developed and maintained by Google, it leverages TypeScript as its primary language, offering benefits like strong typing and improved code maintainability.
 
@@ -1271,7 +1292,7 @@ trackById(index: number, item: any): number {
 \* **Performance Benefits:**
 \* **Faster First Contentful Paint (FCP) and Time To Interactive (TTI):** Users see content almost immediately because the browser receives fully rendered HTML, improving perceived performance. The application becomes interactive faster than pure client-side rendering.
 \* **Improved SEO (Search Engine Optimization):** Search engine crawlers can easily index the fully rendered content, which is beneficial for SEO.
-\* **Better User Experience on Slower Networks/Devices:** Users don't have to wait for the entire JavaScript bundle to download and execute before seeing any content.
+\* **Better User Experience on Slower Networks/Devices:** Users don't have t  o wait for the entire JavaScript bundle to download and execute before seeing any content.
 
 ### Web Workers
 

@@ -1,5 +1,49 @@
 
 
+What is tsconfig.spec.json?
+It is the TypeScript config used for test files.
+
+What is the .angular/cache folder?
+It stores Angular CLI build cache data to speed up rebuilds.
+
+What changed in Angular 17 build output with esbuild?
+Angular 17 uses the esbuild-based builder by default, which improves build speed and changes output chunk structure.
+
+Jenkins default port is 8080. 
+
+Elasticsearch 9200, Kibana 5601, and Logstash 5044 for Beats input; Logstash’s API often runs on 9600.
+
+Kafka default port is 9092 for the broker.
+
+Redis default port is 6379.
+
+
+
+
+What is the difference between app.routes.ts and RouterModule.forRoot()?
+In standalone apps, routes are defined as plain Routes arrays instead of using RouterModule.forRoot()
+
+
+What is main.ts in Angular 17?
+It is the application entry point and usually bootstraps the app using bootstrapApplication() in standalone apps.
+
+
+How do you test a service that uses HttpClient?
+Use HttpClientTestingModule and HttpTestingController to mock HTTP requests.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Why choose Angular over React or Vue?
 Answer: Angular is a full framework, not a library. It includes routing, forms, and HTTP clients out-of-the-box. This creates a highly standardized ecosystem, making it ideal for consistency across large enterprise teams.
 

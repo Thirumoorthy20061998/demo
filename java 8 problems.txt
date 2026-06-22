@@ -1,3 +1,293 @@
+
+
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        String input = "s o f gg o a s Aa r t w 3 h 4 j 7";
+        String[] tokens = input.split(" ");
+        StringBuilder result = new StringBuilder();
+
+        for (String token : tokens) {
+            // Check if the token is a number
+            if (Character.isDigit(token.charAt(0))) {
+                result.append("i").append(" ");
+            } else {
+                // If it's a word/letter, keep it unchanged
+                result.append(token).append(" ");
+            }
+        }
+
+        // Print the final modified string
+        System.out.println(result.toString().trim());
+    }
+}
+
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class Main {
+    public static void main(String[] args) {
+        String input = "GG UU rutu  java hgh python fhhf nodejs";
+        
+        // Convert to lowercase to make the search case-insensitive if needed
+        String[] words = input.toLowerCase().split("\\s+");
+        
+        // Map to store our target languages and their counts
+        Map<String, Integer> counts = new HashMap<>();
+        counts.put("java", 0);
+        counts.put("python", 0);
+        counts.put("nodejs", 0);
+        
+        // Loop through the words and increment the count if it matches our targets
+        for (String word : words) {
+            if (counts.containsKey(word)) {
+                counts.put(word, counts.get(word) + 1);
+            }
+        }
+        
+        // Print the results
+        System.out.println("Found Languages and Counts:");
+        counts.forEach((key, value) -> System.out.println(key + ": " + value));
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        String input = "s o f ? a s Aa r t w 3 h ! j 7";
+        String[] tokens = input.split(" ");
+        StringBuilder output = new StringBuilder();
+
+        for (String token : tokens) {
+            // Check if the token is a single character and neither a letter nor a digit
+            if (token.length() == 1) {
+                char ch = token.charAt(0);
+                
+                if (!Character.isLetterOrDigit(ch)) {
+                    // Replace special character with 'i'
+                    output.append("i").append(" ");
+                } else {
+                    output.append(token).append(" ");
+                }
+            } else {
+                // If it's a multi-character string (like "Aa"), keep it as is
+                output.append(token).append(" ");
+            }
+        }
+
+        // Print final result
+        System.out.println("Output: " + output.toString().trim());
+    }
+}
+
+
+
+
+
+
+
+
+
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        String input = "s d f g h a s f r t w 3 h 4 j 7";
+        String[] elements = input.split(" ");
+        
+        StringBuilder convertedString = new StringBuilder();
+        int sum = 0;
+        
+        for (String element : elements) {
+            // Check if the element is a single character
+            if (element.length() == 1) {
+                char ch = element.charAt(0);
+                
+                if (Character.isLowerCase(ch)) {
+                    // Convert lowercase to uppercase
+                    convertedString.append(Character.toUpperCase(ch)).append(" ");
+                } else if (Character.isUpperCase(ch)) {
+                    // Convert uppercase to lowercase
+                    convertedString.append(Character.toLowerCase(ch)).append(" ");
+                } else if (Character.isDigit(ch)) {
+                    // If it's a digit, add its numeric value to sum
+                   
+String str1 = String.valueOf(ch);    again covert to int
+
+ sum += Character.getNumericValue(ch);
+               
+
+
+ } else {
+                    // For any other symbols, just keep them as is
+                    convertedString.append(ch).append(" ");
+                }
+            }
+        }
+        
+        // Print the results
+        System.out.println("Modified String: " + convertedString.toString().trim());
+        System.out.println("Sum of Numbers: " + sum);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        String input = "s d f gg h a s Aa r t w 3 h 4 j 7";
+        String[] elements = input.split(" ");
+        StringBuilder convertedString = new StringBuilder();
+        int sum = 0;
+
+        for (String element : elements) {
+            for (int i = 0; i < element.length(); i++) {
+                char ch = element.charAt(i);
+                if (Character.isLowerCase(ch)) {
+                    convertedString.append(Character.toUpperCase(ch));
+                } else if (Character.isUpperCase(ch)) {
+                    convertedString.append(Character.toLowerCase(ch));
+                } else if (Character.isDigit(ch)) {
+                    sum += Character.getNumericValue(ch);
+                }
+            }
+            convertedString.append(" ");
+        }
+
+        System.out.println("Modified String: " + convertedString.toString().trim());
+        System.out.println("Sum of Numbers: " + sum);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        String input = "AAS FFD JJG HHH AAS SAA";
+        String[] words = input.split(" ");
+        
+        Map<String, List<String>> anagramGroups = new LinkedHashMap<>();
+        
+        for (String word : words) {
+            char[] chars = word.toCharArray();
+            Arrays.sort(chars);
+            String sortedKey = new String(chars);
+            
+            anagramGroups.putIfAbsent(sortedKey, new ArrayList<>());
+            anagramGroups.get(sortedKey).add(word);
+        }
+        
+        // Only print if the group has more than 1 item (matched anagrams)
+        for (List<String> group : anagramGroups.values()) {
+            if (group.size() > 1) {
+                System.out.println("Group: " + group + " | Count: " + group.size());
+            }
+        }
+    }
+}
+
+
+Group: [AAS, AAS, SAA] | Count: 3
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+public class Main {
+    public static void main(String[] args) {
+        String name = "my name is thirumoorthy";
+        
+        // Split the string into words
+        String[] words = name.split(" ");
+        
+        // Find low word (shortest) and high word (longest)
+        String lowWord = words[0];
+        String highWord = words[0];
+        
+        for (String word : words) {
+            if (word.length() < lowWord.length()) {
+                lowWord = word;
+            }
+            if (word.length() > highWord.length()) {
+                highWord = word;
+            }
+        }
+        
+        System.out.println("Low word: " + lowWord);
+        System.out.println("High word: " + highWord);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 int n = 764786578;
         int sum = 0;
         
@@ -128,7 +418,10 @@ public class JacksonMediumComplicatedTree {
 
         try {
             // Parse payload into a dynamic tree structure
-            JsonNode rootNode = mapper.readTree(jsonString);
+          
+File jsonFile = new File("path/to/your/folder/data.json");
+
+  JsonNode rootNode = mapper.readTree(jsonString);
 
             // Q1: Print Student Name and Status (Using .path() chaining)
             String studentName = rootNode.path("name").asText();
@@ -175,7 +468,9 @@ public static void main(String[] args) {
 
         try {
             // Map JSON String directly to root Java POJO
-            StudentPayload student = mapper.readValue(jsonString, StudentPayload.class);
+          File jsonFile = new File("path/to/your/folder/data.json");
+
+  StudentPayload student = mapper.readValue(jsonString, StudentPayload.class);
 
             // Q1: Print Student Name and Status (Nested Object)
             System.out.println("Student Name: " + student.name);
@@ -214,34 +509,48 @@ public static void main(String[] args) {
 
 
 
-
-paranthesis program:
 import java.util.Stack;
 
 public class Main {
     public static void main(String[] args) {
 
-        String s = "{[()]}";
+        String s = "{[()]}"; 
         Stack<Character> stack = new Stack<>();
+        boolean isValid = true;
 
         for (char c : s.toCharArray()) {
+            // 1. If it's an opening bracket, push it onto the stack
             if (c == '(' || c == '{' || c == '[') {
                 stack.push(c);
-            } else {
-                if (!stack.isEmpty()) stack.pop();
+            } 
+            // 2. If it's a closing bracket, we must validate it
+            else if (c == ')' || c == '}' || c == ']') {
+                
+                // If stack is empty but we have a closing bracket, it's invalid (e.g., " ] ")
+                if (stack.isEmpty()) {
+                    isValid = false;
+                    break;
+                }
+
+                // Pop the top element and check if it matches the closing bracket
+                char top = stack.pop();
+                if ((c == ')' && top != '(') ||
+                    (c == '}' && top != '{') ||
+                    (c == ']' && top != '[')) {
+                    isValid = false; // Mismatch found!
+                    break; 
+                }
             }
         }
 
-        if (stack.isEmpty()) {
+        // The string is only valid if we found no mismatches AND the stack is completely empty
+        if (isValid && stack.isEmpty()) {
             System.out.println("Valid");
         } else {
             System.out.println("Invalid");
         }
     }
 }
-
-
-
 
 
 
@@ -268,6 +577,120 @@ public class StandardPyramid {
         }
     }
 }
+
+
+
+public class NumberPyramid {
+    public static void main(String[] args) {
+        int rows = 5;
+
+        for (int i = 1; i <= rows; i++) {
+            // 1. Print leading spaces
+            for (int j = 1; j <= rows - i; j++) {
+                System.out.print(" ");
+            }
+            
+            // 2. Print numbers (Replaced "*" with i)
+            for (int k = 1; k <= (2 * i - 1); k++) {
+                System.out.print(i);
+            }
+            
+            System.out.println();
+        }
+    }
+}
+
+1
+   222
+  33333
+ 4444444
+555555555
+
+
+
+public class ContinuousNumberPyramid {
+    public static void main(String[] args) {
+        int rows = 5;
+
+        for (int i = 1; i <= rows; i++) {
+            // 1. Print leading spaces
+            for (int j = 1; j <= rows - i; j++) {
+                System.out.print(" ");
+            }
+            
+            // 2. Print loop index k
+            for (int k = 1; k <= (2 * i - 1); k++) {
+                System.out.print(k);
+            }
+            
+            System.out.println();
+        }
+    }
+}
+
+
+
+1
+   123
+  12345
+ 1234567
+123456789
+
+
+
+
+public class DiamondPattern {
+    public static void main(String[] args) {
+        int rows = 5;
+
+        // PART 1: Top Pyramid (Standard)
+        for (int i = 1; i <= rows; i++) {
+            // Print leading spaces
+            for (int j = 1; j <= rows - i; j++) {
+                System.out.print(" ");
+            }
+            // Print stars
+            for (int k = 1; k <= (2 * i - 1); k++) {
+                System.out.print("*");
+            }
+            System.out.println();
+        }
+
+        // PART 2: Bottom Pyramid (Inverted)
+        // i starts at rows - 1 so the middle line doesn't repeat twice
+        for (int i = rows - 1; i >= 1; i--) {
+            // Print leading spaces
+            for (int j = 1; j <= rows - i; j++) {
+                System.out.print(" ");
+            }
+            // Print stars
+            for (int k = 1; k <= (2 * i - 1); k++) {
+                System.out.print("*");
+            }
+            System.out.println();
+        }
+    }
+}
+
+
+   *
+   ***
+  *****
+ *******
+*********
+ *******
+  *****
+   ***
+    *
+
+
+
+
+
+
+
+
+
 
 
 
@@ -662,8 +1085,9 @@ String s = "programming interview question";
 
 char mostRepeatedChar = s.chars()
     .mapToObj(c -> (char) c)
+    .filter(c -> c != ' ')                    // exclude spaces
     .collect(Collectors.groupingBy(
-        Function.identity(), 
+        Function.identity(),
         Collectors.counting()
     )) // Map<Character, Long>
     .entrySet().stream()
@@ -673,6 +1097,43 @@ char mostRepeatedChar = s.chars()
 
 System.out.println("Most Repeated Character: " + mostRepeatedChar);
 // Output: Most Repeated Character: i (Note: 'i' and 'n' both appear 3 times, 'max' picks the first encountered in the iteration)
+
+
+
+
+
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+String s = "programming interview question";
+
+Map<Character, Long> freqMap = s.chars()
+    .mapToObj(c -> (char) c)
+    .filter(c -> c != ' ')
+   .map(c -> Character.toLowerCase(c))  
+
+ .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+long maxCount = Collections.max(freqMap.values());  // find max count value
+
+List<Character> mostRepeated = freqMap.entrySet().stream()
+    .filter(e -> e.getValue() == maxCount)           // keep all entries matching max
+    .map(Map.Entry::getKey)
+    .collect(Collectors.toList());
+
+System.out.println("Max count: " + maxCount);        // 3
+System.out.println("Most repeated chars: " + mostRepeated); // [n, i]
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1038,6 +1499,7 @@ public class Singleton {
 import java.io.FileInputStream;
 import java.io.IOException;
 
+HOW READ BINARY FILE
 public class LargeBinaryFileReader {
     public void readFile(String filePath) {
         try (FileInputStream fis = new FileInputStream(filePath)) {
@@ -4001,14 +4463,14 @@ public class CustomIndexedJoinerDirectMain {
         System.out.println("--- Question 1: Custom Collector to Join Strings with Index ---");
 
         List<String> fruits = Arrays.asList("Apple", "Banana", "Cherry", "Date");
-        List<String> singleFruit = Arrays.asList("Mango");
+        
+        System.out.println("Indexed Fruits (Method 1): " + indexedJoinedString1);List<String> singleFruit = Arrays.asList("Mango");
         List<String> emptyFruits = Arrays.asList();
 
         // Method 1: Using IntStream and map (most common and readable for ordered lists)
         String indexedJoinedString1 = IntStream.range(0, fruits.size())
                                               .mapToObj(i -> (i + 1) + ". " + fruits.get(i))
                                               .collect(Collectors.joining(", "));
-        System.out.println("Indexed Fruits (Method 1): " + indexedJoinedString1);
         // Expected: 1. Apple, 2. Banana, 3. Cherry, 4. Date
 
         String indexedJoinedStringSingle = IntStream.range(0, singleFruit.size())

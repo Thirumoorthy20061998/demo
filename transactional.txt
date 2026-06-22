@@ -1,0 +1,878 @@
+ Basic idea: order service
+Imagine this service:
+
+java
+@Service
+public class OrderService {
+
+    @Transactional
+    public void createOrder() {
+        orderRepository.save(order);       // 1
+        paymentRepository.save(payment);   // 2
+    }
+}
+What happens when another bean calls this method?
+
+java
+@RestController
+public class OrderController {
+
+    private final OrderService orderService;
+
+    @PostMapping("/orders")
+    public void createOrder() {
+        orderService.createOrder();  // <-- important call
+    }
+}
+Internally, Spring does something like this when orderService.createOrder() is called:
+
+Spring intercepts the call using a proxy object.
+
+The proxy:
+
+Opens a DB transaction before entering createOrder().
+
+Runs orderRepository.save(...) and paymentRepository.save(...) inside that transaction.
+
+If no exception → commit the transaction.
+
+If a runtime exception happens → rollback the transaction.
+
+So you can imagine it as if Spring secretly transforms it to:
+
+java
+public void createOrder() {
+    beginTransaction();
+    try {
+        orderRepository.save(order);
+        paymentRepository.save(payment);
+        commitTransaction();
+    } catch (RuntimeException e) {
+        rollbackTransaction();
+        throw e;
+    }
+}
+You don’t write this code; Spring + @Transactional does it for you.
+
+2. Why internal calls don’t work (same class)
+Now the tricky part: same-class internal call.
+
+java
+@Service
+public class UserService {
+
+    public void outerMethod() {
+        // no @Transactional here
+        innerMethod();     // direct call
+    }
+
+    @Transactional
+    public void innerMethod() {
+        userRepository.save(user);
+    }
+}
+What you expect:
+
+innerMethod() is transactional, so userRepository.save() should run in a transaction.
+
+What actually happens:
+
+You call outerMethod() from some other bean.
+
+Inside outerMethod(), you call innerMethod() using this.innerMethod().
+
+This is a direct Java method call, not going through the Spring proxy.
+
+Because the proxy is skipped, Spring never gets the chance to start a transaction.
+
+So innerMethod() runs without a transaction.
+
+Mental picture:
+
+Correct path (transaction works):
+SomeBean -> proxy(UserService) -> innerMethod()
+
+Wrong path (no transaction):
+SomeBean -> proxy(UserService) -> outerMethod() -> this.innerMethod()
+The this.innerMethod() call goes directly to the real object, bypassing the proxy.
+
+That’s why people say:
+
+@Transactional works when the call comes from outside the bean, not from one method to another inside the same bean.
+
+
+
+
+
+
+
+
+Default rollback rules
+By default:
+
+Runtime (unchecked) exceptions → transaction rollback.
+
+Checked exceptions → transaction is committed unless configured otherwise.
+
+You can customize:
+
+java
+@Transactional(rollbackFor = CustomCheckedException.class)
+public void updateWallet(...) { ... }
+Interview-style Q:
+
+“What exceptions cause rollback by default? How do you force rollback for a checked exception?”
+You’d mention: runtime exceptions trigger rollback; checked don’t unless rollbackFor or programmatic TransactionAspectSupport.currentTransactionStatus().setRollbackOnly().
+
+3.3 readOnly = true
+@Transactional(readOnly = true) marks the transaction as read-only.
+
+It can give performance benefits: for example, some providers skip dirty checking; some databases treat read-only differently.
+
+Use it for query-only service methods (e.g. getActiveBidsForDriver).
+
+
+
+
+
+
+
+
+ Where Kafka + Outbox comes in (easy story)
+Problem:
+You want to:
+
+Save order in DB.
+
+Publish a Kafka event: “New order created, start bidding”.
+
+If you do this directly:
+
+java
+@Transactional
+public Order createOrderAndInitBidding(CreateOrderRequest req) {
+    Order order = orderRepository.save(...);
+    BidSession session = bidSessionRepository.save(...);
+
+    kafkaTemplate.send("order-created", order);   // direct Kafka call
+
+    return order;
+}
+Two failure cases:
+
+Case A: DB commit succeeds, but Kafka send fails →
+DB has the order, but drivers never get the event.
+
+Case B: Kafka send succeeds, but later DB commit fails (rare, but possible) →
+Drivers get event for an order that does not exist in DB.
+
+This is called the dual-write problem (writing to DB and Kafka separately).
+
+3) Outbox pattern – super simple version
+Outbox pattern idea:
+
+In the transaction, write only to the DB (both business data + an “event row”).
+
+After that, some separate process reads that event row and publishes to Kafka.
+
+Code idea:
+
+java
+@Transactional
+public Order createOrderAndInitBidding(CreateOrderRequest req) {
+    Order order = orderRepository.save(...);
+    BidSession session = bidSessionRepository.save(...);
+
+    // instead of calling Kafka here:
+    OutboxEvent event = new OutboxEvent(
+        type = "ORDER_CREATED",
+        payload = serialize(order)
+    );
+    outboxRepository.save(event);   // still inside SAME transaction
+
+    return order;
+}
+Now what happens?
+
+If transaction commits:
+
+Order saved
+
+BidSession saved
+
+OutboxEvent row saved
+→ All three guaranteed.
+
+If anything fails:
+
+Entire transaction rolled back
+→ No half-saved state.
+
+Then, another component (could be a scheduled job, or Debezium CDC, etc.) does:
+
+java
+public void publishOutboxEvents() {
+    List<OutboxEvent> events = outboxRepository.findUnpublished();
+    for (OutboxEvent e : events) {
+        kafkaTemplate.send("order-created", e.getPayload());
+        markAsPublished(e);
+    }
+}
+So Kafka publish is decoupled from the main transaction, but still based on what was committed to DB.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+3. NESTED
+
+
+in @transactional method  they are multiple like 10  inserts db  the interviewer asked if any insert fail in betweeen this method fo example if insert faiiled at 6 th i want rollback last two only 5 and 4 how do
+
+NESTED propagation = savepoint under the hood = partial rollback without killing the whole transaction.
+
+
+
+@Transactional
+public void doAllInserts() {
+
+    orderRepository.save(new Order("Insert-1", 1));
+    orderRepository.save(new Order("Insert-2", 2));
+    orderRepository.save(new Order("Insert-3", 3));
+
+    // SAVEPOINT created before entering this method
+    try {
+        riskyInsertService.doRiskyInserts(); // 4, 5, 6 all inside
+    } catch (RuntimeException e) {
+        // 4, 5, 6 all rolled back to savepoint
+        // outer tx still alive
+        System.out.println("Rolled back 4,5,6: " + e.getMessage());
+    }
+
+    // Continues from here
+    orderRepository.save(new Order("Insert-7",  7));
+    orderRepository.save(new Order("Insert-8",  8));
+    orderRepository.save(new Order("Insert-9",  9));
+    orderRepository.save(new Order("Insert-10", 10));
+
+    // Final commit — 1,2,3,7,8,9,10 saved
+}
+
+
+Insert 1 ✅  Insert 2 ✅  Insert 3 ✅
+── SAVEPOINT ──
+Insert 4 ✅
+Insert 5 ✅
+Insert 6 ❌ → exception thrown
+      ↓
+Rollback to SAVEPOINT → 4, 5, 6 all undone
+      ↓
+catch swallows exception
+      ↓
+Insert 7,8,9,10 ✅
+COMMIT → 1,2,3,7,8,9,10 saved
+
+
+
+
+
+
+// ─── RiskyInsertService.java ───
+@Service
+public class RiskyInsertService {
+
+    @Autowired private OrderRepository orderRepository;
+
+    // First savepoint — covers 4,5,6
+    @Transactional(propagation = Propagation.NESTED)
+    public void doRiskyInserts456() {
+        orderRepository.save(new Order("Insert-4", 4));
+        orderRepository.save(new Order("Insert-5", 5));
+        orderRepository.save(new Order("Insert-6", 6));
+
+        throw new RuntimeException("Insert 6 failed ❌");
+    }
+
+    // Second savepoint — covers 8,9
+    @Transactional(propagation = Propagation.NESTED)
+    public void doRiskyInserts89() {
+        orderRepository.save(new Order("Insert-8", 8));
+        orderRepository.save(new Order("Insert-9", 9));
+
+        throw new RuntimeException("Insert 9 failed ❌");
+    }
+}
+
+
+// ─── OrderService.java ───
+@Service
+public class OrderService {
+
+    @Autowired private OrderRepository orderRepository;
+    @Autowired private RiskyInsertService riskyInsertService;
+
+    @Transactional
+    public void doAllInserts() {
+
+        // 1,2,3 — safe inserts
+        orderRepository.save(new Order("Insert-1", 1));
+        orderRepository.save(new Order("Insert-2", 2));
+        orderRepository.save(new Order("Insert-3", 3));
+
+        // SAVEPOINT-1 → 4,5,6
+        try {
+            riskyInsertService.doRiskyInserts456();
+        } catch (RuntimeException e) {
+            System.out.println("4,5,6 rolled back ↩ continuing...");
+        }
+
+        // 7 — safe insert
+        orderRepository.save(new Order("Insert-7", 7));
+
+        // SAVEPOINT-2 → 8,9
+        try {
+            riskyInsertService.doRiskyInserts89();
+        } catch (RuntimeException e) {
+            System.out.println("8,9 rolled back ↩ continuing...");
+        }
+
+        // 10 — continues regardless
+        orderRepository.save(new Order("Insert-10", 10));
+
+        // COMMIT
+    }
+}
+
+
+
+Insert 1 ✅  2 ✅  3 ✅
+── SAVEPOINT-1 ──
+Insert 4 ✅  5 ✅  6 ❌
+      ↓
+Rollback SAVEPOINT-1 → 4,5,6 undone
+catch swallows
+      ↓
+Insert 7 ✅
+── SAVEPOINT-2 ──
+Insert 8 ✅  9 ❌
+      ↓
+Rollback SAVEPOINT-2 → 8,9 undone
+catch swallows
+      ↓
+Insert 10 ✅
+COMMIT → 1,2,3,7,10 saved ✅
+
+
+
+
+
+
+
+
+SUPPORTS
+Meaning:
+
+If a transaction exists → join it.
+
+If not → run without a transaction.
+
+Real-world example: read method that is transaction-optional
+
+
+Code
+java
+@Service
+public class OrderQueryService {
+
+    // READ-ONLY helper
+    @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+    public List<Order> getOrdersForUser(Long userId) {
+        return orderRepository.findByUserId(userId);
+    }
+}
+Usage 1 – inside a transaction:
+
+java
+@Service
+public class OrderService {
+
+    private final OrderQueryService orderQueryService;
+
+    @Transactional  // REQUIRED by default
+    public void placeOrder(PlaceOrderRequest request) {
+        List<Order> existing = orderQueryService.getOrdersForUser(request.getUserId());
+        // SUPPORTS joins this transaction
+        // ... use existing orders for validation ...
+        // ... create new order ...
+    }
+}
+Usage 2 – no transaction:
+
+java
+@RestController
+public class OrderController {
+
+    private final OrderQueryService orderQueryService;
+
+    @GetMapping("/users/{userId}/orders")
+    public List<Order> listUserOrders(@PathVariable Long userId) {
+        // No @Transactional here
+        return orderQueryService.getOrdersForUser(userId);
+        // SUPPORTS runs without any transaction
+    }
+}
+
+
+
+
+
+
+1. REQUIRED (default)
+Meaning:
+
+If a transaction exists → join it.
+
+If no transaction → create a new one.
+This is the default and used 90% of the time.
+
+Real-world example: place order
+
+java
+@Service
+class OrderService {
+
+    @Transactional // REQUIRED by default
+    public void placeOrder(PlaceOrderRequest req) {
+        orderRepository.save(...);          // 1. save order
+        paymentService.debitWallet(...);    // 2. debit money
+    }
+}
+
+@Service
+class PaymentService {
+
+    @Transactional // REQUIRED
+    public void debitWallet(...) {
+        walletRepository.updateBalance(...);
+    }
+}
+placeOrder starts a transaction.
+
+debitWallet joins the same transaction.
+
+If debit fails (exception), both order and wallet updates rollback → no order with unpaid wallet.
+
+Use it for: normal business flows where all steps must succeed together.
+
+2. REQUIRES_NEW
+Meaning:
+
+Always start a new transaction, suspend any existing one.
+
+Real-world example: audit log must be saved even if main logic fails
+
+java
+@Service
+class OrderService {
+
+    @Transactional
+    public void placeOrder(PlaceOrderRequest req) {
+        try {
+            orderRepository.save(...);
+            paymentService.debitWallet(...);
+        } catch (Exception e) {
+            auditService.logPaymentFailure(req, e); // REQUIRES_NEW
+            throw e;
+        }
+    }
+}
+
+@Service
+class AuditService {
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void logPaymentFailure(PlaceOrderRequest req, Exception e) {
+        auditRepository.save(...);  // committed independently
+    }
+}
+If placeOrder rolls back → DB changes for order, wallet are undone.
+
+But the audit log transaction is separate, so it still commits.
+
+Use it for:
+
+Audit logs
+
+Notifications
+
+Retry logs that must survive even when the main operation fails.
+
+
+
+
+
+NOT_SUPPORTED
+Meaning:
+
+Always run without a transaction.
+
+If a transaction exists, Spring suspends it.
+
+Real-world example: heavy reporting job
+
+Code
+java
+@Service
+public class ReportService {
+
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public void generateDailySalesReport() {
+        // No transaction here, even if caller has one
+        List<Order> allOrders = orderRepository.findAll(); // huge read
+        // Heavy processing, aggregations, maybe write to a file, S3, etc.
+    }
+}
+If someone calls:
+
+java
+@Service
+public class AdminService {
+
+    private final ReportService reportService;
+
+    @Transactional
+    public void adminOperation() {
+        // some DB updates here in a tx
+
+        reportService.generateDailySalesReport();
+        // Current transaction is suspended while generateDailySalesReport() runs
+        // Then resumed afterwards
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+6. NEVER
+Meaning:
+
+Must not run inside a transaction.
+
+If someone calls it while a transaction is active → throw exception.
+
+Real-world example: legacy system call that breaks if in transaction
+
+Code
+java
+@Service
+public class LegacyService {
+
+    @Transactional(propagation = Propagation.NEVER)
+    public void callLegacySystem() {
+        // Call some old SOAP / mainframe / old DB
+        // Must NOT be inside any Spring transaction
+    }
+}
+Correct usage:
+
+java
+@Service
+public class LegacyController {
+
+    private final LegacyService legacyService;
+
+    public void manualLegacyCall() {
+        // no @Transactional here
+        legacyService.callLegacySystem(); // OK: no transaction
+    }
+}
+Incorrect usage (will throw):
+
+java
+@Service
+public class WrongService {
+
+    private final LegacyService legacyService;
+
+    @Transactional
+    public void doSomething() {
+        // This line will cause an exception because a transaction is active
+        legacyService.callLegacySystem(); // Spring throws: existing tx not allowed
+    }
+}
+Key idea:
+NEVER = safety guard: “don’t ever wrap me in a transaction”.
+
+
+
+
+
+
+
+
+
+
+
+
+
+7. MANDATORY
+Meaning:
+
+Must be called inside an existing transaction.
+
+If no transaction exists → throw exception.
+
+Real-world example: low-level inventory method that must be part of bigger flow
+
+
+Code
+java
+@Service
+public class InventoryService {
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void reserveStock(Long productId, int qty) {
+        // Will ONLY run if caller already has a transaction
+        Product product = productRepository.findById(productId).orElseThrow();
+        if (product.getAvailableQty() < qty) {
+            throw new IllegalStateException("Not enough stock");
+        }
+        product.setAvailableQty(product.getAvailableQty() - qty);
+    }
+}
+Correct usage:
+
+java
+@Service
+public class OrderService {
+
+    private final InventoryService inventoryService;
+    private final OrderRepository orderRepository;
+
+    @Transactional  // opens transaction
+    public void placeOrder(PlaceOrderRequest req) {
+        orderRepository.save(...);
+        inventoryService.reserveStock(req.getProductId(), req.getQuantity());
+        // MANDATORY joins this existing transaction
+        // If anything fails, both order and stock change rollback together
+    }
+}
+Incorrect usage (will throw):
+
+java
+@Service
+public class TestService {
+
+    private final InventoryService inventoryService;
+
+    public void testReserve() {
+        // no @Transactional here
+        inventoryService.reserveStock(1L, 5); // Spring throws: no existing transaction
+    }
+}
+
+
+
+
+
+
+
+
+
+Why @Transactional doesn’t work on private methods
+Spring handles transactions using AOP proxies. When a bean is created, Spring wraps it in a proxy that intercepts method calls and adds transaction logic before and after the method runs. However, this proxy can only intercept public methods that are called from outside the class. Private methods are not visible to the proxy and cannot be overridden, so the transaction annotation on a private method is completely ignored. For example, if you annotate a private saveDetails() method with @Transactional, it will run without any transaction management.
+
+Step 2: Why @Transactional doesn’t work on self-invocation
+Even if a method is public and annotated with @Transactional, it won’t work if it’s called from another method inside the same class using this.method(). This is called self-invocation, and it bypasses the Spring proxy entirely. The proxy only sees calls that come from outside the bean (like from a controller or another service). Inside the class, you’re calling the target object directly, not the proxy. For example, if processOrder() calls this.validateOrder() and validateOrder() is @Transactional, the validation will not run inside a transaction.
+
+Step 3: How to fix the self-invocation problem
+To make self-invoked methods transactional, you must call them through the proxy instead of using this. One common approach is self-injection: inject the service itself as a proxy and call the method through that. For example, instead of this.validateOrder(), you use orderServiceProxy.validateOrder(), where orderServiceProxy is the injected proxy of the same service. This call goes through the proxy, so Spring can apply the transaction. Another option is to move the transactional method into a separate service and call it from there.
+
+Step 4: Difference between class-level and method-level @Transactional
+When you place @Transactional at the class level, all public methods in that class become transactional with the same configuration. This is useful when every operation in the service should have the same transaction behavior. However, if you annotate a specific method with @Transactional, it overrides the class-level settings for that method only. This gives you fine-grained control. For example, you can make the entire service transactional by default, but mark a read-only search method with @Transactional(readOnly = true) to optimize performance.
+
+Step 5: Where to place @Transactional in a Spring Boot application
+The best place for @Transactional is the service layer. Services contain business logic and often coordinate multiple database operations (like saving an order and its items). You want all of these operations to be in a single transaction so that if any part fails, everything rolls back. Controllers should not have @Transactional because they only handle HTTP requests and shouldn’t manage database transactions. Repository methods are already transactional by default in Spring Data JPA, so adding @Transactional there is usually unnecessary.
+
+Step 6: Simple real-world example
+Imagine an order service that saves an order and its items:
+
+java
+@Service
+public class OrderService {
+
+  @Transactional
+  public void createOrder(Order order, List<Item> items) {
+    orderRepo.save(order);
+    itemRepo.saveAll(items);
+  }
+}
+If either save or saveAll fails, the whole transaction rolls back. If createOrder called a private validate() method with @Transactional, that validation would not be transactional. If it called this.validate() where validate() is public and @Transactional, that also wouldn’t work due to self-invocation. The transaction only works when the public method is called from outside the service, through the Spring proxy.
+
+
+Pro
+Free preview of advanced search enabled.
+
+
+
+
+
+1) READ_COMMITTED
+Meaning: A transaction reads only committed data.
+Prevents: dirty read.
+
+Example
+Imagine a wallet balance is 1000.
+
+Transaction A changes it to 500 but has not committed yet.
+
+Transaction B tries to read it.
+
+With READ_COMMITTED, B still sees 1000, not 500.
+
+Code
+java
+@Transactional(isolation = Isolation.READ_COMMITTED)
+public void updateWallet(Long userId, int amount) {
+    Wallet wallet = walletRepository.findByUserId(userId);
+    wallet.setBalance(wallet.getBalance() - amount);
+}
+Real-world use
+Order creation
+
+Payment update
+
+Normal business transactions
+
+2) REPEATABLE_READ
+Meaning: If you read the same row twice in one transaction, you get the same value.
+Prevents: dirty read + non-repeatable read.
+
+Example
+Transaction A reads product price = 100.
+
+Transaction B updates it to 120 and commits.
+
+Transaction A reads again.
+
+With REPEATABLE_READ, A still sees 100 for that row until it ends.
+
+Code
+java
+@Transactional(isolation = Isolation.REPEATABLE_READ)
+public void validateOrder(Long productId) {
+    Product product1 = productRepository.findById(productId).orElseThrow();
+    // later in same transaction
+    Product product2 = productRepository.findById(productId).orElseThrow();
+}
+Real-world use
+Payment flow
+
+Stock reservation
+
+Order validation
+
+3) SERIALIZABLE
+Meaning: Strongest level. Transactions behave like they run one by one.
+Prevents: dirty read + non-repeatable read + phantom read.
+
+Example
+Transaction A checks all orders above 10000.
+
+Transaction B tries to insert a new order above 10000.
+
+With SERIALIZABLE, B may wait until A finishes.
+
+Code
+java
+@Transactional(isolation = Isolation.SERIALIZABLE)
+public void processHighValueOrders() {
+    List<Order> orders = orderRepository.findHighValueOrders();
+    // safest, but slower
+}
+Real-world use
+Banking
+
+Critical inventory
+
+Very strict consistency cases
+
+4) Read problems in simple words
+Dirty read
+You read data that another transaction has changed but not committed yet.
+
+Non-repeatable read
+You read the same row twice and get different values.
+
+Phantom read
+You run the same query twice and get a different number of rows.
+
+5) readOnly = true
+Meaning: This method is for reading only.
+Spring can optimize it a bit, so it is good for query methods.
+
+Example
+java
+@Transactional(readOnly = true)
+public Order getOrder(Long id) {
+    return orderRepository.findById(id).orElseThrow();
+}
+Real-world use
+Get order
+
+List bids
+
+Search users
+
+Dashboard queries
+
+Important: do not use it for updates.
+
+6) timeout
+Meaning: If the transaction takes too long, Spring rolls it back.
+
+Example
+java
+@Transactional(timeout = 5)
+public void placeOrder() {
+    orderRepository.save(new Order());
+    paymentService.pay();
+}
+If this takes more than 5 seconds, rollback can happen.
+
+Real-world use
+Payment processing
+
+Order placement
+
+Any operation that should finish fast
+
+
+

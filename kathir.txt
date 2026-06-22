@@ -1,3 +1,30 @@
+
+
+Internal Structure of ArrayListAn ArrayList is backed by a standard Java array. It grows dynamically as elements are added.3-Step MechanicsInitialization: It starts empty. Upon adding the first element, it defaults to an initial capacity of 10.Resizing ($1.5x$): When the array is full, it calculates a new capacity that is 50% larger than the current size:$$\text{New Capacity} = \text{Old Capacity} + (\text{Old Capacity} \gg 1)$$Data Transfer: Java allocates a new array with this larger capacity, copies the old elements over using System.arraycopy(), and discards the old array.
+
+
+
+
+
+
+
+ Primary / Clustered IndexUsecase: Order_IDReal-Time Scenario: When a user clicks "View Order Details," the system fetches everything using the unique Order_ID. Because the database physically stores the orders sequentially by this ID, retrieving a specific order is nearly instant.
+2. Secondary / Non-Clustered IndexUsecase: Customer_IDReal-Time Scenario: A customer goes to their "Order History" page. The database uses a secondary index on Customer_ID to quickly find the pointers to all orders belonging to that specific user, without scanning the entire global orders table.
+3. Unique IndexUsecase: Email_Address or Phone_NumberReal-Time Scenario: During sign-up, the system checks if an email is already taken. A unique index prevents two different users from registering with the exact same email address, throwing an instant error if a duplicate is attempted.
+4. Composite IndexUsecase: Category + PriceReal-Time Scenario: A shopper filters for "Electronics" and sorts by "Price: Low to High." A composite index on (category, price) allows the database to instantly serve up the sorted list without doing a heavy sorting operation in memory.Structural Usecases (Under the Hood)
+B+ Tree Index (Age or Created_Date): Used when a manager wants to see all users who signed up between January and March. B+ Trees keep data sorted, making range searches fast.
+Hash Index (Product_SKU): Used when a warehouse scanner lookups an exact barcode item (SKU == 'XYZ123'). It points directly to the item instantly ($O(1)$), but is useless if you try to search for "all SKUs starting with ABC".
+
+
+
+
+
+
+
+
+
+
+
 What are Java Streams and how do they provide a more functional approach to processing collections of data in Java?
 
 

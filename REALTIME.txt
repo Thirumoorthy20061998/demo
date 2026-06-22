@@ -1,4 +1,201 @@
 
+
+in @transactional method  they are multiple like 10  inserts db  the interviewer asked if any insert fail in betweeen this method fo example if insert faiiled at 6 th i want rollback last two only 5 and 4 how do
+
+NESTED propagation = savepoint under the hood = partial rollback without killing the whole transaction.
+
+
+
+@Transactional
+public void doAllInserts() {
+
+    orderRepository.save(new Order("Insert-1", 1));
+    orderRepository.save(new Order("Insert-2", 2));
+    orderRepository.save(new Order("Insert-3", 3));
+
+    // SAVEPOINT created before entering this method
+    try {
+        riskyInsertService.doRiskyInserts(); // 4, 5, 6 all inside
+    } catch (RuntimeException e) {
+        // 4, 5, 6 all rolled back to savepoint
+        // outer tx still alive
+        System.out.println("Rolled back 4,5,6: " + e.getMessage());
+    }
+
+    // Continues from here
+    orderRepository.save(new Order("Insert-7",  7));
+    orderRepository.save(new Order("Insert-8",  8));
+    orderRepository.save(new Order("Insert-9",  9));
+    orderRepository.save(new Order("Insert-10", 10));
+
+    // Final commit — 1,2,3,7,8,9,10 saved
+}
+
+
+Insert 1 ✅  Insert 2 ✅  Insert 3 ✅
+── SAVEPOINT ──
+Insert 4 ✅
+Insert 5 ✅
+Insert 6 ❌ → exception thrown
+      ↓
+Rollback to SAVEPOINT → 4, 5, 6 all undone
+      ↓
+catch swallows exception
+      ↓
+Insert 7,8,9,10 ✅
+COMMIT → 1,2,3,7,8,9,10 saved
+
+
+
+
+
+
+// ─── RiskyInsertService.java ───
+@Service
+public class RiskyInsertService {
+
+    @Autowired private OrderRepository orderRepository;
+
+    // First savepoint — covers 4,5,6
+    @Transactional(propagation = Propagation.NESTED)
+    public void doRiskyInserts456() {
+        orderRepository.save(new Order("Insert-4", 4));
+        orderRepository.save(new Order("Insert-5", 5));
+        orderRepository.save(new Order("Insert-6", 6));
+
+        throw new RuntimeException("Insert 6 failed ❌");
+    }
+
+    // Second savepoint — covers 8,9
+    @Transactional(propagation = Propagation.NESTED)
+    public void doRiskyInserts89() {
+        orderRepository.save(new Order("Insert-8", 8));
+        orderRepository.save(new Order("Insert-9", 9));
+
+        throw new RuntimeException("Insert 9 failed ❌");
+    }
+}
+
+
+// ─── OrderService.java ───
+@Service
+public class OrderService {
+
+    @Autowired private OrderRepository orderRepository;
+    @Autowired private RiskyInsertService riskyInsertService;
+
+    @Transactional
+    public void doAllInserts() {
+
+        // 1,2,3 — safe inserts
+        orderRepository.save(new Order("Insert-1", 1));
+        orderRepository.save(new Order("Insert-2", 2));
+        orderRepository.save(new Order("Insert-3", 3));
+
+        // SAVEPOINT-1 → 4,5,6
+        try {
+            riskyInsertService.doRiskyInserts456();
+        } catch (RuntimeException e) {
+            System.out.println("4,5,6 rolled back ↩ continuing...");
+        }
+
+        // 7 — safe insert
+        orderRepository.save(new Order("Insert-7", 7));
+
+        // SAVEPOINT-2 → 8,9
+        try {
+            riskyInsertService.doRiskyInserts89();
+        } catch (RuntimeException e) {
+            System.out.println("8,9 rolled back ↩ continuing...");
+        }
+
+        // 10 — continues regardless
+        orderRepository.save(new Order("Insert-10", 10));
+
+        // COMMIT
+    }
+}
+
+
+
+Insert 1 ✅  2 ✅  3 ✅
+── SAVEPOINT-1 ──
+Insert 4 ✅  5 ✅  6 ❌
+      ↓
+Rollback SAVEPOINT-1 → 4,5,6 undone
+catch swallows
+      ↓
+Insert 7 ✅
+── SAVEPOINT-2 ──
+Insert 8 ✅  9 ❌
+      ↓
+Rollback SAVEPOINT-2 → 8,9 undone
+catch swallows
+      ↓
+Insert 10 ✅
+COMMIT → 1,2,3,7,10 saved ✅
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+there are multiple files in server the user access the files at same time
+but if one thread access one files the another thread not touch the same file how implement   just answer not code how do in java and spring boot
+
+11:30 AM
+
+
+
+Core Concept: One file = One lock
+Use a ConcurrentHashMap<String, ReentrantLock> where the key is the filename/path and the value is a lock for that file.
+
+How it works step by step:
+
+When Thread A wants to access report.pdf, it looks up the lock for report.pdf in the map
+It acquires that lock — now Thread A owns it
+Thread B comes in for the same report.pdf — it tries to acquire the same lock and blocks/waits
+Thread C comes in for invoice.pdf — it gets a different lock, so it proceeds immediately ✅
+When Thread A finishes, it releases the lock — Thread B unblocks
+
+
+In Spring Boot context:
+
+Create a singleton Spring @Service that holds this ConcurrentHashMap
+Since it's a singleton, all threads across all requests share the same map
+Use computeIfAbsent to safely create a lock if one doesn't exist yet for that file
+Always release the lock in a finally block to avoid deadlocks
+
+
+Interview keywords to mention:
+TermWhy it mattersReentrantLockMore flexible than synchronized, supports tryLock() with timeoutConcurrentHashMapThread-safe map — safe for concurrent lock creationcomputeIfAbsentAtomic "get or create" — avoids race condition on map itselffinally blockGuarantees lock release even if exception occursSingleton scopeEnsures all threads see the same map
+
+
+
+
+
+
+
+
+
 OAUTH2
 
 "In my logistics platform, I implemented OAuth2 Resource Server with JWT by creating a /api/auth/login endpoint that validates credentials and returns a JWT token. Drivers store that token and send it in every API call (like updating POD). Spring Security validates the JWT signature on each request without storing session state, and I used @PreAuthorize to restrict endpoints by role (only drivers can update POD)."

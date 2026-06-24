@@ -1,0 +1,166 @@
+What multithreading means
+Multithreading means a program does more than one task at the same time. In Java, this helps your app stay fast and responsive when work can be split into smaller parts.
+
+Easy real-world examples
+Restaurant kitchen: One cook makes rice, another makes curry, another packs the order.
+
+ATM booth: One part checks balance, another updates transaction history, another sends SMS.
+
+E-commerce app: One thread loads product details, another fetches reviews, another calculates delivery time.
+
+YouTube app: One thread plays video, another buffers next part, another loads comments.
+
+Bank system: One thread handles deposit, another handles withdrawal, another updates account summary.
+
+Why it matters
+Without multithreading, the app may wait for one task to finish before starting the next. With multithreading, tasks can overlap, so the app feels faster and handles more users.
+
+One-line interview answer
+Multithreading is a way to run multiple tasks concurrently in the same program to improve performance and responsiveness.
+
+Very simple Java example idea
+Imagine a food app:
+
+Thread 1: load menu.
+
+Thread 2: fetch restaurant ratings.
+
+Thread 3: calculate delivery estimate.
+
+
+
+
+Thread in simple words
+A thread is like one worker inside your program. One program can have many workers doing different jobs at the same time.
+
+Example:
+
+One thread loads a page.
+
+Another thread checks notifications.
+
+Another thread saves data.
+
+
+
+
+
+Thread means you are making the task also become a thread.
+
+Runnable means you are only giving the task, and another thread runs it.
+
+Thread: task + thread together.
+
+Runnable: task only, thread is separate.
+
+
+
+Why Runnable is better
+More flexible.
+
+You can still extend another class.
+
+
+Race condition
+A race condition happens when two or more threads access the same shared data at the same time, and the final result depends on who finishes first. This can cause wrong values or inconsistent behavior in real applications.
+
+Real-world example
+Imagine two people trying to book the last train ticket at the same time.
+
+Person A checks that 1 ticket is available.
+
+Person B checks the same thing at almost the same time.
+
+Both try to book it.
+
+But only one ticket exists.
+
+That is a race condition: the result depends on timing.
+
+
+
+
+Thread safety
+Thread safety means a class, method, or code block works correctly even when many threads use it at the same time. In practice, it prevents data corruption and inconsistent results when shared data is modified concurrently.
+
+
+
+Real-world example
+In a bank account:
+
+Thread 1 deposits money.
+
+Thread 2 withdraws money.
+
+If both update the balance without protection, the final balance may become wrong.
+
+
+
+Synchronization
+Synchronization is a way to make sure only one thread at a time can access a critical section of code. It is one of the main ways Java prevents thread interference and memory consistency problems.
+
+Real-world example
+Think of a single-person washroom:
+
+Only one person can enter at a time.
+
+Others must wait.
+
+That is how synchronized works for shared code.
+
+Simple Java idea
+java
+class Counter {
+    private int count = 0;
+
+    public synchronized void increment() {
+        count++;
+    }
+
+    public int getCount() {
+        return count;
+    }
+}
+
+
+
+
+Give a real-world example of synchronization.
+Answer: ATM cash withdrawal, booking the last ticket, or updating a shared bank balance.
+
+Easy memory trick
+Race condition = problem.
+
+Thread safety = goal.
+
+Synchronization = solution.
+
+
+
+volatile
+volatile tells Java: “read the latest value directly from memory, not from a cached copy.” It is mainly useful for visibility, not for making compound actions safe.
+
+Real-world example
+Imagine a manager updates a notice board:
+
+Without volatile, a worker may keep looking at an old note.
+
+With volatile, everyone sees the latest notice.
+
+synchronized
+synchronized makes only one thread enter the protected section at a time. It gives both mutual exclusion and visibility.
+
+Real-world example
+Think of a single cash counter:
+
+One customer is served at a time.
+
+Others wait outside.
+
+That prevents two people from changing the same data together.
+
+Easy difference
+volatile = “see the latest value.”
+
+synchronized = “one thread at a time
+

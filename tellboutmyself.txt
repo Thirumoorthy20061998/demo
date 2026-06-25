@@ -22,14 +22,51 @@ I’m switching because my consulting contract with TVSCS for this client ended 
 
 
 
+1. How do you handle ambiguity, pressure, and tight deadlines with clients? 
+"I stay focused on priorities, communicate clearly with clients, and break work into manageable tasks. Under pressure, I remain calm, adapt quickly, and ensure timely delivery without compromising quality."
+
+ 2. Why do you want to work on this project/team, and why this client?
+ "I'm excited about this project because it offers opportunities to learn, contribute, and solve meaningful challenges. The client's vision and the team's collaborative culture make it a great fit for my skills and growth."
+
+What would you do if a deadline is moved up suddenly?
+"I reassess priorities, communicate trade-offs, and focus on delivering the most important work first."
+
+How do you estimate work and communicate risk early?
+"I break tasks into smaller parts, estimate realistically, and raise risks as soon as I spot them."
+
+What did you do when there was a disagreement in the team?
+"I listened to different perspectives, focused on facts, and worked toward a solution everyone could support."
+
+What value do you add beyond coding, such as design, ownership, or coordination?
+"I take ownership, collaborate effectively, and help ensure projects are delivered smoothly and successfully."
+
+
+
+SCB (Standard Chartered Bank) is a leading international bank with a strong presence across Asia, Africa, and the Middle East. It has over 170 years of history and serves millions of customers worldwide. I know the company focuses on digital innovation, customer-centric services, sustainability, and responsible banking. SCB's emphasis on technology, diversity, and continuous learning makes it an exciting organization where I can contribute and grow professionally."
 
 
 
 
+
+
+
+
+how you handle  client?
+short
+
+"I handle clients with clear communication, active listening, and a focus on understanding their needs to deliver the best solutions on time."
+
+
+
+SCB (Standard Chartered Bank) is a leading international bank with a strong presence across Asia, Africa, and the Middle East. It has over 170 years of history and serves millions of customers worldwide. I know the company focuses on digital innovation, customer-centric services, sustainability, and responsible banking. SCB's emphasis on technology, diversity, and continuous learning makes it an exciting organization where I can contribute and grow professionally."
 
 
 
  
+daily routine?
+i start my day with meeting on clients and vendors ragarding discuss with list of bug issues.After these meetings, my primary task is to focus on application development. I spend the rest of my day writing code and implementing solutions to address the bugs and new features we discussed and finally deliever to our quality team 
+
+
 
 
 
@@ -65,10 +102,6 @@ sir, i was looking for a opportunity where i can learn and grow simultaneously a
 
 without offer why leave?
 The high-pressure environment made it challenging to dedicate the necessary time to a thorough job search while performing at my best. I wanted to be able to focus fully on finding the right long-term opportunity, which is why I decided to resign first.
-
-
-daily routine?
-i start my day with meeting on clients and vendors ragarding discuss with list of bug issues.After these meetings, my primary task is to focus on application development. I spend the rest of my day writing code and implementing solutions to address the bugs and new features we discussed and finally deliever to our quality team 
 
 microservice experience
 I've worked with microservices for about four years, primarily using Java and Spring Boot. My experience covers the entire lifecycle, from initial design and development to production deployment.

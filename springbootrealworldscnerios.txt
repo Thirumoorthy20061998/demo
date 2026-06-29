@@ -5,6 +5,235 @@ rg.springframework.dao.DataAccessResourceFailureException: Unable to acquire JDB
 Caused by: java.sql.SQLTransientConnectionException: HikariPool-1 - Connection is not available, request timed out after 30005ms.
 
 
+ForkJoinPool in Java
+ForkJoinPool is a special thread pool designed for divide-and-conquer tasks — it splits a big task into smaller subtasks, processes them in parallel, then joins the results.
+It uses work-stealing: idle threads "steal" tasks from busy threads' queues, maximizing CPU utilization.
+
+
+Imagine searching for a keyword across thousands of files in a directory tree.
+
+
+
+
+// ❌ Bad Practice — Optional as field
+@Entity
+public class User {
+    private Optional<String> middleName; // wrong usage
+}
+
+// ✅ Correct Practice — plain nullable field
+@Entity
+public class User {
+    private String middleName; // can be null, that's fine
+}
+
+
+Serialization issues
+           ✅
+3. Optional is not Serializable
+
+private Optional<String> name; // ❌
+
+
+
+
+
+
+
+
+Connecting DB Without @Repository in Spring Boot
+You can use @Component + JdbcTemplate directly to perform DB operations.
+
+Key Difference vs @Repository
+Feature@Component
+@Repository
+Bean registered✅ Yes✅ YesDB operations work✅ Yes✅ YesSQL exception translation❌ No✅ Yes (converts SQLException → Spring DataAccessException)Semantic clarity❌ Generic✅ Clear DAO intent
+
+
+
+Production DB Deployment Steps (Sprint 50)
+This is the standard process followed in professional teams for safe DB changes during production deployment.
+
+🔧 Tools Commonly Used
+
+Flyway or Liquibase — DB migration tools (most teams use one of these)
+Manual SQL scripts — if no migration tool is used
+
+
+✅ Step-by-Step Process
+Phase 1 — Pre-Deployment (Before Code Goes Live)
+1. Backup Production DB
+   └── Take full snapshot/dump before any change
+       mysqldump -u root -p mydb > mydb_backup_sprint50.sql
+
+2. Review Migration Scripts
+   └── DBA + Developer reviews all ALTER / CREATE TABLE scripts
+   └── Check for missing indexes, constraints, data type mismatches
+
+3. Run on Staging/UAT First
+   └── Execute exact same scripts on staging environment
+   └── Verify no errors, check data integrity
+
+4. Estimate Downtime
+   └── Large table ALTER = table lock = downtime risk
+   └── Plan maintenance window if needed
+
+Phase 2 — Migration Scripts (Flyway Example)
+If your team uses Flyway, scripts are versioned like:
+db/migration/
+  ├── V1__initial_schema.sql
+  ├── V2__add_user_table.sql
+  ├── V48__add_loan_status.sql
+  ├── V49__update_indexes.sql
+  └── V50__sprint50_changes.sql   ← new script
+V50__sprint50_changes.sql:
+sql-- New table creation
+CREATE TABLE IF NOT EXISTS payment_schedule (
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    loan_id     BIGINT NOT NULL,
+    due_date    DATE NOT NULL,
+    amount      DECIMAL(15,2) NOT NULL,
+    status      VARCHAR(20) DEFAULT 'PENDING',
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (loan_id) REFERENCES loan(id)
+);
+
+-- Update existing table
+ALTER TABLE loan
+    ADD COLUMN restructured_flag BOOLEAN DEFAULT FALSE,
+    ADD COLUMN last_modified_by  VARCHAR(100);
+
+-- New index for performance
+CREATE INDEX idx_payment_loan_id ON payment_schedule(loan_id);
+
+Flyway auto-runs this on app startup — no manual intervention needed.
+
+
+Phase 3 — Deployment Day
+Step 1 → Notify team / raise change request ticket
+Step 2 → Put app in maintenance mode (if needed)
+Step 3 → Take fresh DB backup
+Step 4 → Run migration scripts (Flyway auto / manual SQL)
+Step 5 → Verify tables created/updated in production DB
+Step 6 → Deploy new Spring Boot JAR / Docker image
+Step 7 → Smoke test critical APIs
+Step 8 → Monitor logs for DB errors
+Step 9 → Remove maintenance mode → Go Live ✅
+
+Phase 4 — Post-Deployment Verification
+sql-- Verify new table exists
+SHOW TABLES LIKE 'payment_schedule';
+
+-- Verify new columns added
+DESCRIBE loan;
+
+-- Verify data integrity
+SELECT COUNT(*) FROM payment_schedule;
+
+-- Check Flyway migration history
+SELECT * FROM flyway_schema_history ORDER BY installed_rank DESC;
+
+Phase 5 — Rollback Plan (If Something Fails)
+sql-- Undo new table
+DROP TABLE IF EXISTS payment_schedule;
+
+-- Undo ALTER
+ALTER TABLE loan
+    DROP COLUMN restructured_flag,
+    DROP COLUMN last_modified_by;
+
+-- Restore from backup (worst case)
+mysql -u root -p mydb < mydb_backup_sprint50.sql
+
+📋 Sprint 50 Checklist Summary
+StepActionOwner✅Scripts reviewed & approvedDBA + Dev✅Staging deployment successfulDev✅DB backup takenDBA✅Migration ran without errorsDevOps✅App deployed & smoke testedQA✅Rollback script readyDBA✅Monitoring checked post-deployDevOps
+
+
+
+
+
+@Component@ServiceBusiness logic✅✅Bean injection✅✅Tells devs "I'm service layer"❌✅
+
+
+@Component = "Hey Spring, manage this class"
+java@Component
+public class UserService { } // Spring registers it as a bean ✅
+
+@Service = same thing + tells everyone "this is business logic"
+java@Service
+public class UserService { } // Spring registers it as a bean ✅
+//                              + clearly says "I am service layer"
+
+
+
+
+
+
+
+
+
+
+
+
+
+@Component in Spring Boot
+@Component marks a class as a Spring-managed bean — Spring automatically detects and registers it during classpath scanning.
+javaimport org.springframework.stereotype.Component;
+
+@Component
+public class EmailValidator {
+
+    public boolean isValid(String email) {
+        return email != null && email.matches("^[\\w.-]+@[\\w.-]+\\.\\w{2,}$");
+    }
+}
+Inject and use it anywhere:
+javaimport org.springframework.stereotype.Service;
+
+@Service
+public class UserService {
+
+    private final EmailValidator emailValidator;
+
+    // Constructor injection (best practice)
+    public UserService(EmailValidator emailValidator) {
+        this.emailValidator = emailValidator;
+    }
+
+    public void registerUser(String email) {
+        if (!emailValidator.isValid(email)) {
+            throw new IllegalArgumentException("Invalid email: " + email);
+        }
+        // proceed with registration...
+        System.out.println("User registered: " + email);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1280,6 +1509,12 @@ Batch Fetching (@BatchSize or
 @PathVariable extracts a value directly from the URI path itself. It's used to identify a specific resource.
 
 @RequestParam extracts a value from the query parameters in the URL. It's typically used for filtering, sorting, or providing optional parameters.
+The HEAD method in HTTP is identical to GET, but with one major twist: it asks the server to return only the headers, completely skipping the response body
+
+PUT: You send the entire profile data again. If you only change your bio, you still must send your name and email along with it. If you forget to send your email, the server might overwrite it with null or delete it.
+
+PATCH: You send only the bio. The server leaves your name and email completely untouched.
+
 
 
 

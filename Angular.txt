@@ -1,5 +1,20 @@
 
 
+
+Arrays.asList()  :
+
+Fixed-size list ❌ (can't add/remove)
+Use Arrays.asList() for read-only or temporary lists.
+
+new ArrayList();
+
+Fully mutable ✅ (can add/remove)
+
+Use new ArrayList<>(Arrays.asList(...)) if you need to add/remove elements.
+
+
+
+
 What is tsconfig.spec.json?
 It is the TypeScript config used for test files.
 

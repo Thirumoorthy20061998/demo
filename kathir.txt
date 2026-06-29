@@ -1,5 +1,211 @@
 
 
+
+For Java 17 to 21 migration, use these medium-level points:
+
+Check Java 21 compatibility of all libraries and frameworks.
+
+Upgrade build tools, plugins, and Spring Boot if needed.
+
+Run the app on Java 21 in a test environment first.
+
+Fix any deprecated API, reflection, or module-access issues.
+
+Run unit, integration, and performance tests.
+
+Deploy gradually with monitoring and rollback support.
+
+
+
+I used CI/CD to move code from Git to production.
+
+I checked configs, secrets, and database changes before deploy.
+
+I deployed to staging first, then production with health checks.
+
+I monitored logs/metrics and used rollback if needed.
+
+
+
+how you ensured zero downtime or safe rollback?
+
+I used rolling/blue-green deployment, backward-compatible database changes, health checks, and feature flags to keep the old version serving traffic until the new one was verified.
+
+For safe rollback, I kept the previous stable version ready, monitored logs/metrics after release, and switched traffic back immediately if health checks or errors failed.
+
+
+
+
+
+Yes, 5xx means server-side errors, and 500 and 503 are both in that group.
+
+500 = Internal Server Error, usually an unexpected bug or failure.
+
+503 = Service Unavailable, usually temporary downtime, overload, or maintenance.
+
+
+
+
+if api gateway down in spring boot application what occurs?
+
+
+Short fix steps:
+
+Check gateway is running and healthy.
+
+Restart gateway service.
+
+Verify route config and service discovery names.
+
+Check load balancer / Eureka registration.
+
+Check logs for 5xx, timeout, or connection refused.
+
+Add fallback/circuit breaker and run multiple gateway instances behind a load balancer.
+  
+
+
+
+what are  issues facing  when inytegrate third party apis?
+
+A strong interview answer:
+“I usually face authentication, timeout, version changes, and data-mapping issues. I handle them with retries, timeouts, fallback logic, validation, and close monitoring.”
+
+
+
+Google Maps API.
+AWS S3 API.
+Payment gateway APIs like Razorpay or PayPal.
+
+
+
+
+ performance tests.
+
+
+I have used JMeter for load testing, and also k6/Gatling for API performance checks.”
+
+Performance tests are used to check speed, stability, scalability, and response time under load.
+
+
+if particular bean is not created what steps to need to debug?
+
+Enable Spring debug logs.
+
+Look at the full stack trace, especially the last Caused by.
+
+Verify the bean class has proper annotation like @Component, @Service, or @Bean.
+
+Check package scanning and component scan path.
+
+Ensure required dependencies are available.
+
+Check @Conditional, @Profile, or config properties blocking bean creation.
+
+If needed, write a small context-load test to isolate the issue.
+
+
+
+
+text
+debug=true
+logging.level.org.springframework.boot.autoconfigure=DEBUG
+This shows the Spring Boot auto-configuration report and helps debug why a bean is or isn’t created.
+
+
+
+
+beancurreltlyincreationexception
+
+BeanCurrentlyInCreationException usually means circular dependency in Spring. For example, Bean A needs Bean B, and Bean B needs Bean A.
+
+
+
+
+
+
+Producer sends messages.
+
+Topic stores messages by category.
+
+Partition keeps messages ordered and helps parallel processing.
+
+Broker stores and serves the data.
+
+Consumer reads messages, usually as part of a consumer group
+
+
+Producer sends messages.
+
+Topic groups messages.
+
+Partition keeps order and adds parallelism.
+
+Broker stores messages.
+
+Consumer reads messages.
+
+Consumer group shares the load.
+
+Replication gives fault tolerance.
+
+Offset tracks consumed messages.
+
+
+
+
+if consumer down how we check and fix?
+
+Check whether the consumer group is active and how much lag it has.
+
+Inspect consumer logs for exceptions, timeout, or auth issues.
+
+Verify Kafka broker health and network connectivity.
+
+Restart the consumer with the same group id so it continues from the last committed offset.
+
+If lag is high, scale more consumers or fix slow processing logic.
+
+
+
+
+A real-time use of ExecutorService is processing multiple user requests in parallel, like sending notifications, generating reports, or handling order updates in a Spring Boot app.
+
+Example: when an order is placed, one thread saves the order, another sends email/SMS, and another updates cache, all at the same time using a thread pool.
+
+
+
+
+
+
+
+Spring will throw NoUniqueBeanDefinitionException because it finds 2 beans for the same interface and does not know which one to inject.
+
+Fix
+Use @Qualifier("noticlassimpl1") or @Qualifier("noticlassimpl2").
+
+Or mark one implementation as @Primary.
+
+Or choose the implementation dynamically with a factory/service map.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Internal Structure of ArrayListAn ArrayList is backed by a standard Java array. It grows dynamically as elements are added.3-Step MechanicsInitialization: It starts empty. Upon adding the first element, it defaults to an initial capacity of 10.Resizing ($1.5x$): When the array is full, it calculates a new capacity that is 50% larger than the current size:$$\text{New Capacity} = \text{Old Capacity} + (\text{Old Capacity} \gg 1)$$Data Transfer: Java allocates a new array with this larger capacity, copies the old elements over using System.arraycopy(), and discards the old array.
 
 
@@ -14,6 +220,68 @@ Internal Structure of ArrayListAn ArrayList is backed by a standard Java array. 
 4. Composite IndexUsecase: Category + PriceReal-Time Scenario: A shopper filters for "Electronics" and sorts by "Price: Low to High." A composite index on (category, price) allows the database to instantly serve up the sorted list without doing a heavy sorting operation in memory.Structural Usecases (Under the Hood)
 B+ Tree Index (Age or Created_Date): Used when a manager wants to see all users who signed up between January and March. B+ Trees keep data sorted, making range searches fast.
 Hash Index (Product_SKU): Used when a warehouse scanner lookups an exact barcode item (SKU == 'XYZ123'). It points directly to the item instantly ($O(1)$), but is useless if you try to search for "all SKUs starting with ABC".
+
+
+
+
+
+
+
+
+Concurrency = managing multiple tasks at once. Parallelism = doing multiple tasks at the same time.
+
+Java example:
+
+Concurrency: one thread pool handling many requests, switching between them.
+
+Parallelism: parallelStream() or multiple threads using multiple CPU cores.
+
+
+Easy way to remember:
+
+Concurrency = dealing with many tasks
+
+Parallelism = running many tasks simultaneously
+
+
+
+Concurrency
+Web app requests: A Spring Boot server handles many user requests by switching between them quickly.
+
+Restaurant order system: One kitchen handles many orders one by one, but all orders are still moving together.
+
+
+Parallelism
+Image processing: A photo app edits many images at once using multiple CPU cores.
+
+
+
+
+
+
+
+
+
+
+class Singleton {
+    private static Singleton instance;
+
+    private Singleton() {}
+
+    public static Singleton getInstance() {
+        if (instance == null) {
+            instance = new Singleton();
+        }
+        return instance;
+    }
+}
+
+
+
+
+
+
+
 
 
 

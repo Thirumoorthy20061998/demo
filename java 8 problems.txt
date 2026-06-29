@@ -1,4 +1,702 @@
 
+ int[] arr1 = {1, 2, 3, 4, 5};
+        int[] arr2 = {4, 5, 6, 7, 8};
+
+        Set<Integer> set2 = Arrays.stream(arr2)
+                .boxed()
+                .collect(Collectors.toSet());
+
+        List<Integer> intersection = Arrays.stream(arr1)
+                .boxed()
+                .filter(set2::contains)
+                .collect(Collectors.toList());
+
+        System.out.println(intersection);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+List<Integer> list1 = Arrays.asList(1, 2, 3, 4, 5);
+        List<Integer> list2 = Arrays.asList(4, 5, 6, 7, 8);
+
+        List<Integer> intersection = list1.stream()
+                .filter(list2::contains)
+                .collect(Collectors.toList());
+
+        System.out.println(intersection);
+
+
+
+javaString s = "hfh hdh hhf@ hnnb! jfjj9  jj";
+
+✅ Q1 — Count Vowels
+javalong count = s.chars()
+              .filter(c -> "aeiouAEIOU".indexOf(c) >= 0)
+              .count();
+System.out.println("Vowels: " + count); // 0
+
+long vowels = s.toLowerCase().chars()
+    .filter(c -> "aeiou".indexOf(c) >= 0)
+    .count();
+
+
+
+✅ Q2 — Count Consonants
+javalong count = s.chars()
+              .filter(Character::isLetter)   .filter(c -> Character.isLetter(c))
+              .filter(c -> "aeiouAEIOU".indexOf(c) < 0)
+              .count();
+System.out.println("Consonants: " + count); // 18
+
+✅ Q3 — Count Digits
+javalong count = s.chars()
+              .filter(Character::isDigit)
+              .count();
+System.out.println("Digits: " + count); // 1  → '9'
+
+✅ Q4 — Count Special Characters
+javalong count = s.chars()
+              .filter(c -> !Character.isLetterOrDigit(c) && c != ' ')
+              .count();
+System.out.println("Special chars: " + count); // 2  → '@','!'
+
+✅ Q5 — Count Words
+javalong count = Arrays.stream(s.trim().split("\\s+"))
+                   .count();
+System.out.println("Words: " + count); // 6
+
+✅ Q6 — Remove All Spaces
+javaString result = s.replaceAll("\\s+", "");
+System.out.println(result); // hfhhdhhf@hnnb!jfjj9jj
+
+✅ Q7 — Remove Special Characters (keep letters, digits, spaces)
+javaString result = s.replaceAll("[^a-zA-Z0-9 ]", "");
+System.out.println(result); // hfh hdh hhf hnnb jfjj9  jj
+
+✅ Q8 — Remove Digits
+javaString result = s.replaceAll("\\d", "");
+System.out.println(result); // hfh hdh hhf@ hnnb! jfjj  jj
+
+✅ Q9 — Extract Only Letters
+javaString result = s.replaceAll("[^a-zA-Z]", "");
+System.out.println(result); // hfhhdhhfhnnbjfjjjj
+
+✅ Q10 — Extract Only Digits
+javaString result = s.replaceAll("[^0-9]", "");
+System.out.println(result); // 9
+
+✅ Q11 — Check if String contains a Number
+javaboolean hasDigit = s.matches(".*\\d.*");
+System.out.println("Has digit: " + hasDigit); // true
+
+✅ Q12 — Check if String contains Special Character
+javaboolean hasSpecial = s.matches(".*[^a-zA-Z0-9 ].*");
+System.out.println("Has special: " + hasSpecial); // true
+
+✅ Q13 — Count Occurrences of a Character
+javachar ch = 'h';
+long count = s.chars()
+              .filter(c -> c == ch)
+              .count();
+System.out.println("Count of 'h': " + count); // 7
+
+✅ Q14 — First Non-Repeating Character
+javaMap<Character, Long> freq = s.chars()
+    .filter(c -> c != ' ')
+    .mapToObj(c -> (char) c)
+    .collect(Collectors.groupingBy(c -> c, LinkedHashMap::new, Collectors.counting()));
+
+char result = freq.entrySet().stream()
+    .filter(e -> e.getValue() == 1)
+    .map(Map.Entry::getKey)
+    .findFirst().orElse('_');
+
+System.out.println("First non-repeat: " + result); // f
+
+✅ Q15 — Reverse Each Word
+javaString result = Arrays.stream(s.trim().split("\\s+"))
+    .map(w -> new StringBuilder(w).reverse().toString())
+    .collect(Collectors.joining(" "));
+System.out.println(result); // hfh hdh fhh@ !bnnhh 9jjfj jj
+
+✅ Q16 — Capitalize First Letter of Each Word
+javaString result = Arrays.stream(s.trim().split("\\s+"))
+    .map(w -> Character.toUpperCase(w.charAt(0)) + w.substring(1))
+    .collect(Collectors.joining(" "));
+System.out.println(result); // Hfh Hdh Hhf@ Hnnb! Jfjj9 Jj
+
+✅ Q17 — Find Longest Word
+javaString result = Arrays.stream(s.trim().split("\\s+"))
+    .max(Comparator.comparingInt(String::length))
+    .orElse("");
+System.out.println("Longest word: " + result); // hnnb! or jfjj9
+
+✅ Q18 — Frequency of Each Character
+javas.chars()
+ .filter(c -> c != ' ')
+ .mapToObj(c -> (char) c)
+ .collect(Collectors.groupingBy(c -> c, LinkedHashMap::new, Collectors.counting()))
+ .forEach((k, v) -> System.out.println(k + " = " + v));
+// h=7, f=3, d=1, @=1, n=2, b=1, !=1, j=4, 9=1
+
+✅ Q19 — Replace Special Characters with *
+javaString result = s.replaceAll("[^a-zA-Z0-9 ]", "*");
+System.out.println(result); // hfh hdh hhf* hnnb* jfjj9  jj
+
+✅ Q20 — Check Palindrome (letters only, ignore case)
+javaString clean = s.replaceAll("[^a-zA-Z]", "").toLowerCase();
+String rev   = new StringBuilder(clean).reverse().toString();
+System.out.println("Palindrome: " + clean.equals(rev)); // false
+
+
+
+
+
+
+
+
+
+
+
+
+
+avaString s = "hfh hdh hhf@ hnnb! jfjj9  jj";
+
+✅ Q1 — Find All Words Containing Special Characters
+javaArrays.stream(s.trim().split("\\s+"))
+      .filter(w -> w.matches(".*[^a-zA-Z0-9].*"))
+      .forEach(System.out::println);
+// hhf@  hnnb!
+
+✅ Q2 — Find All Words Containing Digits
+javaArrays.stream(s.trim().split("\\s+"))
+      .filter(w -> w.matches(".*\\d.*"))
+      .forEach(System.out::println);
+// jfjj9
+
+✅ Q3 — Group Words by Length
+javaArrays.stream(s.trim().split("\\s+"))
+      .collect(Collectors.groupingBy(String::length))
+      .forEach((len, words) -> System.out.println(len + " -> " + words));
+// 2 -> [jj]
+// 3 -> [hfh, hdh]
+// 4 -> [jfjj]   ← wait, jfjj9 is 5
+// 5 -> [hhf@, hnnb!, jfjj9]
+
+✅ Q4 — Find Duplicate Words (case-insensitive)
+javaMap<String, Long> freq = Arrays.stream(s.trim().split("\\s+"))
+    .map(String::toLowerCase)
+    .collect(Collectors.groupingBy(w -> w, Collectors.counting()));
+
+freq.entrySet().stream()
+    .filter(e -> e.getValue() > 1)
+    .forEach(e -> System.out.println("Duplicate: " + e.getKey()));
+// none in this string — try with repeated words
+
+✅ Q5 — Extract All Words with Only Letters (clean words)
+javaArrays.stream(s.trim().split("\\s+"))
+      .filter(w -> w.matches("[a-zA-Z]+"))
+      .forEach(System.out::println);
+// hfh  hdh  jj
+
+✅ Q6 — Count Words Starting with a Specific Letter
+javachar ch = 'h';
+long count = Arrays.stream(s.trim().split("\\s+"))
+    .filter(w -> Character.toLowerCase(w.charAt(0)) == ch)
+    .count();
+System.out.println("Words starting with '" + ch + "': " + count); // 3
+
+✅ Q7 — Sort Words by Length
+javaArrays.stream(s.trim().split("\\s+"))
+      .sorted(Comparator.comparingInt(String::length))
+      .forEach(System.out::println);
+// jj, hfh, hdh, hhf@, hnnb!, jfjj9
+
+✅ Q8 — Reverse Words in String (keep word order)
+javaString result = Arrays.stream(s.trim().split("\\s+"))
+    .map(w -> new StringBuilder(w).reverse().toString())
+    .collect(Collectors.joining(" "));
+System.out.println(result);
+// hfh hdh @fhh !bnnhh 9jjfj jj
+
+✅ Q9 — Find Most Frequent Character (ignore spaces)
+javas.chars()
+ .filter(c -> c != ' ')
+ .mapToObj(c -> (char) c)
+ .collect(Collectors.groupingBy(c -> c, Collectors.counting()))
+ .entrySet().stream()
+ .max(Map.Entry.comparingByValue())
+ .ifPresent(e -> System.out.println("Most frequent: " + e.getKey() + " = " + e.getValue()));
+// h = 7
+
+✅ Q10 — Find All Unique Characters
+javas.chars()
+ .filter(c -> c != ' ')
+ .mapToObj(c -> (char) c)
+ .collect(Collectors.groupingBy(c -> c, LinkedHashMap::new, Collectors.counting()))
+ .entrySet().stream()
+ .filter(e -> e.getValue() == 1)
+ .map(Map.Entry::getKey)
+ .forEach(System.out::println);
+// d, @, n, b, !, 9
+
+✅ Q11 — Replace Consecutive Spaces with Single Space
+javaString result = s.replaceAll(" {2,}", " ").trim();
+System.out.println(result);
+// hfh hdh hhf@ hnnb! jfjj9 jj
+
+✅ Q12 — Check if Two Strings are Anagrams
+javaString a = "hfh", b = "hhf";
+
+boolean isAnagram = Arrays.equals(
+    a.toLowerCase().chars().sorted().toArray(),
+    b.toLowerCase().chars().sorted().toArray()
+);
+System.out.println("Anagram: " + isAnagram); // true
+
+✅ Q13 — Find Words Matching a Regex Pattern (only letters+digits)
+javaPattern p = Pattern.compile("[a-zA-Z]+\\d+");  // letters followed by digit
+Matcher m = p.matcher(s);
+while (m.find()) {
+    System.out.println("Match: " + m.group());
+}
+// jfjj9
+
+✅ Q14 — Extract All Special Characters from String
+javas.chars()
+ .filter(c -> !Character.isLetterOrDigit(c) && c != ' ')
+ .mapToObj(c -> String.valueOf((char) c))
+ .forEach(System.out::println);
+// @  !
+
+✅ Q15 — Count Sentences (split by . ! ?)
+javaString text = "hfh hdh. hhf@ hnnb! jfjj9  jj?";
+long count = Arrays.stream(text.split("[.!?]"))
+                   .filter(part -> !part.isBlank())
+                   .count();
+System.out.println("Sentences: " + count); // 3
+
+✅ Q16 — Find Longest Word Without Special Characters
+javaString result = Arrays.stream(s.trim().split("\\s+"))
+    .filter(w -> w.matches("[a-zA-Z0-9]+"))
+    .max(Comparator.comparingInt(String::length))
+    .orElse("");
+System.out.println("Longest clean word: " + result); // jfjj9
+
+✅ Q17 — Mask All Digits with #
+javaString result = s.replaceAll("\\d", "#");
+System.out.println(result);
+// hfh hdh hhf@ hnnb! jfjj#  jj
+
+✅ Q18 — Find Index of All Occurrences of a Pattern
+javaPattern p = Pattern.compile("h{2,}");  // two or more h's together
+Matcher m = p.matcher(s);
+while (m.find()) {
+    System.out.println("Found '" + m.group() + "' at index " + m.start());
+}
+// hh at index 8 (hhf@)
+
+✅ Q19 — Remove Duplicate Characters (preserve order)
+javaString result = s.chars()
+    .distinct()
+    .mapToObj(c -> String.valueOf((char) c))
+    .collect(Collectors.joining());
+System.out.println(result);
+// hf d@nb!jg9  (unique chars only)
+
+✅ Q20 — Validate Each Word Against a Pattern
+javaString[] words = s.trim().split("\\s+");
+String pattern = "[a-zA-Z]{3,5}[^a-zA-Z]?";  // 3-5 letters + optional special
+
+for (String w : words) {
+    System.out.println(w + " → " + (w.matches(pattern) ? "valid" : "invalid"));
+}
+// hfh    → valid
+// hdh    → valid
+// h
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class Main {
+    public static void main(String[] args) {
+        String data = "abcdabcabc";
+        int k = 3;
+
+        Map<String, Integer> freq = new HashMap<>();
+
+        for (int i = 0; i <= data.length() - k; i++) {
+            String sub = data.substring(i, i + k);
+            freq.put(sub, freq.getOrDefault(sub, 0) + 1);
+        }
+
+        System.out.print("Repeated substrings: ");
+        for (Map.Entry<String, Integer> entry : freq.entrySet()) {
+            if (entry.getValue() > 1) {
+                System.out.print(entry.getKey() + " ");
+            }
+        }
+    }
+}
+
+
+
+Repeated substrings: abc bca
+
+
+
+
+
+
+
+String pattern = "h?h";  // ? matches exactly one char
+String regex = pattern.replace("?", ".");
+Arrays.stream(s.trim().split("\\s+"))
+      .filter(w -> w.matches(regex))
+      .forEach(System.out::println);
+// hfh, hdh
+
+
+
+
+
+
+String s = "hfh hdh hhf@ hnnb! jfjj9  jj";
+ Find Longest Common Prefix Among All Words
+javaString[] words = s.trim().split("\\s+");
+String prefix = words[0];
+for (String w : words) {
+    while (!w.startsWith(prefix))
+        prefix = prefix.substring(0, prefix.length() - 1);
+}
+System.out.println("Common prefix: '" + prefix + "'");
+// 'h' → hfh, hdh, hhf@ all start with h; jfjj9, jj break it
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ Group Anagrams from Words
+javaArrays.stream(s.trim().split("\\s+"))
+    .collect(Collectors.groupingBy(
+        w -> w.chars().sorted()
+               .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+               .toString()
+    ))
+    .entrySet().stream()
+    .filter(e -> e.getValue().size() > 1)
+    .forEach(e -> System.out.println("Anagram group: " + e.getValue()));
+// [hfh, hhf@] → h,f,h same letters (ignoring @)
+// [hdh] alone
+
+
+
+
+
+
+ Find Longest Common Prefix Among All Words
+javaString[] words = s.trim().split("\\s+");
+String prefix = words[0];
+for (String w : words) {
+    while (!w.startsWith(prefix))
+        prefix = prefix.substring(0, prefix.length() - 1);
+}
+System.out.println("Common prefix: '" + prefix + "'");
+// 'h' → hfh, hdh, hhf@ all start with h; jfjj9, jj break it
+
+
+
+
+
+
+public static int strStr(String haystack, String needle) {
+        int hLen = haystack.length();
+        int nLen = needle.length();
+        
+        // Loop through haystack, stopping where needle can no longer fit
+        for (int i = 0; i <= hLen - nLen; i++) {
+            
+            // Extract a chunk of haystack equal to needle's length
+            String currentWindow = haystack.substring(i, i + nLen);
+            
+            // If it matches, return the starting index immediately
+            if (currentWindow.equals(needle)) {
+                return i;
+            }
+        }
+        
+        // Return -1 if needle is
+sadbutsad
+sad
+
+
+
+
+import java.util.*;
+
+public class Duplicates {
+
+    public static Set<Integer> findDuplicates(int[] a) {
+        Set<Integer> seen = new HashSet<>();
+        Set<Integer> dup  = new LinkedHashSet<>();
+
+        for (int num : a) {
+            if (!seen.contains(num)) {   // if NOT seen → add to seen
+                seen.add(num);
+            } else {                     // already seen → duplicate
+                dup.add(num);
+            }
+        }
+        return dup;
+    }
+
+    public static void main(String[] args) {
+        int[] a = {2, 3, 5, 7, 2, 9, 6, 3};
+        System.out.println(findDuplicates(a));  // [2, 3]
+    }
+}
+
+
+
+
+
+
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        int[] a = {2, 3, 5, 7, 2, 9, 6, 3};
+
+        List<Integer> evens = new ArrayList<>();
+        List<Integer> odds  = new ArrayList<>();
+
+        for (int num : a) {
+            if (num % 2 == 0) {
+                evens.add(num);   // even → evens list
+            } else {
+                odds.add(num);    // odd  → odds list
+            }
+        }
+
+        evens.addAll(odds);       // join odds after evens
+
+        System.out.println(evens);  // [2, 2, 6, 3, 5, 7, 9, 3]
+    }
+}
+
+
+
+
+
+
+
+import java.util.Arrays;
+
+public class Main {
+    public static void main(String[] args) {
+        int[] a = {2, 3, 5, 7, 2, 9, 6, 3};
+
+        int left  = 0;
+        int right = a.length - 1;
+
+        while (left < right) {
+            if (a[left] % 2 == 0) {
+                left++;                    // even → already in place → move left
+            } else if (a[right] % 2 != 0) {
+                right--;                   // odd on right → already in place → move right
+            } else {
+                int temp    = a[left];     // swap odd(left) with even(right)
+                a[left]     = a[right];
+                a[right]    = temp;
+                left++;
+                right--;
+            }
+        }
+
+        System.out.println(Arrays.toString(a));
+    }
+}
+
+
+[2, 6, 2, 7, 9, 5, 3, 3]
+
+
+
+
+
+
+
+
+
+Find All Pairs with Difference k=4
+Input: {2, 3, 5, 7, 2, 9, 6, 3}, k=4
+
+Output: (3,7) (2,6)
+
+Code
+javaimport java.util.HashSet;
+import java.util.Set;
+
+public class Main {
+    public static void main(String[] args) {
+        int[] a = {2, 3, 5, 7, 2, 9, 6, 3};
+        int k = 4;
+
+        Set<Integer> seen = new HashSet<>();
+
+        for (int num : a) {
+            seen.add(num);
+        }
+
+        Set<String> result = new HashSet<>();
+
+        for (int num : a) {
+            if (seen.contains(num + k)) {
+                int small = Math.min(num, num + k);
+                int large = Math.max(num, num + k);
+                result.add("(" + small + "," + large + ")");
+            }
+            if (seen.contains(num - k)) {
+                int small = Math.min(num, num - k);
+                int large = Math.max(num, num - k);
+                result.add("(" + small + "," + large + ")");
+            }
+        }
+
+        System.out.println(result);
+    }
+}
+
+Output
+(2,6) (3,7)
+
+
+
+
+
+
+
+
+
+
+
+
+
+ public static void main(String[] args) {
+        int[] a = {2, 3, 5, 7, 2, 9, 6, 3};
+        int k = 4;
+
+        System.out.println("Q1: " + maxSumK(a, k));           // 24
+        System.out.println("Q2: " + minLenSumK(a, k));        // 1
+        System.out.println("Q3: " + exactlyKDistinct(a, k));  // 4
+    }
+
+    static int maxSumK(int[] a, int k) {
+        int sum = 0;
+        for (int i = 0; i < k; i++) {
+            sum += a[i];
+        }
+        int max = sum;
+        for (int i = k; i < a.length; i++) {
+            sum += a[i] - a[i - k];
+            max = Math.max(max, sum);
+        }
+        return max;
+    }
+
+
+
+
+ Pascal Case
+javaimport java.util.Arrays;
+import java.util.stream.Collectors;
+
+public class Main {
+    public static void main(String[] args) {
+        String s = "i love java";
+
+        String result = Arrays.stream(s.split(" "))
+                .map(word -> "#" + Character.toUpperCase(word.charAt(0)) + word.substring(1).toLowerCase())
+                .collect(Collectors.joining(" "));
+
+        System.out.println("Pascal Case : " + result);
+    }
+}
+Output
+Pascal Case : #I #Love #Java
+
+
+
+
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
+public class Main {
+    public static void main(String[] args) {
+        String s = "thiru love java";
+
+        AtomicInteger index = new AtomicInteger(0);
+
+        String result = Arrays.stream(s.split(" "))
+                .map(word -> index.getAndIncrement() == 0
+                        ? word.toLowerCase()
+                        : "#" + Character.toUpperCase(word.charAt(0)) + word.substring(1).toLowerCase())
+                .collect(Collectors.joining(" "));
+
+        System.out.println("Camel Case  : " + result);
+    }
+}
+Output
+Camel Case  : thiru #Love #Java
+
+
+
+
+
+
+
+
+
+
+
+
 
 import java.util.*;
 
@@ -22,6 +720,79 @@ public class Main {
         System.out.println(result.toString().trim());
     }
 }
+
+
+
+
+
+
+public class Main {
+    public static void main(String[] args) {
+        String s = "aaa sss aabbba cccb";
+        int i = 0;
+
+        while (i < s.length()) {
+            if (s.charAt(i) == ' ') {
+                i++;
+                continue;
+            }
+
+            char ch = s.charAt(i);
+            StringBuilder sb = new StringBuilder();
+
+            while (i < s.length() && s.charAt(i) == ch) {
+                sb.append(s.charAt(i));
+                i++;
+            }
+
+            if (sb.length() > 1) {
+                System.out.println(sb.toString());
+            }
+        }
+    }
+}
+
+
+aaa
+sss
+aa
+bbb
+ccc
+
+
+
+
+
+
+
+
+
+
+
+int[] arr = {2, 3, 4, 5, 6, 7, 4, 5, 6};
+int target = 5;
+
+int first = -1, last = -1;
+
+for (int i = 0; i < arr.length; i++) {
+    if (arr[i] == target) {
+        if (first == -1) first = i;
+        last = i;
+    }
+}
+
+System.out.println("First index: " + first);
+System.out.println("Last index: " + last);
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1314,6 +2085,14 @@ public class ReverseLinkedList {
         return prev;
     }
 }
+
+
+
+
+
+
+
+Find the longest substring without repeating characters
 
 
 String data = "abcdab";

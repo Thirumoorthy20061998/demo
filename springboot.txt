@@ -198,7 +198,7 @@ Answer:
 Creates a new bean for each HTTP request.
 ✅ Real-time example:
 In a web app, you can use it to store request-specific user data.
-
+a shopping cart per customer visit.
 
 @Component
 @Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
@@ -216,6 +216,10 @@ Answer:
 One bean instance per user session.
 ✅ Real-time example:
 Store user login details or shopping cart items during a web session.
+
+
+E-commerce Multi-Step Checkout (Flipkart / Amazon style)
+User adds items → enters address → selects payment → confirms order — all separate requests, but same session data.
 
 
 @Component

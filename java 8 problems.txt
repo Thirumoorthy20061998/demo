@@ -49,6 +49,24 @@ long vowels = s.toLowerCase().chars()
     .count();
 
 
+String[] arr = {"hfh", "hdh", "hhf@", "hnnb!", "jfjj9", "jj"};
+
+for (String str : arr) {
+    long count = str.toLowerCase().chars()
+            .filter(c -> "aeiou".indexOf(c) >= 0)
+            .count();
+
+    System.out.println(str + " -> " + count);
+}
+
+
+
+
+
+
+
+
+
 
 ✅ Q2 — Count Consonants
 javalong count = s.chars()
@@ -192,6 +210,20 @@ javaArrays.stream(s.trim().split("\\s+"))
 // 4 -> [jfjj]   ← wait, jfjj9 is 5
 // 5 -> [hhf@, hnnb!, jfjj9]
 
+
+
+
+Map<Integer, List<String>> d = Arrays.stream(s.trim().split("\\s+"))
+        .collect(Collectors.groupingBy(String::length));
+
+// Now you can use it later
+d.forEach((len, words) -> System.out.println(len + " -> " + words));
+
+
+
+
+
+
 ✅ Q4 — Find Duplicate Words (case-insensitive)
 javaMap<String, Long> freq = Arrays.stream(s.trim().split("\\s+"))
     .map(String::toLowerCase)
@@ -277,6 +309,39 @@ javas.chars()
  .mapToObj(c -> String.valueOf((char) c))
  .forEach(System.out::println);
 // @  !
+
+
+String[] rr = {"thi@ru", "karth!ck", "madh#an$"};
+
+        for (String javas : rr) {
+            javas.chars()
+                .filter(c -> !Character.isLetterOrDigit(c) && c != ' ')
+                .mapToObj(c -> String.valueOf((char) c))
+                .forEach(System.out::println);
+        }
+    }
+
+
+String[] rr = {"thi@ru", "karth!ck", "madh#an$"};
+
+        // Loop through each string in the array
+        for (int i = 0; i < rr.length; i++) {
+            String currentString = rr[i];
+            
+            // Loop through each character of the current string
+            for (int j = 0; j < currentString.length(); j++) {
+                char c = currentString.charAt(j);
+                
+                // Check if it's NOT a letter/digit and NOT a space/whitespace
+                if (!Character.isLetterOrDigit(c) && !Character.isWhitespace(c)) {
+                    System.out.println(c);
+                }
+            }
+        }
+
+
+
+
 
 ✅ Q15 — Count Sentences (split by . ! ?)
 javaString text = "hfh hdh. hhf@ hnnb! jfjj9  jj?";
@@ -367,6 +432,35 @@ public class Main {
 
 
 Repeated substrings: abc bca
+
+
+
+String data = "abcdabcabc";
+
+for (int k = 1; k <= data.length(); k++) {   // try each length
+    Map<String, Integer> freq = new HashMap<>();
+
+    for (int i = 0; i <= data.length() - k; i++) {
+        String sub = data.substring(i, i + k);
+        freq.put(sub, freq.getOrDefault(sub, 0) + 1);
+    }
+
+    System.out.print("Repeated substrings of length " + k + ": ");
+    for (Map.Entry<String, Integer> entry : freq.entrySet()) {
+        if (entry.getValue() > 1) {
+            System.out.print(entry.getKey() + " ");
+        }
+    }
+    System.out.println();
+}
+
+
+
+
+
+
+
+
 
 
 

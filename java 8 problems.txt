@@ -1,3 +1,1973 @@
+ 
+
+eature	Arrays.asList(array)	new ArrayList<>(...)
+Size	Fixed	Resizable
+Can use .add() or .remove()?	❌ No (Throws UnsupportedOperationException)	✅ Yes
+Can use .set() to change items?	✅ Yes	✅ Yes
+
+
+
+
+
+
+
+
+List<Employee> employees = Arrays.asList(
+                new Employee(1, "Arun", "Developer", 50000),
+                new Employee(2, "Bala", "Developer", 60000),
+                new Employee(3, "Chitra", "Tester", 45000),
+                new Employee(4, "Deepak", "Tester", 47000),
+                new Employee(5, "Esha", "Manager", 90000)
+        );
+
+
+
+List<Employee> employees = new ArrayList<>();
+employees.add(new Employee(1, "Arun", "Developer", 50000));
+employees.add(new Employee(2, "Bala", "Developer", 60000));
+employees.add(new Employee(3, "Chitra", "Tester", 45000));
+employees.add(new Employee(4, "Deepak", "Tester", 47000));
+employees.add(new Employee(5, "Esha", "Manager", 90000));
+
+
+
+
+
+
+
+
+
+
+
+
+public class Employee {
+    private int id;
+    private String name;
+    private String position;
+    private double salary;
+
+    public Employee() {
+    }
+
+    public Employee(int id, String name, String position, double salary) {
+        this.id = id;
+        this.name = name;
+        this.position = position;
+        this.salary = salary;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getPosition() {
+        return position;
+    }
+
+    public void setPosition(String position) {
+        this.position = position;
+    }
+
+    public double getSalary() {
+        return salary;
+    }
+
+    public void setSalary(double salary) {
+        this.salary = salary;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"Count the exact frequency of every element in this array. Twist: You are strictly banned from using HashMap, and you cannot create a new counting array. You must use $O(1)$ extra space and $O(N)$ time."
+
+public class Main {
+    public static void main(String[] args) {
+        int[] arr = {2, 5, 6, 7, 8, 4, 6, 7, 3, 3, 6};
+        int n = arr.length; // n = 11
+
+        // Phase 1: Add 'n' to the index corresponding to the value
+        for (int i = 0; i < n; i++) {
+            // Use modulo 'n' to get the original value, in case it was already modified
+            int originalValue = arr[i] % n; 
+            arr[originalValue] += n; 
+        }
+
+        // Phase 2: Divide by 'n' to find how many times 'n' was added
+        for (int i = 0; i < n; i++) {
+            int frequency = arr[i] / n;
+            if (frequency > 0) {
+                System.out.println("Element " + i + " appears " + frequency + " times");
+            }
+        }
+    }
+}
+
+
+
+
+Element 2 appears 1 times
+Element 3 appears 2 times
+Element 4 appears 1 times
+Element 5 appears 1 times
+Element 6 appears 3 times
+Element 7 appears 2 times
+Element 8 appears 1 times
+
+
+
+
+public class Main {
+    public static void main(String[] args) {
+        String[] s = {"thiru", "madhan", "thiru", "bai", "bai"};
+        int n = s.length;
+
+        // 1. Sort the array alphabetically (Bubble Sort)
+        for (int i = 0; i < n - 1; i++) {
+            for (int j = 0; j < n - i - 1; j++) {
+                // compareTo looks at alphabetical order
+                if (s[j].compareTo(s[j + 1]) > 0) {
+                    // Swap the elements
+                    String temp = s[j];
+                    s[j] = s[j + 1];
+                    s[j + 1] = temp;
+                }
+            }
+        }
+
+        // After sorting, the array is: ["bai", "bai", "madhan", "thiru", "thiru"]
+
+        // 2. Count adjacent matching names
+        
+int count = 1;
+
+for (int i = 0; i < n - 1; i++) {
+
+    if (s[i].equals(s[i + 1])) {
+        count++;
+    } else {
+        System.out.println(s[i] + " -> " + count);
+        count = 1;
+    }
+}
+
+// Print the last element
+System.out.println(s[n - 1] + " -> " + count);
+
+
+
+    }
+}
+
+
+
+Element bai appears 2 times
+Element madhan appears 1 times
+Element thiru appears 2 times
+
+
+
+
+
+public class Main {
+    public static void main(String[] args) {
+        String[] s = {"thiru", "madhan", "thiru", "bai", "bai"};
+
+        for (int i = 0; i < s.length; i++) {
+            boolean alreadySeen = false;
+
+            for (int k = 0; k < i; k++) {
+                if (s[i].equals(s[k])) {
+                    alreadySeen = true;
+                    break;
+                }
+            }
+
+            if (alreadySeen) continue;
+
+            int count = 1;
+            String name = s[i];
+
+            for (int j = i + 1; j < s.length; j++) {
+                if (name.equals(s[j])) {
+                    count++;
+                }
+            }
+
+            System.out.println("Element " + name + " appears " + count + " times");
+        }
+    }
+}
+
+
+
+Element thiru appears 2 times
+Element madhan appears 1 times
+Element bai appears 2 times
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+odd numbers move to left and even numbers move to right
+
+public class Main {
+    public static void main(String[] args) {
+        int[] arr = {2, 5, 6, 7, 8, 4, 6, 7, 3, 3, 6};                                    
+
+        int left = 0;
+        int right = arr.length - 1;
+
+        while (left < right) {
+            while (left < right && arr[left] % 2 != 0) {
+                left++;
+            }
+
+            while (left < right && arr[right] % 2 == 0) {
+                right--;
+            }
+
+            if (left < right) {
+                int temp = arr[left];
+                arr[left] = arr[right];
+                arr[right] = temp;
+                left++;
+                right--;
+            }
+        }
+
+        for (int num : arr) {
+            System.out.print(num + " ");
+        }
+    }
+}
+
+
+
+alternative:
+int oddPos = 0; // Rename for clarity
+
+// Loop through the array from left to right
+for (int i = 0; i < arr.length; i++) {
+    // Look for ODD numbers instead of evens
+    if (arr[i] % 2 != 0) { 
+        // Swap the current odd number with the element at oddPos
+        int temp = arr[i];
+        arr[i] = arr[oddPos];
+        arr[oddPos] = temp;
+        
+        oddPos++; // Move the pointer to the next available left slot
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+5 3 7 3 7 4 6 8 6 2 6
+
+
+
+
+even numbers move to left and odd numbers move to right with sorting
+not use any packages or new arrays
+
+
+
+public class Main {
+    public static void main(String[] args) {
+        int[] arr = {2, 5, 6, 7, 8, 4, 6, 7, 3, 3, 6};
+
+        int evenPos = 0;
+
+        // Step 1: move even numbers to left
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i] % 2 == 0) {
+                int temp = arr[i];
+                arr[i] = arr[evenPos];
+                arr[evenPos] = temp;
+                evenPos++;
+            }
+        }
+
+        // Step 2: sort even part
+        for (int i = 0; i < evenPos - 1; i++) {
+            for (int j = i + 1; j < evenPos; j++) {
+                if (arr[i] > arr[j]) {
+                    int temp = arr[i];
+                    arr[i] = arr[j];
+                    arr[j] = temp;
+                }
+            }
+        }
+
+        // Step 3: sort odd part
+        for (int i = evenPos; i < arr.length - 1; i++) {
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] > arr[j]) {
+                    int temp = arr[i];
+                    arr[i] = arr[j];
+                    arr[j] = temp;
+                }
+            }
+        }
+
+        // Step 4: print result
+        for (int num : arr) {
+            System.out.print(num + " ");
+        }
+    }
+}
+
+
+
+2 4 6 6 6 8 3 3 5 7 7
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+The "Threshold" String Compressor
+Question: "Compress the string by counting consecutive characters, but only apply the compression if a character repeats 3 or more times consecutively. If it repeats 1 or 2 times, leave it exactly as is. Keep spaces perfectly intact."
+
+
+
+
+public class Main {
+    public static void main(String[] args) {
+        String s = "aaabcc  dddd e";
+        StringBuilder result = new StringBuilder();
+
+        int i = 0;
+        while (i < s.length()) {
+            char ch = s.charAt(i);
+            int count = 1;
+            int j = i + 1;
+
+            while (j < s.length() && s.charAt(j) == ch) {
+                count++;
+                j++;
+            }
+
+            if (count >= 3) {
+                result.append(ch).append(count);
+            } else {
+                for (int k = 0; k < count; k++) {
+                    result.append(ch);
+                }
+            }
+
+            i = j;
+        }
+
+        System.out.println(result.toString());
+    }
+}
+
+
+a3bcc  d4 e
+
+
+
+
+
+
+
+
+
+
+
+Modulo Arithmetic Indexing
+
+
+public class Main {
+    public static void main(String[] args) {
+
+        int[] arr = {1, 2, 3, 4, 5};
+        int k = 2;
+
+        int n = arr.length;
+        int[] temp = new int[n];
+
+        k = k % n;
+
+        for (int i = 0; i < n; i++) {
+
+            temp[i] = arr[(i + k) % n];
+        }
+
+        System.out.print("Left Rotation: ");
+
+        for (int num : temp) {
+            System.out.print(num + " ");
+        }
+    }
+}
+Left Rotation: 3 4 5 1 2
+
+
+
+public class Main {
+    public static void main(String[] args) {
+
+        int[] arr = {1, 2, 3, 4, 5};
+        int k = 2;
+
+        int n = arr.length;
+        int[] temp = new int[n];
+
+        k = k % n;
+
+        for (int i = 0; i < n; i++) {
+
+            int newIndex = (i + k) % n;
+
+            temp[newIndex] = arr[i];
+        }
+
+        System.out.print("Right Rotation: ");
+
+        for (int num : temp) {
+            System.out.print(num + " ");
+        }
+    }
+}
+
+
+
+Right Rotation: 4 5 1 2 3
+
+
+
+
+
+
+
+
+
+
+
+
+Core Java code for sorted array
+
+public class Main {
+    public static void main(String[] args) {
+        int[] nums = {1, 1, 2, 2, 2, 3, 4, 4};
+
+        int i = 0;
+
+        for (int j = 1; j < nums.length; j++) {
+            if (nums[j] != nums[i]) {
+                i++;
+                nums[i] = nums[j];
+            }
+        }
+
+        System.out.println("New length = " + (i + 1));
+        System.out.print("Array after removing duplicates = [");
+        for (int i = 0; i <= i; i++) {
+            System.out.print(nums[i]);
+            if (i < i) System.out.print(", ");
+        }
+        System.out.println("]");
+    }
+}
+
+
+New length = 4
+Array after removing duplicates = [1, 2, 3, 4]
+
+
+Core Java code for unsorted array
+java
+public class Main {
+    public static void main(String[] args) {
+        int[] nums = {1, 1, 2, 1, 2, 3, 4, 3};
+
+        int size = nums.length;
+
+        for (int i = 0; i < size; i++) {
+            for (int j = i + 1; j < size; j++) {
+                if (nums[i] == nums[j]) {
+                    for (int k = j; k < size - 1; k++) {
+                        nums[k] = nums[k + 1];
+                    }
+                    size--;
+                    j--;
+                }
+            }
+        }
+
+        System.out.println("New length = " + size);
+        System.out.print("Array after removing duplicates = [");
+        for (int i = 0; i < size; i++) {
+            System.out.print(nums[i]);
+            if (i < size - 1) System.out.print(", ");
+        }
+        System.out.println("]");
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Find two numbers in an array whose sum equals the target.
+
+
+public class Main {
+    public static void main(String[] args) {
+
+        int[] arr = {2, 7, 11, 15};
+        int target = 9;
+
+        boolean found = false;
+
+        for (int i = 0; i < arr.length; i++) {
+
+            for (int j = i + 1; j < arr.length; j++) {
+
+                if (arr[i] + arr[j] == target) {
+
+                    System.out.println("Pair: " + arr[i] + " " + arr[j]);
+                    System.out.println("Indices: " + i + " " + j);
+
+                    found = true;
+                    break;
+                }
+            }
+
+            if (found) {
+                break;
+            }
+        }
+
+        if (!found) {
+            System.out.println("No pair found");
+        }
+    }
+}
+
+
+
+
+2,7
+
+
+
+
+
+
+
+
+
+A majority element is an element that appears more than n/2 times in an array.
+
+
+public class Main {
+    public static void main(String[] args) {
+
+        int[] arr = {2, 2, 1, 2, 3, 2, 2};
+        int n = arr.length;
+
+        for (int i = 0; i < n; i++) {
+
+            int count = 0;
+
+            for (int j = 0; j < n; j++) {
+
+                if (arr[i] == arr[j]) {
+                    count++;
+                }
+            }
+
+            if (count > n / 2) {
+                System.out.println("Majority Element = " + arr[i]);
+                return;
+            }
+        }
+
+        System.out.println("No Majority Element");
+    }
+}
+
+
+Majority Element = 2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Thread-Safe Concurrency (Without Synchronized Collections)
+Question: "Count the occurrences of every character in this string using multiple threads (parallel processing).
+
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+public class Main {
+    public static void main(String[] args) {
+        String s = "java  is   a programming!   langua@ge";
+        
+        // Convert to a List of Characters, then process in parallel
+        Map<Character, Long> counts = s.chars()
+            .mapToObj(c -> (char) c)
+            .parallel() // Spawns multiple threads using the common ForkJoinPool
+            .collect(Collectors.toConcurrentMap(
+                Function.identity(), 
+                c -> 1L, 
+                Long::sum // Merge function for when threads combine their results
+            ));
+            
+        System.out.println(counts);
+    }
+}
+
+
+When * comes, remove the * and also remove the nearest non-* character on its left.
+
+public class Main {
+    public static void main(String[] args) {
+
+        String s = "ja*va*pro*gram";
+        String result = "";
+
+        for (int i = 0; i < s.length(); i++) {
+
+            char ch = s.charAt(i);
+
+            if (ch == '*') {
+
+                // Remove last character if result is not empty
+                if (result.length() > 0) {
+                    result = result.substring(0, result.length() - 1);
+                }
+
+            } else {
+
+                result = result + ch;
+            }
+        }
+
+        System.out.println(result);
+    }
+}
+
+
+
+jvprgram
+
+
+
+
+
+
+leader of the array
+
+public class Main {
+    public static void main(String[] args) {
+
+        int[] arr = {16, 17, 4, 3, 5, 2};
+
+        for (int i = 0; i < arr.length; i++) {
+
+            boolean isLeader = true;
+
+            for (int j = i + 1; j < arr.length; j++) {
+
+                if (arr[j] > arr[i]) {
+                    isLeader = false;
+                    break;
+                }
+            }
+
+            if (isLeader) {
+                System.out.print(arr[i] + " ");
+            }
+        }
+    }
+}
+
+
+
+17 5 2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+String s = "java is a programming language";
+
+
+public class Main {
+    public static void main(String[] args) {
+
+        String s = "java is a programming language";
+        String longest = "";
+
+        for (int i = 0; i < s.length(); i++) {
+
+            for (int j = i + 1; j <= s.length(); j++) {
+
+                String sub = s.substring(i, j);
+
+                if (isPalindrome(sub) && sub.length() > longest.length()) {
+                    longest = sub;
+                }
+            }
+        }
+
+        System.out.println("Longest Palindrome: " + longest);
+    }
+
+    static boolean isPalindrome(String str) {
+
+        int left = 0;
+        int right = str.length() - 1;
+
+        while (left < right) {
+
+            if (str.charAt(left) != str.charAt(right)) {
+                return false;
+            }
+
+            left++;
+            right--;
+        }
+
+        return true;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+public class Main {
+    public static void main(String[] args) {
+
+        String s = "java is apple programmingp language";
+
+        String[] words = s.split(" ");
+
+        for (int i = 0; i < words.length; i++) {
+
+            String word = words[i];
+            char first = word.charAt(0);
+            int count = 0;
+
+            // Check entire word
+            for (int j = 0; j < word.length(); j++) {
+
+                if (word.charAt(j) == first) {
+                    count++;
+                }
+            }
+
+            System.out.println(word + " -> " + first + " = " + count);
+        }
+    }
+}
+
+
+java -> j = 1
+is -> i = 1
+apple -> a = 1
+programmingp -> p = 2
+language -> l = 1
+
+
+
+
+
+
+public class Main {
+    public static void main(String[] args) {
+
+        String s = "java is a programming language ";
+
+        String[] words = s.trim().split(" ");
+
+        for (int i = 0; i < words.length; i++) {
+
+            char first = words[i].charAt(0);
+            int count = 1;
+            boolean alreadyCounted = false;
+
+            // Check if this first letter was already processed
+            for (int k = 0; k < i; k++) {
+                if (words[k].charAt(0) == first) {
+                    alreadyCounted = true;
+                    break;
+                }
+            }
+
+            if (alreadyCounted) {
+                continue;
+            }
+
+            // Count occurrences of the same first letter
+            for (int j = i + 1; j < words.length; j++) {
+                if (words[j].charAt(0) == first) {
+                    count++;
+                }
+            }
+
+            System.out.println(first + " -> " + count);
+        }
+    }
+}
+
+
+
+
+j -> 1
+i -> 1
+a -> 1
+p -> 1
+l -> 1
+
+
+
+
+
+
+
+
+public class Main {
+    public static void main(String[] args) {
+
+        String s = "java@12 is#good programming!! lan$guage";
+
+        String[] words = s.split(" ");
+
+        int maxCount = 0;
+        String result = "";
+
+        for (int i = 0; i < words.length; i++) {
+
+            int count = 0;
+
+            for (int j = 0; j < words[i].length(); j++) {
+
+                char ch = words[i].charAt(j);
+
+                // Not a letter and not a digit
+                if (!Character.isLetter(ch) && !Character.isDigit(ch)) {
+                    count++;
+                }
+            }
+
+            if (count > maxCount) {
+                maxCount = count;
+                result = words[i];
+            }
+        }
+
+        System.out.println("Substring with most special characters: " + result);
+        System.out.println("Count: " + maxCount);
+    }
+}
+
+
+
+Substring with most special characters: programming!!
+Count: 2
+
+
+
+
+Word Reversal (Stack Implementation)
+import java.util.Stack;
+
+public class Main {
+    public static void main(String[] args) {
+        String s = "java  is   a programming!   langua@ge";
+        Stack<Character> stack = new Stack<>();
+        StringBuilder result = new StringBuilder();
+
+        for (int i = 0; i < s.length(); i++) {
+            char ch = s.charAt(i);
+
+            if (Character.isLetter(ch)) {
+                stack.push(ch); // Buffer the word characters
+            } else {
+                // We hit a boundary (space or symbol). Flush the stack first!
+                while (!stack.isEmpty()) {
+                    result.append(stack.pop());
+                }
+                result.append(ch); // Append the boundary character in its exact place
+            }
+        }
+        
+        // Final flush for any remaining characters at the end of the string
+        while (!stack.isEmpty()) {
+            result.append(stack.pop());
+        }
+
+        System.out.println(result.toString());
+    }
+}
+
+
+Output: avaj  si   a gnimmargorp!   augnal@eg
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+The "Lexicographical Word Sort" Without Built-in Sorters
+
+public class Main {
+    public static void main(String[] args) {
+
+        String s = "java is a programming! langua@ge";
+
+
+
+ if allow-> String[] words = s.split("[^a-zA-Z]+");
+
+
+        String[] words = new String[20]; // Assume max 20 words
+        int index = 0;
+        String word = "";
+
+        // Manual split
+        for (int i = 0; i < s.length(); i++) {
+
+            char ch = s.charAt(i);
+
+            if ((ch >= 'a' && ch <= 'z') ||
+                (ch >= 'A' && ch <= 'Z')) {
+
+                word += ch;
+            } else {
+
+                if (!word.equals("")) {
+                    words[index++] = word;
+                    word = "";
+                }
+            }
+        }
+
+        // Store last word
+        if (!word.equals("")) {
+            words[index++] = word;
+        }
+
+        // Bubble Sort
+        for (int i = 0; i < index - 1; i++) {
+
+            for (int j = 0; j < index - i - 1; j++) {
+
+                if (words[j].compareTo(words[j + 1]) > 0) {
+
+                    String temp = words[j];
+                    words[j] = words[j + 1];
+                    words[j + 1] = temp;
+                }
+            }
+        }
+
+        // Print sorted words
+        for (int i = 0; i < index; i++) {
+            System.out.print(words[i] + " ");
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+public class Main {
+    public static void main(String[] args) {
+
+        String s = "java  is   a programming!   langua@ge";
+
+        int maxLen = 0;
+        int currentLen = 0;
+
+        for (char ch : s.toCharArray()) {
+
+            // Space means word ended
+            if (ch == ' ') {
+
+                if (currentLen > maxLen) {
+                    maxLen = currentLen;
+                }
+
+                currentLen = 0;
+
+            }
+            // Count only letters
+            else if (Character.isLetter(ch)) {
+                currentLen++;
+            }
+
+            // Ignore special characters (!,@,#, etc.)
+        }
+
+        // Check last word
+        if (currentLen > maxLen) {
+            maxLen = currentLen;
+        }
+
+        System.out.println("Longest valid word length: " + maxLen);
+    }
+}
+
+Longest valid word length: 11
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Maximum Length of a "Clean" Word ignore special 
+
+
+public class Main {
+    public static void main(String[] args) {
+
+        String s = "java is a programming! langua@ge";
+
+        String[] words = s.split(" ");
+
+        String longestWord = "";
+        int maxLen = 0;
+
+        for (String word : words) {
+
+            // Remove special characters
+            String cleanWord = "";
+
+            for (char ch : word.toCharArray()) {
+                if (Character.isLetter(ch)) {
+                    cleanWord += ch;
+                }
+            }
+
+            if (cleanWord.length() > maxLen) {
+                maxLen = cleanWord.length();
+                longestWord = cleanWord;
+            }
+        }
+
+        System.out.println("Longest Word: " + longestWord);
+        System.out.println("Length: " + maxLen);
+    }
+}
+
+
+Longest word: programming
+Length: 11
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Question: "Clean this string so that all words are separated by exactly one space, and all special characters (! and @) are completely removed. Twist: You are banned from using String.replaceAll() or regular expressions."
+
+
+
+String s = "java  is   a programming!   langua@ge";
+StringBuilder sb = new StringBuilder();
+boolean lastWasSpace = false;
+
+for (char ch : s.toCharArray()) {
+    // 1. Skip special characters
+    if (ch == '!' || ch == '@') {
+        continue; 
+    }
+    
+    // 2. Handle spaces
+    if (ch == ' ') {
+        if (!lastWasSpace && sb.length() > 0) {
+            sb.append(' ');
+            lastWasSpace = true;
+        }
+    } else {
+        sb.append(ch);
+        lastWasSpace = false; // Reset space tracker
+    }
+}
+
+System.out.println("\"" + sb.toString().trim() + "\"");
+
+
+
+
+Maximum Length of a "Clean" Word
+Question: "Find the length of the longest word in the string. A word is defined as a continuous sequence of alphabetical characters only (special characters break the word)."
+
+
+String s = "java  is   a programming!   langua@ge";
+int maxLen = 0;
+int currentLen = 0;
+
+for (char ch : s.toCharArray()) {
+    if (Character.isLetter(ch)) {
+        currentLen++;
+    } else {
+        if (currentLen > maxLen) {
+            maxLen = currentLen;
+        }
+        currentLen = 0; // Reset for next word
+    }
+}
+// Final check for the last word
+if (currentLen > maxLen) maxLen = currentLen;
+
+System.out.println("Longest valid word length: " + maxLen);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+In-Place Reversal (Immutability Trick)
+
+String s = "karthick";
+char[] chars = s.toCharArray();
+int left = 0, right = chars.length - 1;
+
+while(left < right) {
+    char temp = chars[left];
+    chars[left] = chars[right];
+    chars[right] = temp;
+    left++;
+    right--;
+}
+
+String reversed = new String(chars);
+System.out.println(reversed);
+
+
+
+
+
+
+String s = "karthick";
+int n = s.length();
+
+for (int i = 0; i < n; i++) {
+    for (int j = i; j < n; j++) {
+        // Manually build the substring using a char array
+        char[] sub = new char[j - i + 1];
+        for (int k = i; k <= j; k++) {
+            sub[k - i] = s.charAt(k);
+        }
+        System.out.print(new String(sub) + " ");
+    }
+    System.out.println();
+}
+
+
+
+k ka kar kart karth karthi karthic karthick 
+a ar art arth arthi arthic arthick 
+r rt rth rthi rthic rthick 
+t th thi thic thick 
+h hi hic hick 
+i ic ick 
+c ck 
+k
+
+
+
+
+
+Remove all occurrences of the letter 'k' from "karthick". Twist: You cannot use replace(), replaceAll(), for loops, while loops, or do-while loops."
+
+
+public class Main {
+
+    static String removeK(String s, int index) {
+
+        // Base case
+        if (index == s.length()) {
+            return "";
+        }
+
+        char ch = s.charAt(index);
+
+        // Skip 'k'
+        if (ch == 'k') {
+            return removeK(s, index + 1);
+        }
+
+        // Keep other characters
+        return ch + removeK(s, index + 1);
+    }
+
+    public static void main(String[] args) {
+
+        String s = "karthick";
+
+        System.out.println(removeK(s, 0));
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+String s = "karthick";
+int[] counts = new int[256]; // Assuming extended ASCII
+
+for (int i = 0; i < s.length(); i++) {
+    counts[s.charAt(i)]++;
+}
+
+for (int i = 0; i < s.length(); i++) {
+    char ch = s.charAt(i);
+    if (counts[ch] != 0) {
+        System.out.print(ch + ":" + counts[ch] + " ");
+        counts[ch] = 0; // Prevent printing duplicates again
+    }
+}
+
+
+
+First Non-Repeated Character" Efficiency Challenge
+
+
+String s = "karthick";
+int[] freq = new int[26];
+
+// Pass 1: Populate frequencies
+for (char ch : s.toCharArray()) {
+    freq[ch - 'a']++;
+}
+
+// Pass 2: Find the first one with a count of 1
+for (char ch : s.toCharArray()) {
+    if (freq[ch - 'a'] == 1) {
+        System.out.println("First non-repeated: " + ch);
+        break;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+public class MergeSortedArrays {
+
+    public static int[] merge(int[] arr1, int[] arr2) {
+        // Create a new array large enough to hold both
+        int[] result = new int[arr1.length + arr2.length];
+        
+        int i = 0; // Pointer for arr1
+        int j = 0; // Pointer for arr2
+        int k = 0; // Pointer for result array
+
+        // Step 1: Compare elements from both arrays and merge the smaller one
+        while (i < arr1.length && j < arr2.length) {
+            if (arr1[i] <= arr2[j]) {
+                result[k] = arr1[i];
+                i++; // Move pointer in arr1
+            } else {
+                result[k] = arr2[j];
+                j++; // Move pointer in arr2
+            }
+            k++; // Move pointer in result array
+        }
+
+        // Step 2: If there are leftover elements in arr1, copy them
+        while (i < arr1.length) {
+            result[k] = arr1[i];
+            i++;
+            k++;
+        }
+
+        // Step 3: If there are leftover elements in arr2, copy them
+        while (j < arr2.length) {
+            result[k] = arr2[j];
+            j++;
+            k++;
+        }
+
+        return result;
+    }
+
+    public static void main(String[] args) {
+        int[] arr1 = {1, 3, 5, 7};
+        int[] arr2 = {2, 4, 6, 8, 9};
+
+        int[] mergedArray = merge(arr1, arr2);
+
+        // Print the merged array
+        System.out.print("Merged Array: ");
+        for (int num : mergedArray) {
+            System.out.print(num + " ");
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+public class AnagramCheck {
+    public static void main(String[] args) {
+        String s = "hdgfh";
+        String b = "vvghds";
+
+        // Step 1: If lengths are different, they cannot be anagrams
+        if (s.length() != b.length()) {
+            System.out.println("Not Anagrams");
+            return;
+        }
+
+        // Step 2: Create a scoreboard for all 256 ASCII characters
+        int[] charCounts = new int[256];
+
+        // Step 3: Fill the scoreboard using a single loop
+        for (int i = 0; i < s.length(); i++) {
+            charCounts[s.charAt(i)]++; // Add 1 for characters in 's'
+            charCounts[b.charAt(i)]--; // Subtract 1 for characters in 'b'
+        }
+
+        // Step 4: Check if the scoreboard is completely balanced (all zeros)
+        for (int count : charCounts) {
+            if (count != 0) {
+                System.out.println("Not Anagrams");
+                return; // Exit early if any mismatch is found
+            }
+        }
+
+        System.out.println("Anagrams");
+    }
+}
+
+
+
+
+
+Move Zeroes to the End (Classic Array Manipulation)
+
+import java.util.Arrays;
+
+public class Main {
+    public static void main(String[] args) {
+        int[] arr = {1, 0, 2, 0, 3, 0, 4};
+        
+        int insertPos = 0;
+        
+        // Step 1: Push all non-zero elements to the front
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i] != 0) {
+                arr[insertPos] = arr[i];
+                insertPos++;
+            }
+        }
+        
+        // Step 2: Fill the rest of the array with zeroes
+        while (insertPos < arr.length) {
+            arr[insertPos] = 0;
+            insertPos++;
+        }
+        
+        System.out.println(Arrays.toString(arr));
+    }
+}
+
+
+Output: [1, 2, 3, 4, 0, 0, 0]
+
+
+
+
+Move Zeroes to the Left (The Reverse Twist)
+public class Main {
+    public static void main(String[] args) {
+        int[] arr = {1, 0, 2, 0, 3, 0, 4};
+        int pos = arr.length - 1;
+
+        for (int i = arr.length - 1; i >= 0; i--) {
+            if (arr[i] != 0) {
+                arr[pos] = arr[i];
+                pos--;
+            }
+        }
+
+        while (pos >= 0) {
+            arr[pos] = 0;
+            pos--;
+        }
+
+        for (int num : arr) {
+            System.out.print(num + " ");
+        }
+    }
+}
+
+
+Output: [0, 0, 0, 1, 2, 3, 4]
+
+
+
+
+Sort an Array of 0s, 1s, and 2s (Dutch National Flag)
+
+
+import java.util.Arrays;
+
+public class Main {
+    public static void main(String[] args) {
+        int[] arr = {0, 1, 2, 0, 1, 2, 1, 0};
+        
+        int count0 = 0, count1 = 0, count2 = 0;
+
+        // Phase 1: Count the occurrences
+        for (int num : arr) {
+            if (num == 0) count0++;
+            else if (num == 1) count1++;
+            else if (num == 2) count2++;
+        }
+
+        // Phase 2: Overwrite the array based on counts
+        int i = 0;
+        while (count0 > 0) { arr[i++] = 0; count0--; }
+        while (count1 > 0) { arr[i++] = 1; count1--; }
+        while (count2 > 0) { arr[i++] = 2; count2--; }
+
+        System.out.println(Arrays.toString(arr));
+    }
+}
+
+
+Output: [0, 0, 0, 1, 1, 1, 2, 2]
+
+
+
+
+
+
+
+Remove a Specific Element In-Place
+
+import java.util.Arrays;
+
+public class Main {
+    public static void main(String[] args) {
+        int[] arr = {1, 0, 2, 0, 3, 0, 4};
+        int target = 0;
+        
+        int validLength = 0; // This acts as our pointer for valid data
+
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i] != target) {
+                arr[validLength] = arr[i];
+                validLength++;
+            }
+        }
+
+        System.out.println("New length: " + validLength);
+        
+        // Let's print just the valid part of the array to prove it worked
+        System.out.print("Valid Array: ");
+        for (int i = 0; i < validLength; i++) {
+            System.out.print(arr[i] + " ");
+        }
+    }
+}
+
+
+
+
+Output: ```text
+New length: 4
+Valid Array: 1 2 3 4
+
+
+
+
+
+
+
+
+Reverse the Alphabet, Ignore the Symbols
+
+public class Main {
+    public static void main(String[] args) {
+        String s = "a,b$c";
+        char[] arr = s.toCharArray();
+        
+        int left = 0;
+        int right = arr.length - 1;
+        
+        while (left < right) {
+            // If left is not a letter, skip it
+            if (!Character.isLetter(arr[left])) {
+                left++;
+            } 
+            // If right is not a letter, skip it
+            else if (!Character.isLetter(arr[right])) {
+                right--;
+            } 
+            // Both are letters, so we swap them!
+            else {
+                char temp = arr[left];
+                arr[left] = arr[right];
+                arr[right] = temp;
+                left++;
+                right--;
+            }
+        }
+        
+        System.out.println("Reversed: " + new String(arr));
+    }
+}
+
+
+
+Output: Reversed: c,b$a
+
+
+
+
+Remove Duplicates (Maintaining Order)
+
+public class Main {
+    public static void main(String[] args) {
+        String s = "programming";
+        boolean[] seen = new boolean[256]; // Tracks if an ASCII character has appeared
+        StringBuilder result = new StringBuilder();
+        
+        for (int i = 0; i < s.length(); i++) {
+            char ch = s.charAt(i);
+            
+            // If we haven't seen this character yet
+            if (!seen[ch]) {
+                result.append(ch); // Add to our result
+                seen[ch] = true;   // Mark it as seen so we ignore it next time
+            }
+        }
+        
+        System.out.println("No duplicates: " + result.toString());
+    }
+}
+
+
+Output: No duplicates: progamin
+
+
+
+
+
+
+public class EasiestFirstNonRepeating {
+
+    public static void main(String[] args) {
+        int s = 68669;
+
+        int[] digits = new int[10]; // Stores the digits
+        int[] counts = new int[10]; // Counts how many times 0-9 appear
+        int length = 0;             // Tracks how many digits the number has
+
+        // Step 1: Chop off digits from right-to-left and store them
+        int temp = s;
+        while (temp > 0) {
+            int digit = temp % 10;
+            
+            digits[length] = digit; // Save the digit in our array
+            counts[digit]++;        // Increase the tally for this digit
+            
+            length++;               // Move to the next position
+            temp /= 10;             // Remove the last digit from temp
+        }
+
+        // Step 2: Read our stored digits backwards (which is left-to-right for the original number)
+        // For 68669, digits array has [9, 6, 6, 8, 6]. 
+        // Reading backwards means we check 6, then 8, then 6...
+        for (int i = length - 1; i >= 0; i--) {
+            int currentDigit = digits[i];
+            
+            // If this digit was only counted once, we found our answer!
+            if (counts[currentDigit] == 1) {
+                System.out.println("First non-repeating digit is: " + currentDigit);
+                return; // Stop the program as soon as we find it
+            }
+        }
+
+        System.out.println("No non-repeating digit found.");
+    }
+}
+
+
+
+
+
+
+first repeating  
+if (counts[currentDigit] > 1) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+first non repeating element
+public class Main {
+    public static void main(String[] args) {
+        String str = "aabbcdde";
+        
+        for (int i = 0; i < str.length(); i++) {
+            boolean unique = true;
+
+            for (int j = 0; j < str.length(); j++) {
+                if (i != j && str.charAt(i) == str.charAt(j)) {
+                    unique = false;
+                    break;
+                }
+            }
+
+            if (unique) {
+                System.out.println("First non-repeating character: " + str.charAt(i));
+                break;
+            }
+        }
+    }
+}
+
+
+
+public class Main {
+    public static void main(String[] args) {
+        String str = "aabbcdef";
+
+        int count = 0;
+
+        for (int i = 0; i < str.length(); i++) {
+            boolean unique = true;
+
+            for (int j = 0; j < str.length(); j++) {
+                if (i != j && str.charAt(i) == str.charAt(j)) {
+                    unique = false;
+                    break;
+                }
+            }
+
+            if (unique) {
+                System.out.println(str.charAt(i));
+                count++;
+
+                if (count == 2) {
+                    break;
+                }
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+public class Main {
+    public static void main(String[] args) {
+        int[] arr = {4, 5, 1, 2, 0, 4};
+
+        for (int i = 0; i < arr.length; i++) {
+            boolean repeated = false;
+
+            for (int j = 0; j < arr.length; j++) {
+                if (i != j && arr[i] == arr[j]) {
+                    repeated = true;
+                    break;
+                }
+            }
+
+            if (!repeated) {
+                System.out.println("First non-repeating element: " + arr[i]);
+                break;
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
 
  int[] arr1 = {1, 2, 3, 4, 5};
         int[] arr2 = {4, 5, 6, 7, 8};
@@ -13,6 +1983,64 @@
 
         System.out.println(intersection);
     }
+
+
+merge arrays without sorting
+intersection:
+
+public class BinarySearchIntersection {
+    public static void main(String[] args) {
+        // Inputs (arr2 is much larger)
+        int[] arr1 = {4, 9};     
+        int[] arr2 = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};     
+
+        // Output Array setup
+        int[] temp = new int[arr1.length];
+        int matchCount = 0;
+
+        // Loop through the smaller array
+        for (int i = 0; i < arr1.length; i++) {
+            int target = arr1[i];
+            
+            // Binary Search target inside arr2
+            int low = 0;
+            int high = arr2.length - 1;
+            boolean found = false;
+
+            while (low <= high) {
+                int mid = low + (high - low) / 2;
+                if (arr2[mid] == target) {
+                    found = true;
+                    break;
+                } else if (arr2[mid] < target) {
+                    low = mid + 1;
+                } else {
+                    high = mid - 1;
+                }
+            }
+
+            if (found) {
+                temp[matchCount] = target;
+                matchCount++;
+            }
+        }
+
+        // Output Processing
+        System.out.print("[");
+        for (int k = 0; k < matchCount; k++) {
+            System.out.print(temp[k]);
+            if (k < matchCount - 1) {
+                System.out.print(", ");
+            }
+        }
+        System.out.println("]");
+    }
+}
+
+
+
+
+
 
 
 
@@ -146,6 +2174,52 @@ javaString result = Arrays.stream(s.trim().split("\\s+"))
     .collect(Collectors.joining(" "));
 System.out.println(result); // hfh hdh fhh@ !bnnhh 9jjfj jj
 
+
+
+
+public class Main {
+    public static void main(String[] args) {
+
+        String s = "hfh hdh hhf@ hnnb! jfjj9  jj";
+
+        String[] words = s.split(" ", -1); // Keeps multiple spaces
+        StringBuilder result = new StringBuilder();
+
+        for (String word : words) {
+            String rev = "";
+
+            for (int i = word.length() - 1; i >= 0; i--) {
+                rev += word.charAt(i);
+            }
+
+            result.append(rev).append(" ");
+        }
+
+        System.out.println(result.toString().trim());
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ✅ Q16 — Capitalize First Letter of Each Word
 javaString result = Arrays.stream(s.trim().split("\\s+"))
     .map(w -> Character.toUpperCase(w.charAt(0)) + w.substring(1))
@@ -165,6 +2239,54 @@ javas.chars()
  .collect(Collectors.groupingBy(c -> c, LinkedHashMap::new, Collectors.counting()))
  .forEach((k, v) -> System.out.println(k + " = " + v));
 // h=7, f=3, d=1, @=1, n=2, b=1, !=1, j=4, 9=1
+
+
+public class PureCharFrequency {
+    public static void main(String[] args) {
+        String s = "hfh hdh hhf@ hnnb! jfjj9  jj";
+
+        // Step 1: Create a scoreboard for all 256 ASCII characters
+        int[] counts = new int[256];
+
+        // Step 2: Fill the scoreboard
+        for (int i = 0; i < s.length(); i++) {
+            char ch = s.charAt(i);
+            
+            if (ch != ' ') { // Skip spaces
+                counts[ch]++;
+            }
+        }
+
+        // Step 3: Print in the exact order they first appeared
+        for (int i = 0; i < s.length(); i++) {
+            char ch = s.charAt(i);
+
+            // If it's not a space and it hasn't been printed yet (count > 0)
+            if (ch != ' ' && counts[ch] > 0) {
+                System.out.println(ch + " = " + counts[ch]);
+                
+                // CRITICAL: Set count to 0 so we don't print this character again!
+                counts[ch] = 0; 
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ✅ Q19 — Replace Special Characters with *
 javaString result = s.replaceAll("[^a-zA-Z0-9 ]", "*");
@@ -218,6 +2340,308 @@ Map<Integer, List<String>> d = Arrays.stream(s.trim().split("\\s+"))
 
 // Now you can use it later
 d.forEach((len, words) -> System.out.println(len + " -> " + words));
+
+
+
+
+
+
+public class PureDuplicateWords {
+    public static void main(String[] args) {
+        // String with actual duplicates
+        String s = "Java is fun and java programming is powerful";
+
+        // Step 1: Clean and split the string into an array of words
+        String[] words = s.trim().split("\\s+");
+
+        System.out.println("Duplicate words found:");
+
+        // Step 2: Compare each word with every word that comes after it
+        for (int i = 0; i < words.length; i++) {
+            // If this word was already wiped out (marked as duplicate), skip it
+            if (words[i] == null) {
+                continue;
+            }
+
+            boolean isDuplicate = false;
+
+            for (int j = i + 1; j < words.length; j++) {
+                if (words[j] != null && words[i].equalsIgnoreCase(words[j])) {
+                    isDuplicate = true;
+                    words[j] = null; // Wipe out the matching word so we don't count it again
+                }
+            }
+
+            // If we found a duplicate match, print the word
+            if (isDuplicate) {
+                System.out.println("Duplicate: " + words[i].toLowerCase());
+            }
+        }
+    }
+}
+
+
+
+
+
+public class PureDuplicateChars {
+    public static void main(String[] args) {
+        String s = "hhhhjfhjd";
+
+        // Step 1: Convert string to a character array
+        char[] chars = s.toLowerCase().toCharArray();
+
+        System.out.println("Duplicate characters found:");
+
+        // Step 2: Compare each character with every character that follows it
+        for (int i = 0; i < chars.length; i++) {
+            // If this character was already wiped out (marked with '\0'), skip it
+            if (chars[i] == '\0') {
+                continue;
+            }
+
+            boolean isDuplicate = false;
+
+            for (int j = i + 1; j < chars.length; j++) {
+                if (chars[i] == chars[j]) {
+                    isDuplicate = true;
+                    chars[j] = '\0'; // Wipe out the matching char using the null character
+                }
+            }
+
+            // If we found a duplicate match, print the character
+            if (isDuplicate) {
+                System.out.println("Duplicate: " + chars[i]);
+            }
+        }
+    }
+}
+
+
+
+
+
+public class RemoveDuplicates {
+    public static void main(String[] args) {
+        String s = "hhhhjfhjd";
+
+        // Step 1: Convert string to a character array
+        char[] chars = s.toLowerCase().toCharArray();
+
+        System.out.print("String after removing duplicates: ");
+
+        // Step 2: Loop through each character
+        for (int i = 0; i < chars.length; i++) {
+            // If this character was already wiped out as a duplicate, skip it
+            if (chars[i] == '\0') {
+                continue;
+            }
+
+            // Print the unique character immediately!
+            System.out.print(chars[i]);
+
+            // Wipe out all FUTURE identical characters so they are skipped later
+            for (int j = i + 1; j < chars.length; j++) {
+                if (chars[i] == chars[j]) {
+                    chars[j] = '\0'; // Erase the duplicate
+                }
+            }
+        }
+        System.out.println(); // New line at the end
+    }
+}
+
+
+
+
+
+
+
+public class RemoveDuplicateWords {
+    public static void main(String[] args) {
+        String s = "Java is fun and java programming is powerful";
+
+        // Step 1: Clean and split the string into an array of words
+        String[] words = s.trim().split("\\s+");
+
+        System.out.print("String after removing duplicate words: ");
+
+        // Step 2: Loop through each word
+        for (int i = 0; i < words.length; i++) {
+            // If this word was already wiped out as a duplicate, skip it
+            if (words[i] == null) {
+                continue;
+            }
+
+            // Print the unique word immediately (converting to lowercase for consistency)
+            System.out.print(words[i].toLowerCase() + " ");
+
+            // Wipe out all FUTURE identical words (case-insensitive)
+            for (int j = i + 1; j < words.length; j++) {
+                if (words[j] != null && words[i].equalsIgnoreCase(words[j])) {
+                    words[j] = null; // Erase the duplicate word
+                }
+            }
+        }
+        System.out.println(); // New line at the end
+    }
+}
+
+
+
+
+
+
+public class CountDuplicateWords {
+    public static void main(String[] args) {
+        String s = "Java is fun and java programming is powerful";
+        String[] words = s.trim().split("\\s+");
+
+        System.out.println("Duplicate word counts:");
+
+        for (int i = 0; i < words.length; i++) {
+            if (words[i] == null) {
+                continue;
+            }
+
+            int count = 1; // Start count at 1 (counts the current word)
+
+            // Look ahead to find all matches
+            for (int j = i + 1; j < words.length; j++) {
+                if (words[j] != null && words[i].equalsIgnoreCase(words[j])) {
+                    count++;
+                    words[j] = null; // Wipe it out so we don't count it again later
+                }
+            }
+
+            // ONLY print if it appeared more than once
+            if (count > 1) {
+                System.out.println(words[i].toLowerCase() + " found " + count + " times");
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+public class CountDuplicateChars {
+    public static void main(String[] args) {
+        String s = "hhhhjfhjd";
+        String lowerStr = s.toLowerCase();
+
+        // Step 1: Scoreboard array for all 256 ASCII characters
+        int[] counts = new int[256];
+
+        // Step 2: Count frequencies of every character
+        for (int i = 0; i < lowerStr.length(); i++) {
+            counts[lowerStr.charAt(i)]++;
+        }
+
+        System.out.println("Duplicate character counts:");
+
+        // Step 3: Print counts ONLY for duplicates
+        for (int i = 0; i < lowerStr.length(); i++) {
+            char ch = lowerStr.charAt(i);
+
+            // If count > 1, it's a duplicate!
+            if (counts[ch] > 1) {
+                System.out.println(ch + " found " + counts[ch] + " times");
+                
+                // Clear the count to 0 so we don't print this character again
+                counts[ch] = 0; 
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+public class RemoveDuplicates {
+    public static void main(String[] args) {
+        String s = "hhhhjfhjd";
+
+        // Step 1: Convert string to a character array
+        char[] chars = s.toLowerCase().toCharArray();
+
+        System.out.print("String after removing duplicates: ");
+
+        // Step 2: Loop through each character
+        for (int i = 0; i < chars.length; i++) {
+            // If this character was already wiped out as a duplicate, skip it
+            if (chars[i] == '\0') {
+                continue;
+            }
+
+            // Print the unique character immediately!
+            System.out.print(chars[i]);
+
+            // Wipe out all FUTURE identical characters so they are skipped later
+            for (int j = i + 1; j < chars.length; j++) {
+                if (chars[i] == chars[j]) {
+                    chars[j] = '\0'; // Erase the duplicate
+                }
+            }
+        }
+        System.out.println(); // New line at the end
+    }
+}
+
+
+
+
+public class SpecialCharactersIndex {
+    public static void main(String[] args) {
+        String s = "hhh?hjfh!?jd";
+
+        // Step 1: Convert string to a character array
+        char[] chars = s.toLowerCase().toCharArray();
+
+        System.out.println("Processing string elements:");
+
+        // Step 2: Loop through each character
+        for (int i = 0; i < chars.length; i++) {
+            // If this character was already wiped out as a duplicate, skip it
+            if (chars[i] == '\0') {
+                continue;
+            }
+
+            // DYNAMIC CHECK: If the character is NOT a letter and NOT a digit, it's a special character!
+            if (!Character.isLetterOrDigit(chars[i])) {
+                System.out.println("-> Found special character '" + chars[i] + "' at index: " + i);
+            }
+
+            int removedCount = 0; // Reset counter for the current character
+
+            // Scan and wipe out all FUTURE identical characters
+            for (int j = i + 1; j < chars.length; j++) {
+                if (chars[i] == chars[j]) {
+                    removedCount++;   // Count it as a removal
+                    chars[j] = '\0';  // Erase the duplicate so it's skipped later
+                }
+            }
+
+            // If we removed one or more copies, print the report
+            if (removedCount > 0) {
+                System.out.println("Character '" + chars[i] + "': removed " + removedCount + " duplicate(s)");
+            }
+        }
+    }
+}
+
+
+
+
+
 
 
 
@@ -280,6 +2704,57 @@ javas.chars()
  .map(Map.Entry::getKey)
  .forEach(System.out::println);
 // d, @, n, b, !, 9
+
+
+
+Find All Unique Characters
+
+public class StrictlyUniqueCharacters {
+    public static void main(String[] args) {
+        String s = "hhh?hjfh!?jd";
+        char[] chars = s.toLowerCase().toCharArray();
+
+        System.out.print("Strictly unique characters (appeared only once): ");
+
+        for (int i = 0; i < chars.length; i++) {
+            if (chars[i] == '\0') {
+                continue;
+            }
+
+            boolean hasDuplicates = false;
+
+            // Look ahead to check for and destroy duplicates
+            for (int j = i + 1; j < chars.length; j++) {
+                if (chars[i] == chars[j]) {
+                    hasDuplicates = true;
+                    chars[j] = '\0'; 
+                }
+            }
+
+            // Only print if NO duplicates were found anywhere down the line
+            if (!hasDuplicates) {
+                System.out.print(chars[i] + " ");
+            }
+        }
+        System.out.println();
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ✅ Q11 — Replace Consecutive Spaces with Single Space
 javaString result = s.replaceAll(" {2,}", " ").trim();
@@ -357,6 +2832,57 @@ javaString result = Arrays.stream(s.trim().split("\\s+"))
     .orElse("");
 System.out.println("Longest clean word: " + result); // jfjj9
 
+
+
+ Find Longest Word Without Special Characters
+
+public class LongestAlphanumericWord {
+    public static void main(String[] args) {
+        String d = "java is  a pr@!hghg powerful programming @jjg";
+
+        // Step 1: Split strictly by spaces
+        String[] words = d.trim().split("\\s+");
+
+        String longestWord = ""; // Holds our winning word
+
+        // Step 2: Loop through each word
+        for (int i = 0; i < words.length; i++) {
+            if (words[i] == null || words[i].isEmpty()) {
+                continue;
+            }
+
+            // CHECK: True ONLY if the word consists entirely of letters/digits (\w+)
+            boolean isAlphanumericOnly = words[i].matches("\\w+");
+
+            // If it's clean and longer than our current winner, update it
+            if (isAlphanumericOnly && words[i].length() > longestWord.length()) {
+                longestWord = words[i];
+            }
+        }
+
+        // Step 3: Print the result
+        if (!longestWord.isEmpty()) {
+            System.out.println("Longest word without special characters: \"" + longestWord + "\"");
+            System.out.println("Length: " + longestWord.length());
+        } else {
+            System.out.println("No pure alphanumeric words found.");
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ✅ Q17 — Mask All Digits with #
 javaString result = s.replaceAll("\\d", "#");
 System.out.println(result);
@@ -393,7 +2919,39 @@ for (String w : words) {
 
 
 
+public class RemoveDuplicatesPreserveOrder {
+    public static void main(String[] args) {
+        String s = "hhh?hjfh!?jd";
+        
+        // Step 1: Convert string to a lowercase character array
+        char[] chars = s.toLowerCase().toCharArray();
+        
+        // Use StringBuilder to reconstruct the final ordered string safely
+        StringBuilder result = new StringBuilder();
 
+        // Step 2: Loop through each character
+        for (int i = 0; i < chars.length; i++) {
+            // If this character was already wiped out as a duplicate copy, skip it
+            if (chars[i] == '\0') {
+                continue;
+            }
+
+            // Append the unique character to our result sequence
+            result.append(chars[i]);
+
+            // Step 3: Scan ahead and wipe out all FUTURE identical characters
+            for (int j = i + 1; j < chars.length; j++) {
+                if (chars[i] == chars[j]) {
+                    chars[j] = '\0'; // Destroy future copies so they get skipped later
+                }
+            }
+        }
+
+        // Step 4: Output the preserved-order string
+        System.out.println("Original String: " + s);
+        System.out.println("Result String:   " + result.toString());
+    }
+}
 
 
 
@@ -435,6 +2993,7 @@ Repeated substrings: abc bca
 
 
 
+ “find all repeated substrings of every possible length” program.
 String data = "abcdabcabc";
 
 for (int k = 1; k <= data.length(); k++) {   // try each length
@@ -455,9 +3014,50 @@ for (int k = 1; k <= data.length(); k++) {   // try each length
 }
 
 
+Find the length of the longest substring with unique characters.
 
+public class Main {
 
+    static boolean isUnique(String str) {
 
+        for (int i = 0; i < str.length(); i++) {
+
+            for (int j = i + 1; j < str.length(); j++) {
+
+                if (str.charAt(i) == str.charAt(j)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public static void main(String[] args) {
+
+        String data = "abcdabcabc";
+
+        int maxLength = 0;
+        String longest = "";
+
+        for (int i = 0; i < data.length(); i++) {
+
+            for (int j = i + 1; j <= data.length(); j++) {
+
+                String sub = data.substring(i, j);
+
+                if (isUnique(sub) && sub.length() > maxLength) {
+
+                    maxLength = sub.length();
+                    longest = sub;
+                }
+            }
+        }
+
+        System.out.println("Longest substring: " + longest);
+        System.out.println("Length: " + maxLength);
+    }
+}
 
 
 
@@ -3352,12 +5952,45 @@ public static void main(String[] args) {
 
 
 
+public class LargestWord {
+    public static void main(String[] args) {
+        String[] names = {"Charlie", "Alice", "David", "Bob", "Eve"};
+        
+        // Start by assuming the first name is the largest
+        String maxWord = names[0];
+
+        // Loop through the rest of the array
+        for (int i = 1; i < names.length; i++) {
+            
+            // If the current name comes AFTER our maxWord alphabetically
+            if (names[i].compareTo(maxWord) > 0) {
+                maxWord = names[i]; // Update our maxWord
+            }
+        }
+
+        System.out.println("Largest word alphabetically: " + maxWord);
+    }
+}
 
 
 
 
+public class LongestWord {
+    public static void main(String[] args) {
+        String[] names = {"Charlie", "Alice", "David", "Bob", "Eve"};
+        
+        String longestWord = names[0];
 
+        for (int i = 1; i < names.length; i++) {
+            // Check which word has more letters
+            if (names[i].length() > longestWord.length()) {
+                longestWord = names[i];
+            }
+        }
 
+        System.out.println("Longest word by length: " + longestWord);
+    }
+}
 
 
 
@@ -3456,17 +6089,50 @@ int[] arr = {1, 2, 3, 4, 2, 5, 6, 1, 7, 8, 3};
 	
 	//bruteforce first duplicate
 	
-        for(int i=0;i<arr.length;i++) {
-        	   for(int j=i+1;j<arr.length;j++) {
-        	if(arr[i] == arr[j]) {
-        	
-        	System.out.println(arr[i]);
-        	
-        	}
-        	
-        	
-        	
+public static void main(String[] args) {
+        String str = "geeksforgeeks";
+
+        for (int i = 0; i < str.length(); i++) {
+            for (int j = i + 1; j < str.length(); j++) {
+                if (str.charAt(i) == str.charAt(j)) {
+                    System.out.println("First repeating character: " + str.charAt(i));
+                    return;
+                }
+            }
+
+
+
+public class Main {
+    public static void main(String[] args) {
+        String str = "geeksforgeeks";
+        int count = 0;
+
+        for (int i = 0; i < str.length(); i++) {
+            for (int j = i + 1; j < str.length(); j++) {
+                if (str.charAt(i) == str.charAt(j)) {
+                    System.out.println(str.charAt(i));
+                    count++;
+                    break;
+                }
+            }
+
+            if (count == 2) {
+                break;
+            }
         }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3788,6 +6454,90 @@ int a[]= {1,3,4,5,6,7,9,0};
 	
 
 
+public class Main {
+    public static void main(String[] args) {
+        int[] arr = {1, 2, 4, 5};
+
+        int n = arr.length + 1;
+        int total = n * (n + 1) / 2;
+
+        int sum = 0;
+        for (int num : arr) {
+            sum += num;
+        }
+
+        int missing = total - sum;
+
+        System.out.println("Missing number = " + missing);
+    }
+}
+
+
+
+
+
+The "Second Largest" Duplicate Trap (Arrays)
+
+
+public class Main {
+    public static void main(String[] args) {
+        int[] arr = {10, 10, 5, 20, 20, 15};
+        
+        int highest = Integer.MIN_VALUE;
+        int secondHighest = Integer.MIN_VALUE;
+
+        for (int num : arr) {
+            if (num > highest) {
+                secondHighest = highest; // Old highest becomes second highest
+                highest = num;
+            } else if (num > secondHighest && num != highest) {
+                // The 'num != highest' check is the crucial twist to handle duplicates
+                secondHighest = num;
+            }
+        }
+
+        System.out.println("Second highest is: " + secondHighest);
+    }
+}
+
+
+Output: Second highest is: 15
+
+
+
+
+
+
+n these array which element is continously present in order more than 2 times print its first and last index of starting and ending
+
+
+
+public class Main {
+    public static void main(String[] args) {
+        int[] arr = {10, 10, 5, 5, 5, 5, 5, 5, 20, 20, 15};
+
+        int i = 0;
+
+        while (i < arr.length) {
+            int start = i;
+            int count = 1;
+
+            while (i + 1 < arr.length && arr[i] == arr[i + 1]) {
+                count++;
+                i++;
+            }
+
+            if (count > 2) {
+                System.out.println("Element " + arr[start] + " appears from index " + start + " to " + i);
+            }
+
+            i++;
+        }
+    }
+}
+
+
+Element 5 appears from index 2 to 7
 
 
 

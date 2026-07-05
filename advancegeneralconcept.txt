@@ -1,3 +1,230 @@
+Git Fetch	                                               Git Pull
+Downloads latest changes from remote repository.	Downloads and merges changes into the current branch.
+Does not modify your working files.	               Modifies your working files after merging.
+Safe to inspect changes before applying them.           	Directly applies changes to your local branch.
+Command: git fetch origin	                         Command: git pull origin main
+
+
+
+
+
+
+
+
+
+what are the tools available  to develop spring boot microservice  applications
+
+. What happens when you do String s = "Java"; s = s + "8";?
+A new String object is created because the original String cannot be modified.
+
+
+
+String in Java is immutable, which means once created, its content cannot be modified.
+So any operation like +, concat(), or replace() creates a new String object instead of changing the old one
+
+
+
+
+
+String: immutable text object.
+
+new String: always creates a new object.
+
+StringBuffer: mutable and synchronized.
+
+StringBuilder: mutable and not synchronized.
+
+==: compares references for objects.
+
+.equals(): compares content.
+
+
+
+
+
+String a = new String("Java");
+String b = new String("Java");
+
+System.out.println(a == b);       // false
+System.out.println(a.equals(b));  // true
+
+
+
+
+
+
+
+
+
+
+
+Core Spring tools
+Spring Boot for building standalone microservices with embedded servers and fast startup.
+
+Spring Initializr for generating the project skeleton, dependencies, and build setup quickly.
+
+Spring Cloud for microservice features like service discovery, load balancing, circuit breaking, API gateway, and distributed tracing.
+
+Build and run tools
+Maven or Gradle for dependency management and builds.
+
+Embedded server support from Spring Boot so each service runs independently.
+
+Spring Boot CLI for quick prototyping and project startup, often used with Initializr.
+
+Testing tools
+JUnit 5 for unit and integration tests.
+
+Mockito for mocking dependencies.
+
+Spring Boot Test for testing Spring-managed components.
+
+Testcontainers for running real dependencies like databases in containers during tests.
+
+API and communication tools
+Spring Web / Spring WebFlux for REST APIs and reactive services.
+
+Spring Cloud OpenFeign for service-to-service REST calls.
+
+Spring Cloud Stream for event-driven messaging between microservices.
+
+Deployment and ops tools
+Docker to package each microservice in a container.
+
+Kubernetes for orchestration and scaling.
+
+Micrometer for metrics, and Micrometer Tracing for distributed tracing to backends like Prometheus and Zipkin/OpenZipkin
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Functional Interface (Short Points)
+An interface that contains only one abstract method.
+Introduced in Java 8.
+Used for Lambda Expressions and Method References.
+Can have multiple default and static methods.
+
+Common Functional Interfaces
+Predicate → boolean test(T t)
+Consumer → void accept(T t)
+Supplier → T get()
+
+
+
+
+
+
+
+
+Git Merge	                                      Git Rebase
+Combines two branches with a merge commit	Moves your commits on top of another branch
+Keeps complete history	                          Rewrites commit history
+
+Safe for shared/public branches
+                                                 Best for local/private branches
+
+
+
+
+
+
+
+
+
+
+
+OWASP = Open Worldwide Application Security Project — a nonprofit, open community that publishes free tools, guides, and standards to improve application and API security.
+
+Key points (easy):
+
+Purpose: help developers and organizations build and maintain secure apps and APIs.
+
+
+
+
+
+
+
+
+
+
+
+
+approach secure coding and threat mitigation  in spring boot in backend development
+
+Validate all request data with @Valid, bean validation, and server-side checks to stop bad input early.
+
+Use Spring Security for authentication and role-based authorization, with JWT or OAuth2 for stateless APIs.
+
+Hash passwords with BCryptPasswordEncoder; never store plain text passwords.
+
+Protect APIs with HTTPS, secure headers, and proper CORS settings.
+
+Avoid injection risks by using parameterized queries, JPA, and safe escaping where needed.
+
+Keep tokens safe with short expiry, refresh tokens, and secure storage.
+
+Limit abuse with rate limiting and throttling, especially on login and public APIs.
+
+Handle exceptions centrally with @ControllerAdvice and return generic error messages.
+
+Keep dependencies updated and scan for vulnerabilities regularly.
+
+Log suspicious activity and monitor failed logins, unusual traffic, and access patterns.
+
+
+
+
+
+
+
+
+Scan for Vulnerable Libraries (OWASP Dependency-Check)Modern apps use a lot of third-party code. Hackers often exploit known bugs in these old libraries.How to use it: Add the OWASP Dependency-Check Maven/Gradle plugin to your pom.xml or build.gradle. It automatically scans your dependencies during the build process and warns you (or fails the build) if you are using libraries with known security flaws (CVEs).  
+
+
+Stop SQL Injection (Spring Data JPA)Injection attacks happen when untrusted user data tricks your database into executing malicious commands.How to use it: Never concatenate strings to build SQL queries. Instead, use Spring Data JPA (Hibernate). It automatically uses "parameterized queries" under the hood, which safely separates your code from the user's data, neutralizing SQL injection out of the box.  
+
+Enable CSRF Protection & Security HeadersOWASP warns against Cross-Site Request Forgery (CSRF) and missing security configurations.  How to use it: If you are using Spring Security with browser-based clients (like Thymeleaf, React, or Angular), CSRF protection is enabled by default. Furthermore, Spring Security automatically injects essential HTTP security headers (like Strict-Transport-Security and X-Content-Type-Options) into your responses to protect the browser.
+
+
+
+
+
+
+
+
 
 
  Stream API vs Collection in short points:

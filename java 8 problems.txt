@@ -1261,9 +1261,44 @@ public class Main {
 Longest word: programming
 Length: 11
 
+not used .split
 
+public class Main {
+    public static void main(String[] args) {
+        String s = "java is a programming! langua@ge";
 
+        String longestWord = "";
+        String currentWord = "";
+        int maxLen = 0;
 
+        // Loop through every character plus an extra pass at the end to handle the last word
+        for (int i = 0; i <= s.length(); i++) {
+            
+            // Check if we reached a space or the end of the string
+            if (i == s.length() || s.charAt(i) == ' ') {
+                
+                // Compare current word length with the max found so far
+                if (currentWord.length() > maxLen) {
+                    maxLen = currentWord.length();
+                    longestWord = currentWord;
+                }
+                
+                // Reset for the next word
+                currentWord = ""; 
+                
+            } else {
+                // If it's a letter, add it to our current building word
+                char ch = s.charAt(i);
+                if (Character.isLetter(ch)) {
+                    currentWord += ch;
+                }
+            }
+        }
+
+        System.out.println("Longest Word: " + longestWord);
+        System.out.println("Length: " + maxLen);
+    }
+}
 
 
 
@@ -1468,6 +1503,15 @@ for (int i = 0; i < s.length(); i++) {
         counts[ch] = 0; // Prevent printing duplicates again
     }
 }
+
+k:2 a:1 r:1 t:1 h:1 i:1 c:2
+
+
+
+
+
+
+
 
 
 
@@ -1782,6 +1826,59 @@ Output: Reversed: c,b$a
 
 
 
+using stack
+import java.util.Stack;
+
+public class Main {
+    public static void main(String[] args) {
+        String s = "a,b$c";
+        Stack<Character> stack = new Stack<>();
+
+        // Step 1: Push all alphabetical characters into the stack
+        for (char ch : s.toCharArray()) {
+            if (Character.isLetter(ch)) {
+                stack.push(ch);
+            }
+        }
+
+        StringBuilder result = new StringBuilder();
+
+        // Step 2: Reconstruct the string
+        for (char ch : s.toCharArray()) {
+            if (Character.isLetter(ch)) {
+                // Pop the last seen letter (reversing order)
+                result.append(stack.pop());
+            } else {
+                // Keep symbols exactly where they are
+                result.append(ch);
+            }
+        }
+
+        System.out.println("Reversed: " + result.toString());
+    }
+}
+
+
+
+
+Output: Reversed: c,b$a
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Remove Duplicates (Maintaining Order)
 
@@ -1898,27 +1995,27 @@ public class Main {
 }
 
 
-
+find and print the first two unique (non-repeating) characters in the given string str.
 public class Main {
+   public class Main {
     public static void main(String[] args) {
-        String str = "aabbcdef";
+        String s = "karthick";
+        int[] freq = new int[26];
 
-        int count = 0;
+        // Pass 1: Populate frequencies
+        for (char ch : s.toCharArray()) {
+            freq[ch - 'a']++;
+        }
 
-        for (int i = 0; i < str.length(); i++) {
-            boolean unique = true;
+        int count = 0; // Track how many unique characters we've printed
 
-            for (int j = 0; j < str.length(); j++) {
-                if (i != j && str.charAt(i) == str.charAt(j)) {
-                    unique = false;
-                    break;
-                }
-            }
-
-            if (unique) {
-                System.out.println(str.charAt(i));
+        // Pass 2: Find the first two with a count of 1
+        for (char ch : s.toCharArray()) {
+            if (freq[ch - 'a'] == 1) {
+                System.out.println("Non-repeated: " + ch);
                 count++;
 
+                // Stop after finding exactly two
                 if (count == 2) {
                     break;
                 }
@@ -1926,6 +2023,56 @@ public class Main {
         }
     }
 }
+
+
+
+
+public class Main {
+    public static void main(String[] args) {
+        String s = "karthick";
+        int[] freq = new int[26];
+
+        // Pass 1: Populate frequencies
+        for (char ch : s.toCharArray()) {
+            freq[ch - 'a']++;
+        }
+
+        int count = 0; // Track how many repeating characters we've printed
+
+        // Pass 2: Find the first two with a count > 1
+        for (char ch : s.toCharArray()) {
+            if (freq[ch - 'a'] > 1) {
+                System.out.println("Repeated: " + ch);
+                count++;
+
+                // Clear the frequency so we don't print the same character again
+                freq[ch - 'a'] = 0; 
+
+                // Stop after finding exactly two unique repeating characters
+                if (count == 2) {
+                    break;
+                }
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2040,7 +2187,7 @@ public class BinarySearchIntersection {
 
 
 
-
+[4, 9]
 
 
 
@@ -2200,7 +2347,7 @@ public class Main {
 }
 
 
-
+hfh hdh @fhh !bnnh 9jjfj  jj
 
 
 
@@ -2274,7 +2421,15 @@ public class PureCharFrequency {
 
 
 
-
+h = 6
+f = 2
+d = 1
+@ = 1
+n = 2
+b = 1
+! = 1
+j = 4
+9 = 1
 
 
 

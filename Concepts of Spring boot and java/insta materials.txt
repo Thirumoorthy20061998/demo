@@ -1,0 +1,978 @@
+MICROSERVICE PATTERNS - SHORT NOTES
+
+================================================================
+1. API GATEWAY PATTERN
+================================================================
+Purpose: Single entry point for all client requests - routes to
+appropriate microservice, handles auth, rate limiting, logging.
+
+Client -> API Gateway -> Order Service / User Service / Payment Service
+
+Spring Cloud Gateway example:
+@Bean
+public RouteLocator routes(RouteLocatorBuilder builder) {
+    return builder.routes()
+        .route("order-service", r -> r.path("/orders/**")
+            .uri("lb://ORDER-SERVICE"))
+        .build();
+}
+
+Why: Client doesn't need to know internal service URLs, handles
+cross-cutting concerns (auth, rate limit) in one place.
+
+
+================================================================
+2. SERVICE DISCOVERY PATTERN
+================================================================
+Purpose: Services register themselves; other services find them
+dynamically instead of hardcoded IPs (needed since instances scale
+up/down).
+
+Tool: Eureka / Consul
+
+@EnableEurekaClient
+@SpringBootApplication
+public class OrderServiceApplication { }
+
+Feign client calls by service name, not IP:
+@FeignClient(name = "inventory-service")
+public interface InventoryClient {
+    @GetMapping("/stock/{id}")
+    Integer getStock(@PathVariable Long id);
+}
+
+
+================================================================
+3. CIRCUIT BREAKER PATTERN
+================================================================
+Purpose: Prevent cascading failures - if a service is down/slow,
+stop calling it repeatedly, fail fast, return fallback.
+
+Tool: Resilience4j
+
+@CircuitBreaker(name = "inventoryService", fallbackMethod = "fallback")
+public Integer getStock(Long productId) {
+    return inventoryClient.getStock(productId);
+}
+
+public Integer fallback(Long productId, Throwable t) {
+    return -1; // default/cached response
+}
+
+Why: Order Service doesn't hang forever waiting on a broken
+Inventory Service - fails gracefully instead.
+
+
+================================================================
+4. SAGA PATTERN (distributed transactions)
+================================================================
+Purpose: Manage transactions across multiple services without
+2-phase commit - each step publishes event, next step reacts,
+compensating action if failure.
+
+Order Service -> Payment Service -> Shipping Service
+  CREATED    ->    PAID        ->   SHIPPED
+
+If Payment fails:
+  Order Service listens to "PAYMENT_FAILED" event
+  -> compensating transaction: cancel order
+
+Two types:
+- Choreography (event-driven, no central controller) - via Kafka
+- Orchestration (central Saga coordinator service controls flow)
+
+
+================================================================
+5. CQRS (Command Query Responsibility Segregation)
+================================================================
+Purpose: Separate write model (Command) from read model (Query) -
+different DB/schema optimized for each.
+
+Write -> Order Service -> Write DB (normalized, transactional)
+                              |
+                        (event published)
+                              v
+Read  -> Order Read Service -> Read DB (denormalized, fast reads)
+
+Why: Read-heavy dashboards/reports don't slow down write-heavy
+transactional operations.
+
+
+================================================================
+6. EVENT SOURCING
+================================================================
+Purpose: Store state as a sequence of events instead of current
+state only - rebuild state by replaying events.
+
+OrderCreated -> ItemAdded -> PaymentReceived -> OrderShipped
+(each event stored in event store, current state derived by replay)
+
+Why: Full audit trail, can rebuild state at any point in time,
+pairs well with CQRS.
+
+
+================================================================
+7. STRANGLER FIG PATTERN
+================================================================
+Purpose: Gradually migrate a monolith to microservices - route
+some endpoints to new microservice, rest still hit monolith, until
+fully migrated.
+
+API Gateway routes:
+  /api/v2/orders  -> New Order Microservice
+  /api/*          -> Old Monolith (not yet migrated)
+
+Why: Low-risk incremental migration instead of big-bang rewrite.
+
+
+================================================================
+8. DATABASE PER SERVICE
+================================================================
+Purpose: Each microservice owns its own DB - no shared DB across
+services, prevents tight coupling.
+
+Order Service    -> Order DB (PostgreSQL)
+Inventory Service -> Inventory DB (MySQL)
+User Service     -> User DB (MongoDB)
+
+Why: Services can scale/deploy independently, no schema conflicts,
+enforces true service boundaries.
+
+Trade-off: No JOIN across services -> need API calls or events to
+combine data (leads to eventual consistency, Saga pattern).
+
+
+================================================================
+9. BFF (BACKEND FOR FRONTEND)
+================================================================
+Purpose: Separate gateway/API layer per client type (Web, Mobile)
+since they need different response shapes.
+
+Mobile App -> Mobile BFF -> Order/User/Payment services
+Web App    -> Web BFF    -> Order/User/Payment services
+
+Why: Mobile needs lightweight response, Web needs richer data -
+avoids one bloated generic API for all clients.
+
+
+================================================================
+10. SIDECAR PATTERN
+================================================================
+Purpose: Attach helper container (logging, monitoring, proxy) next
+to main service container - common in Kubernetes/Istio.
+
+Pod:
+  [ Order Service Container ]  +  [ Envoy Proxy Sidecar ]
+
+Why: Cross-cutting infra concerns (service mesh, TLS, metrics)
+handled outside app code, app stays focused on business logic.
+
+
+================================================================
+QUICK MAP: PATTERN -> PROBLEM SOLVED
+================================================================
+API Gateway         -> single entry point, routing
+Service Discovery   -> find services dynamically
+Circuit Breaker     -> prevent cascading failures
+Saga                -> distributed transactions
+CQRS                -> separate read/write optimization
+Event Sourcing      -> full state history / audit
+Strangler Fig       -> monolith -> microservice migration
+DB per Service      -> service independence
+BFF                 -> client-specific APIs
+Sidecar             -> offload infra concerns (K8s/Istio)
+
+
+ONE-LINE INTERVIEW ANSWER
+----------------------------------------------------------------
+"Common microservice patterns include API Gateway for routing,
+Service Discovery (Eureka) for dynamic service lookup, Circuit
+Breaker (Resilience4j) for fault tolerance, Saga for distributed
+transactions without 2PC, CQRS for separating read/write models,
+Database-per-service for loose coupling, and Strangler Fig for
+gradual monolith migration."
+
+
+
+
+
+
+Event Sourcing — Implementation in Spring Boot
+Core idea: Don't store current state in a table. Store every event that happened. Current state = replay all events for that entity.
+
+
+@Entity
+@Table(name = "event_store")
+public class EventEntity {
+
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    private String aggregateId;   // e.g., orderId
+    private String eventType;     // "ORDER_CREATED", "ITEM_ADDED", etc.
+    private String payload;       // JSON of event data
+    private LocalDateTime timestamp;
+    private Integer version;      // order of events for this aggregate
+
+    // getters/setters
+}
+
+
+public interface OrderEvent {
+    String getOrderId();
+}
+
+public class OrderCreatedEvent implements OrderEvent {
+    private String orderId;
+    private String customerId;
+    // constructor, getters
+}
+
+public class ItemAddedEvent implements OrderEvent {
+    private String orderId;
+    private String productId;
+    private int quantity;
+    // constructor, getters
+}
+
+public class OrderShippedEvent implements OrderEvent {
+    private String orderId;
+    // constructor, getters
+}
+
+
+public interface EventStoreRepository extends JpaRepository<EventEntity, Long> {
+    List<EventEntity> findByAggregateIdOrderByVersionAsc(String aggregateId);
+}
+
+
+
+
+
+
+
+
+
+jpa auditing implementation
+
+
+
+
+1. Enable auditing on main class or a config class:
+java@Configuration
+@EnableJpaAuditing
+public class JpaAuditConfig {
+}
+2. Create an Auditor-aware bean (to capture "who" from Spring Security):
+java@Component
+public class AuditorAwareImpl implements AuditorAware<String> {
+
+    @Override
+    public Optional<String> getCurrentAuditor() {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return Optional.of("SYSTEM");
+        }
+
+        return Optional.of(authentication.getName());
+    }
+}
+Then wire it into the config:
+java@Configuration
+@EnableJpaAuditing(auditorAwareRef = "auditorAwareImpl")
+public class JpaAuditConfig {
+}
+3. Create a base entity with audit fields:
+java@MappedSuperclass
+@EntityListeners(AuditingEntityListener.class)
+public abstract class Auditable {
+
+    @CreatedDate
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
+
+    @CreatedBy
+    @Column(updatable = false)
+    private String createdBy;
+
+    @LastModifiedBy
+    private String updatedBy;
+
+    // getters, setters
+}
+4. Extend it in your entity:
+java@Entity
+@Table(name = "product")
+public class Product extends Auditable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String name;
+
+    private BigDecimal price;
+
+    // getters, setters
+}
+?
+
+
+
+
+
+
+
+N+1 QUERY PROBLEM
+
+
+N+1 QUERY PROBLEM - FETCH 100 ORDERS
+=========================================
+
+SCENARIO
+--------
+Flipkart admin panel: "Show last 100 orders with customer name and product name."
+
+ENTITIES
+--------
+
+Order.java
+@Entity
+public class Order {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String product;
+    private BigDecimal price;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
+}
+
+Customer.java
+@Entity
+public class Customer {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String name;
+}
+
+BUGGY CODE
+----------
+List<Order> orders = orderRepository.findTop100ByOrderByIdDesc();   // Query 1
+
+for (Order order : orders) {
+    System.out.println(order.getProduct() + " - " + order.getCustomer().getName());
+}
+
+WHAT HAPPENS BEHIND THE SCENES
+-------------------------------
+-- Query 1: fetch 100 orders
+SELECT * FROM order ORDER BY id DESC LIMIT 100;
+
+-- Then for EACH order, Hibernate lazily loads the customer:
+SELECT * FROM customer WHERE id = 501;   -- Query 2
+SELECT * FROM customer WHERE id = 502;   -- Query 3
+SELECT * FROM customer WHERE id = 503;   -- Query 4
+...
+SELECT * FROM customer WHERE id = 600;   -- Query 101
+
+TOTAL = 1 + 100 = 101 queries just to show 100 orders.
+This is the N+1 problem. N = 100 here.
+
+WHY IT'S BAD
+------------
+- Each query = network round trip (say 2ms) -> 100 x 2ms = 200ms wasted
+- Multiply by concurrent users -> DB connection pool exhausted fast
+
+HOW TO DETECT
+-------------
+application.properties:
+spring.jpa.show-sql=true
+logging.level.org.hibernate.SQL=DEBUG
+
+Run the endpoint -> count "SELECT * FROM customer" lines in console.
+If ~100 lines appear -> confirmed N+1.
+
+SOLUTION 1: JOIN FETCH (best fix - ManyToOne, no pagination conflict)
+-----------------------------------------------------------------------
+public interface OrderRepository extends JpaRepository<Order, Long> {
+
+    @Query("SELECT o FROM Order o JOIN FETCH o.customer ORDER BY o.id DESC")
+    List<Order> findTop100WithCustomer(Pageable pageable);
+}
+
+Usage:
+List<Order> orders = orderRepository.findTop100WithCustomer(PageRequest.of(0, 100));
+
+Now only 1 query runs:
+SELECT o.*, c.*
+FROM order o
+JOIN customer c ON o.customer_id = c.id
+ORDER BY o.id DESC
+LIMIT 100;
+
+Result: 101 queries -> 1 query.
+Pagination works fine here because ManyToOne doesn't multiply rows
+(1 order = exactly 1 customer, no cartesian product).
+
+SOLUTION 2: @EntityGraph (cleaner, no JPQL)
+--------------------------------------------
+public interface OrderRepository extends JpaRepository<Order, Long> {
+
+    @EntityGraph(attributePaths = {"customer"})
+    List<Order> findTop100ByOrderByIdDesc();
+}
+
+Same result -> 1 query, customer pre-loaded, no other code changes needed.
+
+BEFORE VS AFTER
+----------------
+Lazy loading (buggy)       -> 101 queries  -> ~200ms+ extra overhead
+JOIN FETCH / EntityGraph   -> 1 query      -> ~2ms
+
+INTERVIEW ONE-LINER
+--------------------
+"Fetching 100 orders lazily loads 100 customers separately - 1+N queries.
+Since Order -> Customer is @ManyToOne (no row multiplication), JOIN FETCH
+or @EntityGraph safely collapses it into a single SQL query with a JOIN,
+even with pagination."
+
+
+
+
+
+
+save(entity)
+   → SimpleJpaRepository.save()
+   → EntityManager.persist() or merge()
+   → Hibernate Session (persistence context)
+   → Dirty checking / SQL generation
+   → JDBC PreparedStatement
+   → Database
+
+
+
+
+
+
+
+
+
+
+
+
+Both configure Spring Boot apps, but differ in format and capability:
+application.properties
+
+Flat key-value format: server.port=8080
+Repetitive for nested config: spring.datasource.url=..., spring.datasource.username=...
+Simpler to read for small configs
+
+application.yml
+
+Hierarchical/nested format using indentation (YAML syntax)
+
+yamlserver:
+  port: 8080
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/db
+    username: root
+
+Cleaner for complex/nested configs
+Supports lists natively:
+
+yamlservers:
+  - dev.example.com
+  - qa.example.com
+
+Supports multiple profiles in a single file using --- separator
+More prone to errors due to strict indentation rules (no tabs allowed)
+
+Key point: Both are functionally equivalent — Spring Boot loads either (yml takes precedence if both exist). Choice is mostly about readability and nesting needs. YAML is generally preferred for larger, profile-heavy configs.
+
+
+
+
+
+cookies:
+small pieces of data that be automatically sent to every request to server for session management, authentication
+
+Local Storage
+
+Storage: ~5-10MB
+Never sent to server automatically
+No expiration — persists until manually cleared
+Accessible only via JavaScript (client-side)
+Use case: storing user preferences, theme settings, cached data
+
+Session Storage
+
+Storage: ~5-10MB
+Never sent to server automatically
+Cleared when tab/browser is closed
+
+
+HTTPS = HTTP + TLS/SSL encryption
+How it works (simplified flow):
+
+Client Hello — Browser requests connection, sends supported TLS versions/cipher suites
+Server Hello — Server responds with its SSL certificate (contains public key)
+Certificate Verification — Browser checks certificate validity via trusted CA (Certificate Authority)
+Key Exchange — Browser generates a symmetric session key, encrypts it with server's public key, sends it over
+Server Decrypts — Server uses its private key to decrypt and get the session key
+Secure Communication — Both sides now use the shared symmetric session key to encrypt/decrypt all data (faster than asymmetric encryption)
+
+Asymmetric encryption (public/private key pair) — used only during handshake to safely exchange the symmetric key
+Port — HTTPS uses port 443 (vs HTTP's port 80)
+
+
+"HTTPS uses asymmetric encryption to securely exchange a symmetric key during the TLS handshake, then uses that symmetric key for fast, encrypted data transfer
+
+
+
+
+Database maintains a sorted structure (usually a B-Tree) mapping email → row location. Now it can jump directly to the matching row, like using the book's index.
+not understand
+
+
+
+No worries, let's slow down with a concrete example.
+Setup: employees table
+Row LocationidemailRow 1101zara@x.comRow 2102anil@x.comRow 3103thiru@x.comRow 4104mahesh@x.com
+Notice — the table is stored in insertion order, not alphabetical order. So if you search WHERE email = 'thiru@x.com', the database has no way to guess where it is. It must check Row 1, Row 2, Row 3... one by one until it finds a match. That's the "flip every page" problem.
+
+Now add an index on email
+The index is a separate, smaller structure — sorted alphabetically — that just stores two things: the email value, and where that row actually lives.
+Index (sorted by email):
+anil@x.com    → Row 2
+mahesh@x.com  → Row 4
+thiru@x.com   → Row 3
+zara@x.com    → Row 1
+Think of this like a phone book. Names are sorted A-Z, and next to each name is a page number telling you where their full address is.
+
+Search using the index
+Query: WHERE email = 'thiru@x.com'
+
+Database looks in the index (not the table)
+Since the index is sorted, it can do a binary search — jump to the middle, check if "thiru" comes before or after, narrow down — similar to how you'd flip to the "T" section of a phone book directly, not start from "A"
+Index says: thiru@x.com → Row 3
+Database jumps directly to Row 3 in the actual table
+
+No scanning Row 1, 2 first. Straight to Row 3.
+
+Why "B-Tree" specifically?
+A B-Tree is just the sorted structure shape used to store that index efficiently — like a tree of branching folders, so even with millions of rows, the database only needs a few comparisons (not thousands) to find the right one. 
+
+
+
+Leftmost Prefix Rule:
+In a composite index (col1, col2, col3), the query must filter using columns starting from the leftmost column in order for the index to be used. Skipping the first column makes the index unusable.
+
+
+
+Why too many indexes cause problems:
+
+Slower writes – Every INSERT/UPDATE/DELETE must update all indexes on that table, not just the data. More indexes = more overhead per write.
+More storage – Each index takes disk space, sometimes as much as the table itself.
+
+
+REST API DESIGN  BEST PRACTICES
+
+Use clear resource URIs
+
+Nouns, not verbs: /users, /orders/123, /products/10/reviews.
+
+Map HTTP methods correctly
+
+GET = read, POST = create, PUT/PATCH = update, DELETE = delete.
+
+Return proper HTTP status codes
+
+200/201 success, 400 bad request, 401/403 auth, 404 not found, 409 conflict, 500 server error.
+
+Use consistent JSON formats
+
+Same naming convention (camelCase or snake_case), predictable response structure.
+
+Design stateless APIs
+
+Each request must contain all required context; server doesn’t store session state.
+
+Validate and sanitize inputs
+
+Strong validation, clear error messages, avoid security issues (SQL injection, etc.).
+
+Implement proper error handling
+
+Standard error body: code, message, optional details field.
+
+Support pagination, filtering, sorting
+
+For collections: ?page=, ?size=, ?sort=, ?filter=.
+
+Secure every endpoint
+
+HTTPS only, authentication (JWT/OAuth2), authorization per role/scope.
+
+Use versioning
+
+Example: /api/v1/... or version in header; don’t break old clients silently.
+
+Use caching where appropriate
+
+HTTP caching headers or server‑side caches (e.g., Redis) for read‑heavy endpoints.
+
+Provide good documentation
+
+OpenAPI/Swagger, clear examples, request/response schemas, error codes.
+
+
+ClassLoader:
+“A ClassLoader is a part of the JVM responsible for loading Java classes into memory at runtime. It reads .class files and makes them available to the application.”
+stackoverflow
++2
+
+If you don’t declare main as static, the program compiles but will not run, and the JVM throws an error saying a valid public static void main(String[] args) method is missing.
+
+
+
+
+WHAT HAPPEN IF REMOVE PRIMARY KEYS IN SQL TABLE WITH HAVE 100 MILLION RECORDS?
+
+Yes. If you remove the Primary Key from a table with 100 million rows:
+
+Duplicate rows can be inserted.
+
+NULL values may be allowed (if not separately restricted).
+
+Search, join, update, and delete operations can become slower because the PK index is removed.
+
+Foreign keys referencing that PK may break or prevent removal.
+
+The operation may take time and lock the table on large datasets.
+
+
+
+
+
+No. @Autowired does not work on static fields.
+
+Spring injects dependencies into bean instances, not static variables.
+Static fields belong to the class, not an object.
+Therefore, @Autowired cannot inject into static fields.
+
+
+
+
+
+
+
+JOIN FETCH is preferred over EAGER because:
+
+EAGER loads the association every time, even when you don't need it.
+JOIN FETCH loads related data only for a specific query.
+It avoids the N+1 query problem without making all queries fetch unnecessary data.
+Best practice: Keep relationships LAZY and use JOIN FETCH only where required.
+
+
+
+
+
+A marker interface (also known as a tagging interface) is an empty interface—it contains absolutely no methods, fields, or constants.
+
+java.io.SerializableTells Java that this object's state is safe to be converted into a byte stream (saved to a file or sent over a network).java.lang.CloneableTells Java that it is allowed to make a field-for-field copy (clone) of this object.
+
+
+
+
+
+
+
+
+
+
+When you have two implementations of the same interface and use @Qualifier, Spring uses it to resolve the ambiguity that would otherwise cause a NoUniqueBeanDefinitionException.
+
+
+
+
+
+
+
+
+
+
+DATABASE SCALING IN SPRING BOOT - SUMMARY NOTES
+=================================================
+
+1. REPLICATION (Read Replicas)
+-------------------------------
+PROBLEM IT SOLVES:
+- Too many READS (order tracking, dashboards, driver polling)
+- Single DB can't handle all read traffic
+
+HOW IT WORKS IN SPRING BOOT:
+- 1 Primary DB (writes) + N Replica DBs (reads)
+- Use AbstractRoutingDataSource to pick DB at runtime
+- @Transactional(readOnly = true) -> routes to Replica
+- @Transactional -> routes to Primary
+- Routing done via ThreadLocal (DataSourceContextHolder)
+- Aspect (@Before @Transactional) auto-sets read/write flag
+- Developer just writes normal @Transactional annotations,
+  no manual routing code needed
+
+ADVANTAGE:
+- Before: 1 DB does everything -> slows down under load
+- After: writes stay fast on primary, reads spread across replicas
+- If primary fails, replica can be promoted (High Availability)
+
+LIMITATION:
+- Does NOT fix write bottleneck (all writes still go to 1 primary)
+- Replication lag issue: user writes then reads immediately,
+  may hit stale replica -> fix with "read-your-writes" 
+  (force next read to Primary for that session)
+
+
+2. SHARDING (Data Partitioning)
+--------------------------------
+PROBLEM IT SOLVES:
+- Too many WRITES or too much DATA for even one primary+replica setup
+- Example: millions of orders/shipments across entire country
+
+HOW IT WORKS IN SPRING BOOT:
+- Split data by business key, e.g. region_id (South/North/West)
+- Each shard = fully separate DB with its own primary
+- AbstractRoutingDataSource again, but key = shard name
+- ShardContextHolder (ThreadLocal) set manually before DB call
+  based on resolveShard(stateCode) logic
+- Repository/Service code stays unchanged
+
+ADVANTAGE:
+- Before: 1 primary holds ALL data -> huge tables, slow writes
+- After: each shard holds a fraction of data -> faster writes,
+  scales horizontally (add more shards as you grow)
+
+LIMITATION:
+- Cross-shard queries are hard (e.g. "total orders nationwide")
+- Needs scatter-gather across shards, OR
+- CDC (Debezium/Kafka) replicate into single analytics DB
+  for reporting/dashboards
+
+
+3. QUICK DECISION TABLE
+-------------------------
+Too many READS, DB slow            -> Replication
+Too many WRITES / too much data    -> Sharding
+Both problems together (real apps) -> Sharding + Replication combined
+                                       (each shard has its own 
+                                        primary + read replicas)
+
+
+4. KEY TAKEAWAY (INTERVIEW ANSWER)
+------------------------------------
+Both solutions use the SAME core Spring mechanism:
+AbstractRoutingDataSource
+
+It sits below @Repository/@Service layer and silently picks
+the correct physical DB connection.
+
+Business logic (ShipmentService, OrderService) never changes.
+No rewriting queries. No touching JPA entities.
+
+Only need to:
+- Mark methods readOnly=true for replica routing
+- Set ShardContextHolder value for shard routing
+
+This proves scaling is an INFRASTRUCTURE/ROUTING decision,
+not something that touches application business logic.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+APPLICATION LAYER FIXES (Before/Alongside DB Scaling)
+========================================================
+
+SCENARIO 1: "Too many READS, DB is slow"
+------------------------------------------
+
+FIX 1 - CACHING (biggest impact, do this FIRST)
+- Add cache in front of DB so repeated reads don't hit DB at all
+- Spring Boot: @Cacheable annotation + Redis/Caffeine
+
+  Example:
+  @Cacheable(value = "shipmentStatus", key = "#shipmentId")
+  public ShipmentStatus trackShipment(String shipmentId) {
+      return shipmentRepository.findStatusById(shipmentId);
+  }
+
+  - First call -> hits DB, stores result in Redis
+  - Next calls -> served from Redis, DB never touched
+  - Use @CacheEvict when data changes (status update)
+
+  WHERE TO USE IN LOGISTICS APP:
+  - Shipment tracking status (changes every few hours, not every second)
+  - Warehouse/pincode master data (rarely changes)
+  - Pricing/rate cards
+
+FIX 2 - PAGINATION (stop loading huge result sets)
+  Example:
+  Page<Order> orders = orderRepository.findByCustomerId(
+      customerId, PageRequest.of(page, 20));
+  - Never SELECT * without LIMIT
+  - Reduces DB load per query drastically
+
+FIX 3 - PROJECTION / DTO QUERIES (fetch only needed columns)
+  Example:
+  @Query("SELECT new com.app.dto.ShipmentSummary(s.id, s.status) 
+          FROM Shipment s WHERE s.id = :id")
+  ShipmentSummary getSummary(@Param("id") String id);
+  - Instead of loading full entity with 30 columns,
+    fetch only 2-3 needed fields -> less DB work, less network
+
+FIX 4 - CONNECTION POOL TUNING (HikariCP)
+  spring.datasource.hikari.maximum-pool-size=20
+  spring.datasource.hikari.minimum-idle=5
+  - Reuse DB connections instead of opening new ones per request
+  - Prevents connection exhaustion under read load
+
+FIX 5 - N+1 QUERY FIX (very common real bug)
+  - Use JOIN FETCH or @EntityGraph instead of lazy-loading
+    child entities one by one in a loop
+  Example:
+  @EntityGraph(attributePaths = {"orderItems"})
+  Optional<Order> findWithItemsById(String id);
+  - Turns 100 queries into 1 query
+
+
+SCENARIO 2: "Too many WRITES, or too much data, DB is slow"
+--------------------------------------------------------------
+
+FIX 1 - ASYNC PROCESSING (don't make writes block the request)
+  Example:
+  @Async
+  public void logTrackingEvent(TrackingEvent event) {
+      trackingEventRepository.save(event);
+  }
+  - Controller returns response immediately
+  - Actual DB write happens in background thread
+  - Good for: GPS ping logs, audit logs, non-critical writes
+
+FIX 2 - MESSAGE QUEUE (Kafka/RabbitMQ) - decouple write from DB
+  Flow:
+  Driver App -> Controller -> Kafka Topic -> Consumer -> DB (batched)
+
+  Example:
+  @PostMapping("/tracking-event")
+  public ResponseEntity<Void> receiveEvent(@RequestBody TrackingEvent e) {
+      kafkaTemplate.send("tracking-events", e);   // fast, non-blocking
+      return ResponseEntity.accepted().build();
+  }
+  - App layer absorbs traffic spikes, DB writes happen at steady rate
+  - Best fix for high-frequency writes like GPS tracking (1 ping/30 sec/driver)
+
+FIX 3 - BATCH INSERTS (instead of 1 insert per record)
+  spring.jpa.properties.hibernate.jdbc.batch_size=50
+  spring.jpa.properties.hibernate.order_inserts=true
+
+  Example:
+  @Transactional
+  public void saveEventsBatch(List<TrackingEvent> events) {
+      trackingEventRepository.saveAll(events);
+      // With batch_size set, Hibernate groups these into
+      // fewer round-trips to DB instead of 1-by-1
+  }
+
+FIX 4 - WRITE-BEHIND CACHE / BUFFER IN MEMORY
+  - Collect events in memory (e.g., a queue/buffer)
+  - Flush to DB every N seconds or every N records, not on every single write
+  Example use case: GPS location pings - don't write every ping,
+  buffer last-known-location, flush every 10 sec
+
+FIX 5 - BULK/BATCH API DESIGN (reduce number of write calls)
+  - Instead of: 100 separate POST /order calls
+  - Design: 1 POST /orders/bulk call with array of 100 orders
+  - Fewer HTTP round trips -> fewer separate transactions
+
+
+SIDE-BY-SIDE: APPLICATION LAYER vs DB LAYER
+==============================================
+                    App Layer Fix              DB Layer Fix
+Too many reads      Caching (Redis)             Read Replicas
+                     Pagination/Projection
+                     Fix N+1 queries
+
+Too many writes     Async + Kafka queue         Sharding
+                     Batch inserts
+                     Bulk APIs
+
+
+KEY INTERVIEW POINT
+======================
+Always mention: "Before scaling the DATABASE (replicas/sharding),
+first optimize the APPLICATION layer (caching, batching, async,
+query optimization) - it's cheaper, faster to implement, and
+often solves 70-80% of the problem without infra changes."
+
+This shows you think about COST and SIMPLICITY, not just
+throwing more infrastructure at a problem.
+
+
+
+
+
+
+you added @transactioonal in spring boot data is still inconsistent how short easy reason
+
+
+
+Most common reason: self-invocation. Spring's @Transactional uses proxies — if a method inside the same class calls another @Transactional method (like this.saveData()), the proxy is bypassed and no transaction wraps it.
+
+Other quick checks:
+
+Method not public — Spring proxies (JDK/CGLIB) only intercept public methods by default.
+Wrong exception type — by default, rollback only happens on unchecked (RuntimeException), not checked exceptions. Fix: @Transactional(rollbackFor = Exception.class).
+Different transaction managers / datasources — if you have multiple DataSources, make sure the right PlatformTransactionManager is picked.
+Async/new thread call — @Async methods run in a different thread, transaction context doesn't propagate.

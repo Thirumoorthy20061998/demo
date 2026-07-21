@@ -1,4 +1,306 @@
- 
+ Paribas:  Bhvj4f_U?%.5.w3
+
+
+
+public class MergeSortedArray {
+
+    // Merge nums2 into nums1, assuming nums1 has size m + n
+    public static void merge(int[] nums1, int m, int[] nums2, int n) {
+        int i = m - 1;        // last valid index in nums1
+        int j = n - 1;        // last index in nums2
+        int k = m + n - 1;    // last index in nums1 (total length)
+
+        // Merge from the back
+        while (i >= 0 && j >= 0) {
+            if (nums1[i] > nums2[j]) {
+                nums1[k] = nums1[i];
+                i--;
+            } else {
+                nums1[k] = nums2[j];
+                j--;
+            }
+            k--;
+        }
+
+        // If nums2 still has elements, copy them
+        // (If nums1 has remaining elements, they are already in place)
+        while (j >= 0) {
+            nums1[k] = nums2[j];
+            j--;
+            k--;
+        }
+    }
+
+    public static void main(String[] args) {
+        int[] nums1 = {1, 2, 3, 0, 0, 0};
+        int m = 3;
+        int[] nums2 = {2, 5, 6};
+        int n = 3;
+
+        merge(nums1, m, nums2, n);
+
+        // Print result
+        System.out.print("Merged nums1: ");
+        for (int x : nums1) {
+            System.out.print(x + " ");
+        }
+        // Output: Merged nums1: 1 2 2 3 5 6
+    }
+}
+
+
+
+
+
+public class ReverseLettersOnly {
+
+    public static void reverseLetters(String[] s) {
+        int left = 0;
+        int right = s.length - 1;
+
+        while (left < right) {
+            // Move left until it points to a non-digit (letter)
+            while (left < right && isDigit(s[left])) {
+                left++;
+            }
+            // Move right until it points to a non-digit (letter)
+            while (left < right && isDigit(s[right])) {
+                right--;
+            }
+
+            // Now s[left] and s[right] are non-digits, swap them
+            if (left < right) {
+                String temp = s[left];
+                s[left] = s[right];
+                s[right] = temp;
+                left++;
+                right--;
+            }
+        }
+    }
+
+    // Helper: is this String a digit character?
+    private static boolean isDigit(String str) {
+        if (str == null || str.length() != 1) {
+            return false;
+        }
+        char c = str.charAt(0);
+        return Character.isDigit(c);
+    }
+
+    public static void main(String[] args) {
+        String[] s = {"t","u","d","2","l","y"};
+
+        reverseLetters(s);
+
+        for (String ch : s) {
+            System.out.print(ch + " ");
+        }
+        // Output: y l d 2 u t
+    }
+}
+
+
+
+
+
+
+
+public class ReverseLettersOnly {
+
+    public static void reverseLetters(String[] s) {
+        int left = 0;
+        int right = s.length - 1;
+
+        while (left < right) {
+            // Move left until it points to a letter
+            while (left < right && !isLetter(s[left])) {
+                left++;
+            }
+            // Move right until it points to a letter
+            while (left < right && !isLetter(s[right])) {
+                right--;
+            }
+
+            // Now s[left] and s[right] are letters, swap them
+            if (left < right) {
+                String temp = s[left];
+                s[left] = s[right];
+                s[right] = temp;
+                left++;
+                right--;
+            }
+        }
+    }
+
+    private static boolean isLetter(String str) {
+        if (str == null || str.length() != 1) {
+            return false;
+        }
+        char c = str.charAt(0);
+        return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+    }
+
+    public static void main(String[] args) {
+        String[] s = {"t","u","d","2","l","y"};
+
+        reverseLetters(s);
+
+        for (String ch : s) {
+            System.out.print(ch + " ");
+        }
+        // Output: y l d 2 u t
+    }
+}
+
+
+
+
+
+
+public class MergeSortedArrays {
+    public static void main(String[] args) {
+        int[] s = {2, 4, 7, 9};
+        int[] s1 = {3, 5, 6, 8};
+
+        int[] result = merge(s, s1);
+
+        for (int num : result) {
+            System.out.print(num + " ");
+        }
+    }
+
+    public static int[] merge(int[] a, int[] b) {
+        int n = a.length;
+        int m = b.length;
+        int[] merged = new int[n + m];
+
+        int i = 0, j = 0, k = 0;
+
+        while (i < n && j < m) {
+            if (a[i] <= b[j]) {
+                merged[k++] = a[i++];
+            } else {
+                merged[k++] = b[j++];
+            }
+        }
+
+        while (i < n) {
+            merged[k++] = a[i++];
+        }
+
+        while (j < m) {
+            merged[k++] = b[j++];
+        }
+
+        return merged;
+    }
+}
+
+
+
+
+
+we had to build the linked list structure completely from scratch.
+
+* You are given an array of k linked-lists lists, each linked-list is sorted in
+         * ascending order.
+         * 
+         * Merge all the linked-lists into one sorted linked-list and return it.
+         * 
+         * 
+         * Example 1:
+         * 
+         * Input: lists = [[1,4,5],[1,3,4],[2,6]] Output: [1,1,2,3,4,4,5,6] Explanation:
+         * The linked-lists are: [ 1->4->5, 1->3->4, 2->6 ] merging them into one sorted
+         * linked list: 1->1->2->3->4->4->5->6 Example 2:
+         * 
+         * Input: lists = [] Output: []
+
+
+solution
+// A simple custom Linked List node since we cannot use any packages
+class ListNode {
+    int val;
+    ListNode next;
+    
+    ListNode(int val) {
+        this.val = val;
+        this.next = null;
+    }
+}
+
+public class Main {
+    
+    public static ListNode mergeTwoLists(ListNode list1, ListNode list2) {
+        ListNode dummy = new ListNode(0); // Dummy node to simplify head creation
+        ListNode current = dummy;
+
+        while (list1 != null && list2 != null) {
+            if (list1.val <= list2.val) {
+                current.next = list1;
+                list1 = list1.next;
+            } else {
+                current.next = list2;
+                list2 = list2.next;
+            }
+            current = current.next;
+        }
+
+        // Append remaining nodes from either list
+        if (list1 != null) {
+            current.next = list1;
+        } else if (list2 != null) {
+            current.next = list2;
+        }
+
+        return dummy.next;
+    }
+
+    public static void main(String[] args) {
+        // list1 = [1, 4, 5]
+        ListNode list1 = new ListNode(1);
+        list1.next = new ListNode(4);
+        list1.next.next = new ListNode(5);
+
+        // list2 = [1, 3, 4]
+        ListNode list2 = new ListNode(1);
+        list2.next = new ListNode(3);
+        list2.next.next = new ListNode(4);
+
+        // list3 = [2, 6]
+        ListNode list3 = new ListNode(2);
+        list3.next = new ListNode(6);
+
+        // lists = [[1,4,5], [1,3,4], [2,6]]
+        ListNode[] lists = new ListNode[]{list1, list2, list3};
+
+        ListNode result = null;
+
+        for (int i = 0; i < lists.length; i++) {
+            result = mergeTwoLists(result, lists[i]);
+        }
+
+        ListNode temp = result;
+        while (temp != null) {
+            System.out.print(temp.val + " ");
+            temp = temp.next;
+        }
+    }
+}
+
+
+
+1 1 2 3 4 4 5 6
+
+
+
+
+
+
+
+
+
 
 eature	Arrays.asList(array)	new ArrayList<>(...)
 Size	Fixed	Resizable
@@ -1673,6 +1975,39 @@ public class Main {
 }
 
 
+or
+import java.util.Arrays;
+
+public class Main {
+    public static void main(String[] args) {
+        int[] arr = {1, 0, 2, 0, 3, 0, 4};
+        
+        int insertPos = 0;
+        
+        // Single-pass swap approach (Eliminates Step 2)
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i] != 0) {
+                // Swap elements at i and insertPos
+                int temp = arr[i];
+                arr[i] = arr[insertPos];
+                arr[insertPos] = temp;
+                
+                insertPos++;
+            }
+        }
+        
+        System.out.println(Arrays.toString(arr));
+    }
+}
+
+
+
+
+
+
+
+
+
 Output: [1, 2, 3, 4, 0, 0, 0]
 
 
@@ -1704,7 +2039,35 @@ public class Main {
 
 
 Output: [0, 0, 0, 1, 2, 3, 4]
+or
 
+
+
+import java.util.Arrays;
+
+public class Main {
+    public static void main(String[] args) {
+        int[] arr = {1, 0, 2, 0, 3, 0, 4};
+        
+        // Start from the very last index of the array
+        int insertPos = arr.length - 1;
+        
+        // Traverse backwards from right to left
+        for (int i = arr.length - 1; i >= 0; i--) {
+            if (arr[i] != 0) {
+                // Swap the non-zero element with the element at insertPos
+                int temp = arr[i];
+                arr[i] = arr[insertPos];
+                arr[insertPos] = temp;
+                
+                insertPos--;
+            }
+        }
+        
+        System.out.println(Arrays.toString(arr));
+        // Output: [0, 0, 0, 1, 2, 3, 4]
+    }
+}
 
 
 
@@ -4921,6 +5284,24 @@ public class PalindromeChecker {
 
 
 
+class ListNode {
+    int val;
+    ListNode next;
+    
+    ListNode(int val) { 
+        this.val = val; 
+    }
+
+
+
+ListNode head = new ListNode(1);
+        head.next = new ListNode(3);
+        head.next.next = new ListNode(4);
+        head.next.next.next = new ListNode(2);
+        head.next.next.next.next = new ListNode(4);
+        head.next.next.next.next.next = new ListNode(3);
+        head.next.next.next.next.next.next = new ListNode(5);
+
 public class ReverseLinkedList {
     public ListNode reverseList(ListNode head) {
         ListNode prev = null;
@@ -4934,6 +5315,26 @@ public class ReverseLinkedList {
         return prev;
     }
 }
+
+public static void printList(ListNode head) {
+        ListNode current = head;
+        while (current != null) {
+            System.out.print(current.val);
+            if (current.next != null) {
+                System.out.print(" -> ");
+            }
+            current = current.next;
+        }
+        System.out.println(" -> null");
+    }
+
+
+
+
+
+
+
+
 
 
 
@@ -5036,25 +5437,36 @@ public static void main(String[] args) {
 
 
 
-mport java.util.*;
 
+
+import java.util.HashSet;
+import java.util.Set;
+
+// 1. Node representation
 class Node {
     int data;
     Node next;
-    Node(int d) { data = d; }
+    
+    Node(int d) { 
+        data = d; 
+        next = null;
+    }
 }
 
+// 2. LinkedList implementation with the loop extraction logic
 class LinkedList {
     Node head;
 
-    // Detect and remove loop using HashSet
+    // Detect and remove loop using a HashSet
     void detectAndRemoveLoop() {
         Set<Node> visited = new HashSet<>();
-        Node prev = null, curr = head;
+        Node prev = null;
+        Node curr = head;
 
         while (curr != null) {
+            // If the node is already in the set, we've found the start of the loop
             if (visited.contains(curr)) {  
-                prev.next = null; // break the loop
+                prev.next = null; // Break the link to sever the loop
                 return;
             }
             visited.add(curr);
@@ -5062,7 +5474,75 @@ class LinkedList {
             curr = curr.next;
         }
     }
+
+    // Safe print utility that guards against infinite loops
+    void printListSafe() {
+        Set<Node> visited = new HashSet<>();
+        Node curr = head;
+        while (curr != null) {
+            if (visited.contains(curr)) {
+                System.out.println("... points back to Node(" + curr.data + ") [LOOP]");
+                return;
+            }
+            System.out.print(curr.data + " -> ");
+            visited.add(curr);
+            curr = curr.next;
+        }
+        System.out.println("null");
+    }
 }
+
+// 3. Execution point using direct node instances
+public class Main {
+    public static void main(String[] args) {
+        // Create the unique node instances
+        Node head = new Node(10);
+        Node n2 = new Node(20);
+        Node n3 = new Node(30);
+        Node n4 = new Node(40);
+        Node n5 = new Node(50);
+
+        // Link them to form a linear path
+        head.next = n2;
+        n2.next = n3;
+        n3.next = n4;
+        n4.next = n5;
+
+        // Intentionally inject the loop cycle (50 points back to 30)
+        n5.next = n3; 
+
+        // Pass the structural setup straight into your algorithm
+        LinkedList solver = new LinkedList();
+        solver.head = head;
+        
+        System.out.print("Input Structure:  ");
+        solver.printListSafe();
+        
+        // Execute the fix
+        solver.detectAndRemoveLoop();
+
+        System.out.print("Output Structure: ");
+        solver.printListSafe();
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

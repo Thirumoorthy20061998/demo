@@ -1,0 +1,236 @@
+None selected
+
+Skip to content
+Using Programming.com Mail with screen readers
+Enable desktop notifications for Programming.com Mail.
+   OK  No thanks
+
+5 of 317
+(no subject)
+Inbox
+
+Thirumoorthy Muthu <thirumoorthy.muthu@programming.com>
+Attachments
+Jul 15, 2026, 4:19 PM (5 days ago)
+to me
+
+
+ 3 Attachments
+  •  Scanned by Gmail
+what is application context? 
+
+
+ApplicationContext as the Control Room & Smart Factory of your entire Spring application.
+
+It is the main container that:
+
+Creates and Holds: It holds all the objects (Beans) like a warehouse.
+
+Wires Up: It acts as the electrician that plugs dependencies into each other.
+
+Manages the Lifecycle: It controls when components turn on (@PostConstruct) and turn off (@PreDestroy).
+
+
+
+Method B: The @Configuration Class (Explicit)
+Sometimes you use third-party libraries (like a database driver or an external API client) where you can't go into their code and add @Component. You create them manually inside a configuration class:
+
+Java
+@Configuration
+public class KitchenConfig {
+
+    @Bean // <-- Tells Spring: "The object returned here is now a Bean!"
+    public ObjectMapper customObjectMapper() {
+        return new ObjectMapper(); 
+    }
+}
+
+
+
+
+
+
+The Step-by-Step Lifecycle
+When you start your Spring Boot application, every single Bean goes through this exact sequence:
+
+[ 1. Instantiation ] ➔ [ 2. Populate Properties ] ➔ [ 3. Awareness Methods ]
+                                                               ↓
+[ 6. Destruction ]   ➔ [ 5. Ready for Use ]     ➔ [ 4. Initialization ]
+1. Instantiation (Birth)
+Spring finds your class (usually via annotations like @Component or @Bean) and creates an instance of it by calling its constructor.
+
+Analogy: The object is physically born into memory, but it doesn't have its tools yet.
+
+2. Populate Properties (Getting Tools)
+Spring looks for any fields marked with @Autowired or @Value and injects those dependencies into your bean.
+
+Analogy: Giving the person their laptop and tools so they can do their job.
+
+3. Awareness Methods (Identity Check)
+If your bean needs to know about the Spring container itself, it can implement "Aware" interfaces. For example, BeanNameAware tells the bean its own name, and ApplicationContextAware gives it a handle to the entire Spring environment.
+
+4. Initialization (Training)
+This is where you can run custom setup code after your dependencies are injected but before the application starts using the bean. This happens in three sub-steps:
+
+@PostConstruct: A method marked with this annotation runs first. (Most common approach).
+
+InitializingBean: If your class implements this interface, its afterPropertiesSet() method runs next.
+
+Custom initMethod: A custom initialization method specified in @Bean(initMethod = "...").
+
+5. Ready for Use (Adult Life)
+The bean is fully formed and lives inside the Application Context. It stays here, handling requests or doing background work, until the application shuts down.
+
+6. Destruction (Retirement)
+When the Spring application stops, it safely shuts down the beans. You can write cleanup code (like closing database connections or clearing caches) using:
+
+@PreDestroy: A method marked with this annotation runs first.
+
+DisposableBean: If your class implements this interface, its destroy() method runs next.
+
+Custom destroyMethod: A custom method specified in @Bean(destroyMethod = "...").
+
+Code Example
+Here is a complete, real-world example showing all these phases in action.
+
+
+
+}
+What you see in the logs when you start and stop the app:
+Plaintext
+➔ 1. Instantiation: Constructor called.
+➔ 3. Awareness: My bean name is 'myCustomBean'.
+➔ 4a. Initialization: @PostConstruct method executed.
+➔ 4b. Initialization: InitializingBean's afterPropertiesSet() executed.
+➔ 5. In Use: Bean is performing its actual duty.
+
+[Application Shuts Down]
+
+➔ 6a. Destruction: @PreDestroy method executed.
+➔ 6b. Destruction: DisposableBean's destroy() executed.
+
+
+
+
+
+taking example of report generator   explain clearly prototype
+
+
+
+A Report Generator is actually the perfect textbook case for why the Prototype scope exists.
+
+Let's put on our developer hats and look at why a Singleton would cause a disaster here, and how Prototype saves the day.
+
+The Scenario: The End-of-Month Reports
+Imagine you have a Spring Boot application where managers can click a button to download a customized PDF report of their department's expenses.
+
+Building a report takes time. Your ReportGenerator class needs to hold on to temporary data—like the report title, the specific manager's name, and a list of database rows—while it formats everything into a PDF.
+
+What happens if we use the default Singleton scope?
+If ReportGenerator is a Singleton, Spring only creates one generator for the entire company.
+
+Alice (HR Manager) clicks "Generate Report". The Singleton generator sets its title to "HR Expenses" and starts gathering Alice's data.
+
+Two milliseconds later, Bob (IT Manager) clicks "Generate Report". The exact same Singleton generator overwrites the title to "IT Expenses" and starts mixing Bob's data into the same list.
+
+Alice receives a PDF titled "IT Expenses" containing a bizarre mix of HR and IT data. You just caused a massive data leak.
+
+Because the ReportGenerator holds "state" (the specific data being processed), it is not thread-safe.
+
+The Fix: @Scope("prototype")
+We need to tell Spring: "Every single time I ask for a ReportGenerator, build me a brand new, empty one."
+
+
+
+
+No. By default, a Singleton is NOT automatically stateless.
+
+Spring does not enforce statelessness. Whether a Singleton is stateless or stateful depends 100% on how you, the developer, write the code inside the class.
+
+
+NO. Spring Singletons are NOT automatically thread-safe.
+
+
+
+How to make a Singleton Thread-Safe
+To keep your Singletons thread-safe, you must make them Stateless.
+
+A bean is stateless when it doesn't store any data across method calls. Instead of saving data in class variables, you pass the data directly into the methods.
+
+Here is the exact same service, written safely:
+
+Java
+@Service // Still a Singleton
+public class UserGreetingService {
+
+    // SAFE: No class-level variables! The bean has no "memory".
+
+    public String generateGreeting(String incomingName) {
+        // SAFE: 'formattedName' is a local variable. 
+        // Local variables are stored on the thread's own stack, not shared!
+        String formattedName = incomingName.trim(); 
+        
+        return "Welcome to the dashboard, " + formattedName + "!";
+    }
+}
+The Golden Rules for Singletons:
+Never use class-level variables (private String myData;) to store data that changes per user or per request.
+
+Do use class-level variables for other beans (private final UserRepository repo;), because the repository is also a stateless singleton.
+
+Do use class-level variables for constant configuration (private final String API_URL = "...";), because constants never change.
+
+
+
+
+
+Request Scope (@RequestScope) sits right in the middle. It means: "Create one brand new instance for every HTTP Request that hits the server. When the HTTP request is finished and the response is sent to the user, destroy the bean."
+
+Imagine you have a complex microservice. An HTTP request comes in from a user, and it has to travel through a Controller, to OrderService, to PaymentService, and finally to NotificationService.
+
+If you use @RequestScope: Spring creates ONE tracker bean the moment the HTTP request starts. The Controller, OrderService, and PaymentService all share that exact same bean for that specific HTTP request. When the request ends, the bean is thrown away.
+
+The Multi-Tenant SaaS (Software as a Service) Application.
+The Scenario: Building a system like Shopify or Salesforce
+Imagine you built a CRM application. You have two different corporate clients: Nike and Adidas.
+
+They both use your exact same API, your exact same code, and the exact same database.
+
+Nike sends an API request to [nike.mycrm.com/api/customers](https://nike.mycrm.com/api/customers).
+
+Adidas sends an API request to [adidas.mycrm.com/api/customers](https://adidas.mycrm.com/api/customers).
+
+
+
+
+
+
+
+
+
+
+
+When a user visits your app, Tomcat gives their browser a unique cookie (usually called JSESSIONID). As long as they keep sending that cookie with their requests, Spring knows it's the same user. A Session-Scoped bean survives across multiple HTTP requests from the exact same user, and is only destroyed when they log out or close their browser for a long time.
+
+session scope:
+
+The Real-World Scenario: The E-Commerce Shopping Cart
+Imagine you are building Amazon.
+
+The user clicks "Add to Cart" on a laptop (HTTP Request 1).
+
+The user browses to a new page and clicks "Add to Cart" on a mouse (HTTP Request 2).
+
+The user goes to the Checkout page (HTTP Request 3).
+
+If you used Request Scope: The cart would empty itself every time they clicked a new link.
+
+If you used Singleton: The entire world would share one massive shopping cart.
+
+If you use Session Scope: Spring creates one cart for Alice. Alice can click around the site making 50 different HTTP requests, and Spring will keep routing her to her specific cart.
+
+
+
+
+spring bean.txt
+Displaying ListUserOrderRow tableData = Arrays.txt.

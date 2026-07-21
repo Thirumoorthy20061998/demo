@@ -1,0 +1,352 @@
+====================================================
+JAVA MEMORY ARCHITECTURE - CHEAT SHEET
+====================================================
+
+BIG PICTURE
+----------------------------------------------------
+   JVM memory splits into TWO main categories:
+
+   1. THREAD-SHARED memory (global, all threads 
+      access it)
+   2. THREAD-PRIVATE memory (local, one copy per 
+      thread, threads can't see each other's copy)
+
+
+1. THREAD-SHARED MEMORY (GLOBAL)
+----------------------------------------------------
+   Created when the JVM starts. Accessible by 
+   EVERY thread in the application.
+
+  A. HEAP MEMORY
+  --------------------------------
+  * What it is:
+      The massive central storage pool where ALL 
+      objects live.
+
+  * Usage:
+      Every time you use `new` (e.g. new String(), 
+      new ArrayList()), the object is allocated 
+      inside the Heap.
+
+  * Key Behavior:
+      Primary target zone for the Garbage 
+      Collector (GC). When an object loses all 
+      active references, GC automatically cleans 
+      it up.
+
+  * Crash Error:
+      java.lang.OutOfMemoryError: Java heap space
+
+
+  B. METHOD AREA / METASPACE (Modern Java)
+  --------------------------------
+  * What it is:
+      The metadata repository of the application.
+
+  * Usage:
+      Stores class structures, method data, the 
+      runtime constant pool, and static variables.
+
+  * Key Behavior:
+      - Old Java: called PermGen (Permanent 
+        Generation), had a FIXED size.
+      - Modern Java: called Metaspace, allocates 
+        memory DYNAMICALLY from native system RAM.
+
+
+2. THREAD-PRIVATE MEMORY (LOCAL)
+----------------------------------------------------
+   Allocated individually for EVERY new Thread 
+   created. Threads cannot see into each other's 
+   private memory areas.
+
+  A. JAVA STACK MEMORY
+  --------------------------------
+  * What it is:
+      A fast, LIFO (Last-In, First-Out) structure 
+      dedicated to execution flow tracking.
+
+  * Usage:
+      - Holds primitive local variables 
+        (e.g. int x = 5)
+      - Holds references/pointers to objects 
+        sitting in the Heap
+      - Every method call -> pushes a new 
+        "Stack Frame"
+      - Method returns -> frame is popped off, 
+        variables disappear instantly
+
+  * Crash Error:
+      Infinite recursion -> stack overflows -> 
+      java.lang.StackOverflowError
+
+
+  B. PC (PROGRAM COUNTER) REGISTER
+  --------------------------------
+  * What it is:
+      A tiny pointer tracking execution.
+
+  * Usage:
+      Holds the memory address of the specific 
+      JVM instruction currently being executed 
+      by THAT specific thread.
+
+
+  C. NATIVE METHOD STACK
+  --------------------------------
+  * What it is:
+      A separate stack for non-Java code.
+
+  * Usage:
+      Handles native code instructions written in 
+      languages like C or C++, invoked via JNI 
+      (Java Native Interface).
+
+
+QUICK VISUAL MAP
+----------------------------------------------------
+   JVM MEMORY
+   |
+   |-- THREAD-SHARED (global)
+   |     |-- Heap             (objects, GC target)
+   |     |-- Method Area /    (class metadata,
+   |         Metaspace         static vars)
+   |
+   |-- THREAD-PRIVATE (per thread)
+         |-- Java Stack        (local vars, frames)
+         |-- PC Register       (current instruction)
+         |-- Native Method     (C/C++ via JNI)
+             Stack
+
+
+REMEMBER THIS LINE
+----------------------------------------------------
+   Heap = shared warehouse for ALL objects (GC 
+   cleans it).
+   Stack = private notebook per thread, tracking 
+   method calls (erased instantly when method 
+   returns).
+
+====================================================
+
+
+
+
+
+====================================================
+JAVA VARIABLES & MEMORY LOCATIONS
+====================================================
+
+BIG PICTURE
+----------------------------------------------------
+   Where a variable is stored depends ONLY on 
+   WHERE it is declared -- NOT on its data type.
+
+
+1. LOCAL VARIABLES
+----------------------------------------------------
+  * What they are:
+      Declared inside a method, constructor, or 
+      code block.
+
+  * Where they store:
+      Always on the STACK (inside that method's 
+      own stack frame).
+
+  * Memory Lifespan:
+      Temporary -- created when the method runs, 
+      disappear instantly when the method finishes.
+
+  * Note:
+      - Primitive local var (int x = 5) 
+            -> value stored on Stack
+      - Object reference local var (List list) 
+            -> reference/pointer on Stack, 
+               actual object on Heap
+
+
+2. INSTANCE VARIABLES (NON-STATIC FIELDS)
+----------------------------------------------------
+  * What they are:
+      Declared inside a class but outside any 
+      method. Belong to a SPECIFIC object instance.
+
+  * Where they store:
+      Always on the HEAP.
+
+  * Memory Lifespan:
+      Live inside the object itself. Stay in 
+      memory as long as the parent object exists 
+      on the Heap. Wiped out when GC deletes 
+      the object.
+
+
+3. STATIC VARIABLES (CLASS VARIABLES)
+----------------------------------------------------
+  * What they are:
+      Declared inside a class with the `static` 
+      keyword. Belong to the CLASS itself, shared 
+      across all instances.
+
+  * Where they store:
+      In the METASPACE (inside the Class 
+      structure metadata).
+
+  * Memory Lifespan:
+      Created when the class is first loaded by 
+      the JVM. Stay in memory until the 
+      application shuts down.
+
+
+QUICK RECALL CODE EXAMPLE
+----------------------------------------------------
+   public class MemoryDemo {
+
+       // 1. STATIC VARIABLE -> Stored in Metaspace
+       public static int globalCounter = 100;
+
+       // 2. INSTANCE VARIABLE -> Stored on Heap
+       public String studentName = "Raj";
+
+       public void processData() {
+
+           // 3. LOCAL VARIABLE -> Stored on Stack
+           int localId = 5;
+
+           // 4. LOCAL OBJECT REFERENCE
+           //    -> Pointer on Stack,
+           //       actual object on Heap
+           Student s = new Student();
+       }
+   }
+
+
+QUICK RECALL TABLE
+----------------------------------------------------
+  VARIABLE TYPE   DECLARATION LOCATION      MEMORY LOCATION
+  --------------------------------------------------------
+  Local           Inside a Method            Stack
+  Instance        Inside a Class (no static)  Heap
+  Static          Inside a Class (static)     Metaspace
+
+
+REMEMBER THIS LINE
+----------------------------------------------------
+   Local      -> lives and dies with the METHOD
+   Instance   -> lives and dies with the OBJECT
+   Static     -> lives and dies with the CLASS 
+                 (basically the whole app)
+
+====================================================
+
+
+
+
+
+
+
+The Garbage Collector (GC) Cheat Sheet
+1. How the GC Decides an Object is "Dead"
+The GC uses a strategy called Reachability Analysis.
+
+It starts at a set of root pointers called GC Roots (like active local variables on the Stack, or active threads).
+
+It traces all connected object references out from those roots like a graph.
+
+If an object cannot be reached by tracing from any active GC Root, it is considered unreachable ("dead") and is marked for deletion.
+
+
+
+Can you force Garbage Collection manually in Java?
+Answer: No, you cannot force it. You can call System.gc(), but this is merely a suggestion to the JVM. The JVM decides when to actually run the collection based on real memory pressure. Calling it explicitly in code is bad practice.
+
+Q2: What is a "Stop-the-World" (STW) event?
+Answer: When the GC runs certain phase cleanups, it must completely freeze all application threads to safely move objects around without references breaking. Minimizing STW pause times is the main goal of modern production garbage collectors like G1 and ZGC.
+
+
+
+
+
+
+====================================================
+JAVA 21 KEY FEATURES - INTERVIEW CHEAT SHEET
+====================================================
+
+1. VIRTUAL THREADS (Project Loom) - THE GAME CHANGER
+----------------------------------------------------
+  * What it is:
+      Light-weight threads managed by the JVM 
+      itself, rather than the Operating System (OS).
+
+  * The Problem it Solves:
+      Traditional Java platform threads are 
+      resource-heavy (~1MB each), so a server 
+      could handle only a few thousand before 
+      running out of memory.
+
+  * The Benefit:
+      Virtual threads are incredibly cheap. You 
+      can spin up MILLIONS of concurrent virtual 
+      threads on a single machine. Standard 
+      blocking code (REST/DB calls) can scale 
+      heavily without needing complex reactive 
+      programming frameworks.
+
+
+2. SEQUENCED COLLECTIONS - CLEAN API UPDATE
+----------------------------------------------------
+  * What it is:
+      A new set of unified interfaces 
+      (SequencedCollection, SequencedSet, 
+      SequencedMap) representing collections with 
+      a defined ordering.
+
+  * The Benefit:
+      Previously, getting the last element was 
+      messy and differed between List, 
+      LinkedHashSet, and Deque. Now there's ONE 
+      standard way across all of them:
+
+      List<String> list = new ArrayList<>();
+      list.getFirst();   // Gets index 0 cleanly
+      list.getLast();    // Gets final element cleanly
+      list.reversed();   // Iterates backward perfectly
+
+
+3. RECORD PATTERNS - SMARTER DESTRUCTURING
+----------------------------------------------------
+  * What it is:
+      Extends pattern matching to break down 
+      (destructure) Record instances directly 
+      inside conditional checks.
+
+  * The Benefit:
+      Avoids manual getter calls or casting 
+      boilerplate.
+
+      // Traditional: check instance, cast, 
+      // call getters manually
+
+      // Java 21 way:
+      if (obj instanceof User(String name, int age)) {
+          System.out.println(name + " is " + age);
+          // Direct access to variables, created instantly!
+      }
+
+
+
+
+5. GENERATIONAL ZGC (Z GARBAGE COLLECTOR)
+----------------------------------------------------
+  * What it is:
+      Upgrades the ZGC memory manager to split the 
+      heap into separate generations (Young and 
+      Old objects).
+
+  * The Benefit:
+      Cleans transient, short-lived objects much 
+      more frequently. Minimizes "Stop-the-World" 
+      application pauses, targeting near-zero 
+      millisecond pause times even with 
+      multi-gigabyte heaps.
+

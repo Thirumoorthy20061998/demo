@@ -1,0 +1,688 @@
+An ArrayList in Java is essentially a dynamic array. Unlike a standard array that has a fixed size, an ArrayList can grow and shrink automatically as you add or remove elements.
+
+Here is exactly how it works under the hood:
+
+1. The Core Storage
+Internally, an ArrayList uses a standard Object array (Object[] elementData) to store its items. When you create an empty ArrayList without specifying a size, it starts with a default capacity of 10 (though it stays empty until you add the first item).
+
+2. The Dynamic Resize (The Magic)
+When you try to add an item but the internal array is completely full, the ArrayList automatically resizes itself using these steps:
+
+Calculates New Capacity: It calculates a new size that is 1.5 times the old size. (Formula: New Capacity = Old Capacity + (Old Capacity >> 1)).
+
+Creates a New Array: It allocates a brand-new, larger Object[] array in memory.
+
+Copies the Data: It uses Arrays.copyOf() to copy all existing elements from the old array into the new one.
+
+Updates Reference: It points its internal elementData reference to this new array, and the old one is left for garbage collection.
+
+
+"Why is ArrayList not thread-safe?"
+ArrayList is not synchronized. If two threads try to add() or remove() from it simultaneously, the internal state (like the size counter or the array structure) can get corrupted, leading to ConcurrentModificationException or data loss.
+
+How to fix it? Use Collections.synchronizedList(new ArrayList<>()) or CopyOnWriteArrayList (for thread-safe scenarios).
+
+
+
+
+
+
+What happens if you have an ArrayList of 1 million items and you remove the first element?"The Trap: Many people think it's $O(1)$.The Truth: It is $O(n)$. Because the element at index 0 is removed, every single other element (999,999 of them) must be shifted one position to the left.
+
+3. "Why is ArrayList not thread-safe?"ArrayList is not synchronized. If two threads try to add() or remove() from it simultaneously, the internal state (like the size counter or the array structure) can get corrupted, leading to ConcurrentModificationException or data loss.How to fix it? Use Collections.synchronizedList(new ArrayList<>()) or CopyOnWriteArrayList (for thread-safe scenarios).
+
+
+
+"How can you optimize an ArrayList if you know the number of elements in advance?"
+The Answer: Always use the constructor that accepts initial capacity, e.g., new ArrayList<>(1000);.
+
+Why? This prevents the "resize and copy" operation from happening repeatedly. If you don't set it, the array will keep resizing (10 -> 15 -> 22 -> 33...), which wastes CPU cycles on array copying.
+
+
+
+
+
+
+                              ArrayList	                                                                    Vector (Legacy)
+Synchronization	Not Synchronized. It is not thread-safe.	Synchronized. Every structural method (add, remove, etc.) is thread-safe.
+Performance	Fast. Because there is no locking overhead, it runs at maximum speed.	Slow. The synchronization overhead bottlenecks performance, even in single-threaded apps.
+Resizing Growth	Increases its capacity by 50% (1.5x) when full.	Doubles its capacity by 100% (2x) when full.
+Introduction	Added in Java 1.2 as part of the modern Collections Framework.	Present since Java 1.0 (Legacy class).
+
+
+
+
+The 3 Rules of How it Works Internally
+1. Scattered Memory (Not a Block)When you create a Linked List, the computer does not allocate one big chunk of memory. It allocates tiny, individual pockets of memory wherever it can find space.
+2. The "Node" AnatomyEach pocket of memory is called a Node. It is strictly split into two halves:The Data Box: Stores the actual value (e.g., the number 42 or a String).The Pointer Box: Stores the exact memory address of where the next node is hiding.
+3. The LinksThe Start (Head): The computer only remembers the memory address of the very first node. That's your entry point.The Middle: To find the third item, the computer must go to the first node, read its pointer to find the second node, and then read the second node's pointer to find the third.The End (Null): The very last node stores null (zero/nothing) in its pointer box. 
+
+This tells the computer, "Stop, the hunt is over."Why does the interviewer care? (The Payoff)Want to add an item at the beginning? It takes $O(1)$ constant time. You just create a new node, point it to the old Head, and make the new node the Head. No other elements have to move.Want to find an item in the middle? It takes $O(N)$ linear time. You can't skip ahead because you don't know where the next node is until you read the current one. You have to walk the chain link by link.
+
+
+IN ARRAYLIST:
+
+The Direct Formula MathBecause all elements are parked right next to each other in one unbroken block, the computer doesn't need to follow clues. It calculates the exact location instantly using this internal formula:$$\text{Element Address} = \text{Base Address of Array} + (\text{Index} \times \text{Size of Data Type})$$
+
+
+LinkedList: Starts with nothing. When you add an element, it allocates memory for exactly one node and hooks it to the chain. It grows organically, one node at a time.
+
+
+
+
+
+
+
+
+
+
+
+
+
+HashMap:
+
+The Core Concept (The "Elevator Pitch")A HashMap is an array of buckets where each bucket points to a linked list (or a tree) of entries. It provides $O(1)$ average time complexity for both get() and put() operations by using hashing to find the array index directly.
+
+
+
+
+====================================================
+JAVA HASHMAP - WALKTHROUGH EXAMPLE (put/get)
+====================================================
+
+Imagine your HashMap is an array with 16 slots 
+(buckets) numbered 0 to 15.
+
+
+STEP 1: You call map.put("Apple", 100);
+----------------------------------------------------
+You are telling Java to store the key "Apple" with 
+the value 100.
+
+
+STEP 2: Java finds the Bucket Number
+----------------------------------------------------
+Java cannot just put "Apple" anywhere; it needs a 
+specific slot number between 0 and 15.
+
+  - It calls "Apple".hashCode() which generates a 
+    large number (e.g., 67392).
+  - It runs a quick math formula: 
+        67392 % 16 (Array Length)
+  - Let's say the result is Index 4.
+        -> Slot 4 is your target bucket.
+
+
+STEP 3: Checking Slot 4 (The 3 Scenarios)
+----------------------------------------------------
+
+  Scenario A: Slot 4 is EMPTY
+  --------------------------------
+  Java creates a small object called a Node containing 
+  ("Apple", 100). It places this Node directly into 
+  Slot 4. Done!
+
+  Scenario B: Slot 4 has data (Collision), 
+              different key
+  --------------------------------
+  Imagine "Banana" is already sitting in Slot 4.
+    - Java compares: Does "Apple".equals("Banana")? No.
+    - Java links them together. It attaches the new 
+      "Apple" Node to the bottom of the "Banana" Node 
+      like a chain (Linked List).
+
+  Scenario C: Slot 4 has data, SAME key
+  --------------------------------
+  Imagine ("Apple", 50) was already sitting in Slot 4.
+    - Java compares: Does "Apple".equals("Apple")? Yes.
+    - Java simply replaces the old value 50 with the 
+      new value 100. No new node is created.
+
+
+STEP 4: The Advanced "Upgrade" (Java 8+)
+----------------------------------------------------
+If you get highly unlucky and 8 different keys end up 
+in Slot 4, the chain becomes too long and slow to 
+search through.
+
+  - Java automatically upgrades Slot 4 from a straight 
+    chain (Linked List) into a mini-search tree 
+    (Red-Black Tree).
+  - This keeps lookups lightning fast even when 
+    collisions happen.
+
+
+HOW map.get("Apple") WORKS:
+----------------------------------------------------
+It does the exact same steps in reverse:
+
+  1. Calculates the hash code for "Apple" 
+        -> finds Slot 4.
+  2. Goes to Slot 4 and looks at the keys using 
+     .equals().
+  3. Finds "Apple" and returns 100.
+
+====================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+====================================================
+JAVA HASHMAP - INTERNAL WORKING NOTES
+====================================================
+
+1. THE CORE INFRASTRUCTURE
+----------------------------------------------------
+* Array Structure   : Internally, a HashMap is an array 
+                       of Node objects (often called Buckets).
+
+* Default Capacity   : The default array size is 16 
+                       (always grows as a power of 2: 
+                       16 -> 32 -> 64).
+
+* What is a Node?     A small object that holds 4 pieces 
+                       of data:
+                       1. int hash   -> The processed hash code
+                       2. K key      -> The user's key
+                       3. V value    -> The user's value
+                       4. Node next  -> Pointer to the next 
+                                        node in case of collision
+
+
+2. HOW put(key, value) WORKS STEP-BY-STEP
+----------------------------------------------------
+* Step A (Hashing):
+    Java calls key.hashCode() and applies a secondary 
+    hash function to scramble the bits (minimizes 
+    collisions).
+
+* Step B (Index Mapping):
+    It calculates the exact array slot using the fast 
+    bitwise formula:
+        Index = hash & (capacity - 1)
+
+* Step C (Handling the Bucket):
+    - If bucket is empty:
+          The node is placed directly at that index.
+
+    - If bucket has a duplicate key:
+          Java finds it using key.equals(), overwrites 
+          the value, and stops.
+
+    - If bucket has a collision (different key):
+          It uses Separate Chaining to append the new 
+          node to the end of a Linked List at that index.
+
+
+3. THE PERFORMANCE TUNING (ADVANCED CONFIGURATION)
+----------------------------------------------------
+* Load Factor (Default 0.75):
+    The threshold that decides when the map is getting 
+    too full.
+
+* Rehashing:
+    When the map hits the threshold (e.g., 12 out of 16 
+    buckets filled), the array capacity doubles. A new 
+    array is created, and all existing elements are 
+    re-mapped to new indexes.
+
+* Treeification (Java 8+):
+    If a single Linked List chain grows greater than 8 
+    elements (and total map capacity is >= 64), Java 
+    upgrades that specific bucket into a balanced 
+    Red-Black Tree. This drops worst-case lookup time 
+    from O(n) to O(log n).
+
+====================================================
+
+
+
+if i want insert key apple value 50 and another key apple value 100
+
+in different buckets its possible 
+
+
+
+No, it is not possible to insert the same key (apple) into two different buckets.
+
+
+The Rule of Determinism
+Same Key = Same Hash Code: The string "apple" will always produce the exact same hash code value every single time you calculate it during the program's execution.
+
+Same Hash Code = Same Bucket: Because the bucket index is calculated using a strict mathematical formula (Index = hash & (capacity - 1)), the same hash code will always point to the exact same bucket number.
+
+
+equals() — The Identicator
+Why we use it: To confirm whether two objects are exactly identical in value, not just sharing the same bucket.
+
+Usage in HashMap:
+
+Once Java navigates to the specific bucket using the hash code, it faces a chain of nodes (due to collisions).
+
+Java uses key.equals(currentNode.key) to walk down the chain until it finds the exact match.
+
+
+
+Tricky Question 1: "If two objects have the same hashCode, are they always equal?"
+The Answer: No.
+
+Tricky Question 2: "If two objects are equal via .equals(), can they have different hash codes?"
+The Answer: Absolutely not.
+
+Tricky Question 3: "What happens if a hashCode() method always returns a constant value, like return 42;?"The Answer: The HashMap will still function correctly, but performance degrades completely to $O(n)$ or $O(\log n)$.The Explanation: Because every single key returns 42, every single entry will map to the exact same bucket index. Your beautiful, fast HashMap turns into one giant, slow Linked List (or Red-Black Tree) in that single bucket. The constant time lookup benefit is entirely lost.
+
+
+Tricky Question 4: "Can you use a mutable (changeable) object as a HashMap key?"
+The Answer: You can, but it is highly dangerous and considered bad practice.
+
+
+
+Tricky Question 1: "What happens if you override hashCode() but forget to override equals()?"
+
+====================================================
+BUG: OVERRIDE hashCode() BUT FORGET equals()
+====================================================
+
+SETUP: Two separate objects, same content
+----------------------------------------------------
+
+   new Apple("A")                    new Apple("A")
+   hashCode = 555                    hashCode = 555
+   address  = 0x001                  address  = 0x002
+
+        \                                  /
+         \                                /
+          \-----> Bucket 4 <-------------/
+                (both hash to
+                 the same bucket)
+
+
+CHECK: equals() was NOT overridden
+----------------------------------------------------
+   Java falls back to Object.equals()
+   which only compares MEMORY ADDRESSES (==)
+
+        0x001  ==  0x002   ?   NO (different addresses)
+
+
+RESULT: Java treats them as different keys
+----------------------------------------------------
+
+   Bucket 4:
+   +---------------------+     +---------------------+
+   | Node 1: Apple "A"   | --> | Node 2: Apple "A"    |
+   | address: 0x001      |     | address: 0x002       |
+   +---------------------+     +---------------------+
+
+   -> Two nodes for what SHOULD be the same key
+   -> This is a DUPLICATE KEY bug
+
+
+
+
+====================================================
+Q4: CAN hashCode() RETURN A RANDOM NUMBER EVERY TIME?
+====================================================
+
+SHORT ANSWER: Technically yes, but it BREAKS HashMap.
+It violates the hashCode-equals contract.
+----------------------------------------------------
+
+
+THE RULE HASHCODE MUST FOLLOW
+----------------------------------------------------
+   If obj.equals(obj) is true,
+   then obj.hashCode() MUST return the 
+   SAME value every time, for the SAME object.
+
+   (as long as the object's fields don't change)
+
+
+WHAT HAPPENS IF hashCode() IS RANDOM
+----------------------------------------------------
+
+  map.put("Apple", 100);
+        |
+        v
+  hashCode() call #1 -> returns 555 -> goes to Bucket 4
+  (Node stored in Bucket 4)
+
+
+  map.get("Apple");
+        |
+        v
+  hashCode() call #2 -> returns 999 (random again!)
+  -> Java looks in Bucket 9 (wrong bucket)
+  -> Bucket 9 is empty
+  -> returns null
+
+  RESULT: You just inserted "Apple" but get() 
+  says it doesn't exist!
+
+REMEMBER THIS LINE
+----------------------------------------------------
+   hashCode() is a PROMISE: 
+   "I will always point to the same street 
+    for the same object."
+
+   Break that promise (random hashCode) -> 
+   the map can never find its way back to 
+   what it stored.
+
+====================================================
+
+
+
+
+
+Why do we need both?
+
+hashCode() is used to find the bucket.
+
+equals() is used to find the exact key within that bucket (in case of a collision).
+
+Rule: If you override equals(), you must override hashCode(). If you don't, two identical keys might return different hash codes, ending up in different buckets, effectively breaking the Map.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ConcurrentHashMap is neither "synchronous" nor "asynchronous" — it's thread-safe with fine-grained locking.
+
+
+
+ConcurrentHashMap Internal Configuration & Working
+1. The Core Infrastructure (Modern Java 8+)
+Array Structure: Like HashMap, it uses an internal array of nodes (Buckets) that can transition into Red-Black Trees if a bucket length exceeds 8.
+
+No Global Locking: Unlike the legacy Hashtable, it never locks the entire map. Multiple threads can read and write at the exact same time.
+
+2. How it Achieves Thread Safety (The Mechanics)
+Bucket-Level Locking (Fine-Grained Locking): Instead of locking the whole structure, it uses the standard Java synchronized keyword to lock only the specific bucket head node being written to.
+
+Example: If Thread A is inserting into Bucket 4, only Bucket 4 is locked. Thread B can freely insert into Bucket 7 at the exact same moment without waiting.
+
+CAS Operations (Compare-And-Swap): When a thread tries to insert an element into an empty bucket, it does not use locks at all. Instead, it uses a low-level, high-speed CPU operation called CAS to insert the node atomically.
+
+Lock-Free Reads: The internal node values and pointers are marked with the volatile keyword. This ensures that any thread reading from the map always sees the absolute latest update instantly, allowing get() operations to happen completely lock-free.
+
+"While Hashtable locks the whole map (low concurrency) and HashMap has no locks (not thread-safe), ConcurrentHashMap strikes the perfect balance. It uses volatile variables for lock-free reads, CAS for empty buckets, and synchronized blocks on individual bucket heads to maximize thread concurrency."
+
+
+
+
+====================================================
+LINKEDHASHMAP - INTERNAL CONFIGURATION & WORKING
+====================================================
+
+QUICK MEMORY TRICK FOR INTERVIEWS
+----------------------------------------------------
+   LinkedHashMap = HashMap + Doubly Linked List
+
+   - Gives O(1) speed of a HashMap
+   - PLUS preserves insertion order of elements
+
+
+1. THE CORE INFRASTRUCTURE
+----------------------------------------------------
+
+* Inheritance:
+    LinkedHashMap extends HashMap.
+    It inherits all the hashing infrastructure:
+        - array of buckets
+        - index calculation logic
+        - resizing behavior
+
+* The Node Structure (Upgraded):
+    A standard HashMap.Node only has:
+        - next  -> points to next node in a 
+                   collision chain
+
+    LinkedHashMap.Entry adds TWO EXTRA pointers:
+        1. Entry before  -> points to the element 
+                             inserted right BEFORE 
+                             this one
+        2. Entry after   -> points to the element 
+                             inserted right AFTER 
+                             this one
+
+* The Global Chain:
+    These before/after pointers link ALL entries 
+    in the entire map together into one single, 
+    GLOBAL Doubly Linked List.
+
+    This is separate from the bucket/chain structure 
+    used for collisions -- it exists purely to 
+    preserve insertion order.
+
+
+VISUAL MENTAL MODEL
+----------------------------------------------------
+
+   Bucket array (like normal HashMap):
+   ------------------------------------------------
+   [0]   [1]   [2]   [3]   [4]   [5] ...
+                       |
+                    "Apple"
+
+   Doubly Linked List (insertion order), separate 
+   from the bucket layout:
+   ------------------------------------------------
+   head <-> "Apple" <-> "Banana" <-> "Cherry" <-> tail
+             (1st)        (2nd)        (3rd)
+
+   -> Even though "Apple" might be in Bucket 3 and 
+      "Banana" might be in Bucket 9 (far apart in 
+      the array), the before/after pointers keep 
+      them in the correct INSERTION ORDER when you 
+      iterate.
+
+
+KEY TAKEAWAY FOR INTERVIEWS
+----------------------------------------------------
+   HashMap:        fast, but NO guaranteed order
+   LinkedHashMap:   same speed, PLUS predictable 
+                    insertion-order iteration
+                    (achieved via extra before/after 
+                    pointers forming a global 
+                    doubly linked list)
+
+====================================================
+
+
+
+
+
+====================================================
+HASHTABLE - INTERNAL CONFIGURATION & WORKING
+====================================================
+
+QUICK MEMORY TRICK FOR INTERVIEWS
+----------------------------------------------------
+   Hashtable = HashMap's older, synchronized cousin
+
+   - Legacy class (JDK 1.0), predates the 
+     Collections Framework
+   - Every method is synchronized -> thread-safe 
+     but SLOWER than HashMap
+   - Does NOT allow null key or null values 
+     (HashMap allows 1 null key + many null values)
+
+
+1. THE CORE INFRASTRUCTURE
+----------------------------------------------------
+
+* Array Structure:
+    Internally also an array of "buckets", similar 
+    to HashMap, based on the principle of hashing.
+
+* Default Capacity:
+    11 (not a power of 2 like HashMap's 16).
+    Grows using formula: (oldCapacity * 2) + 1
+
+* Synchronization:
+    Every public method (put, get, remove, etc.) 
+    is marked `synchronized`. Only ONE thread can 
+    access the Hashtable at a time.
+
+
+2. HOW put(key, value) WORKS
+----------------------------------------------------
+* Step A: Calls key.hashCode() to compute the hash.
+* Step B: Maps to a bucket index.
+* Step C: 
+    - If key is null  -> throws NullPointerException
+    - If value is null -> throws NullPointerException
+    - If bucket empty -> node placed directly
+    - If collision    -> Separate Chaining (Linked 
+                         List), same idea as HashMap
+
+
+3. KEY DIFFERENCES: HASHTABLE vs HASHMAP
+----------------------------------------------------
+
+  FEATURE            HASHTABLE          HASHMAP
+  ------------------------------------------------
+  Thread-safe         YES (sync)         NO
+  Null key            NOT allowed        1 allowed
+  Null values         NOT allowed        allowed
+  Introduced in       JDK 1.0            JDK 1.2
+  Performance         Slower (locking)   Faster
+  Iterator type       Enumerator +       Fail-fast
+                       Fail-fast          Iterator
+  Legacy status       Considered         Modern, 
+                       obsolete           preferred
+
+
+4. WHEN TO USE WHAT
+----------------------------------------------------
+   Single-threaded app       -> use HashMap
+   Multi-threaded app        -> use ConcurrentHashMap
+                                 (NOT Hashtable)
+   Legacy codebase           -> Hashtable may still 
+                                 appear, but avoid 
+                                 for new code
+
+
+REMEMBER THIS LINE
+----------------------------------------------------
+   Hashtable locks the WHOLE table for every 
+   operation (like one cashier for the entire 
+   store). ConcurrentHashMap uses fine-grained 
+   locking (multiple checkout counters) -> that's 
+   why ConcurrentHashMap replaced Hashtable in 
+   modern concurrent code.
+
+====================================================
+
+
+
+
+
+
+
+
+
+
+
+The Core Difference (The 1-Sentence Summary)
+CompletableFuture: An in-memory utility used to run tasks asynchronously within a single running application.
+
+Apache Kafka: A distributed streaming platform used to send data asynchronously across completely different servers and microservices.
+
+
+
+
+
+
+
+
+COMPLETABLEFUTURE vs EXECUTORSERVICE
+====================================================
+
+QUICK MEMORY TRICK
+----------------------------------------------------
+   ExecutorService  -> manages the THREAD POOL 
+                        (WHO runs the task)
+   CompletableFuture -> manages the ASYNC WORKFLOW 
+                        (WHAT happens after the 
+                         task completes)
+
+   They are NOT competitors -- CompletableFuture 
+   is usually built ON TOP of an ExecutorService.
+
+
+
+ExecutorService (Java 5):
+    - Higher-level replacement for manually 
+      creating Threads.
+    - Manages a pool of worker threads.
+    - Submits tasks via execute() / submit().
+    - Returns a plain Future<T> for submit().
+    - Handles thread lifecycle: creation, reuse, 
+      shutdown.
+
+* CompletableFuture (Java 8):
+    - Represents the RESULT of an async 
+      computation.
+    - Built on top of ForkJoinPool.commonPool() 
+      by default (or your own ExecutorService).
+    - Lets you CHAIN and COMBINE async tasks 
+      without blocking.
+
+
+
+KEY DIFFERENCE: BLOCKING vs NON-BLOCKING
+----------------------------------------------------
+
+  PLAIN FUTURE (from ExecutorService):
+  ------------------------------------------------
+    Future<String> f = executor.submit(() -> doWork());
+    String result = f.get();   // BLOCKS the thread
+                                // until task finishes
+
+  COMPLETABLEFUTURE:
+  ------------------------------------------------
+    CompletableFuture<String> cf = 
+        CompletableFuture.supplyAsync(() -> doWork());
+
+    cf.thenAccept(result -> System.out.println(result));
+    // NON-BLOCKING callback -- runs automatically 
+    // when the task completes
+
+
+
+
+ HOW THEY WORK TOGETHER
+----------------------------------------------------
+   ExecutorService executor = Executors.newFixedThreadPool(4);
+
+   CompletableFuture<String> cf = 
+       CompletableFuture.supplyAsync(() -> "Hello", executor);
+
+   -> Here, CompletableFuture handles the WORKFLOW,
+      but the actual task still runs on YOUR 
+      ExecutorService thread pool.
+
+
+
+

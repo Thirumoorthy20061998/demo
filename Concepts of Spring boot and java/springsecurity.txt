@@ -1,0 +1,616 @@
+"Spring Security + JWT is stateless authentication. Client logs in once, gets a signed token, and sends it in the Authorization header on every request. We validate the token in a custom filter before Spring Security's default auth flow kicks in — no session, no server-side state."
+
+
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-api</artifactId>
+    <version>0.12.5</version>
+</dependency>
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-impl</artifactId>
+    <version>0.12.5</version>
+    <scope>runtime</scope>
+</dependency>
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-jackson</artifactId>
+    <version>0.12.5</version>
+    <scope>runtime</scope>
+</dependency>
+
+
+
+dofilter:
+
+Think of doFilter as the green light that tells a request, "You are cleared to move to the next step."
+
+Inside a security filter, filterChain.doFilter(request, response) literally means: "I am done checking this request. Pass it along to the next bouncer in line, or let it finally reach the Controller."
+
+
+Without the call: The filter chain breaks, halting execution, and the client receives an empty response.
+
+
+
+
+
+
+┌─────────────────────────────────────────────────────────────────┐
+│                     REGISTRATION / LOGIN FLOW                     │
+└─────────────────────────────────────────────────────────────────┘
+
+Client                AuthController        AuthenticationManager    DB
+  │                        │                        │                │
+  │──POST /login──────────►│                        │                │
+  │  {username,password}   │──authenticate()───────►│                │
+  │                        │                        │──loadUser()───►│
+  │                        │                        │◄──UserDetails──│
+  │                        │                        │  (match pwd)   │
+  │                        │◄──Authentication OK─────│                │
+  │                        │──generateToken()──►JwtUtil               
+  │                        │◄──JWT token────────────                 
+  │◄───{token: "eyJ..."}───│                        │                │
+
+
+┌─────────────────────────────────────────────────────────────────┐
+│                  PROTECTED REQUEST FLOW (every call)               │
+└─────────────────────────────────────────────────────────────────┘
+
+Client          JwtAuthFilter        JwtUtil       UserDetailsService   SecurityContext   Controller
+  │                   │                  │                  │                 │              │
+  │─GET /api/data─────►                  │                  │                 │              │
+  │ Header: Bearer JWT │                  │                  │                 │              │
+  │                   │─extractUsername()►                  │                 │              │
+  │                   │◄────username──────                  │                 │              │
+  │                   │─loadUserByUsername()────────────────►                 │              │
+  │                   │◄────UserDetails──────────────────────                 │              │
+  │                   │─isTokenValid()───►                  │                 │              │
+  │                   │◄──true/false──────                  │                 │              │
+  │                   │ (if valid) setAuthentication()───────────────────────►│              │
+  │                   │───────────────────────────────────filterChain.doFilter()────────────►│
+  │                   │                  │                  │                 │◄──response────│
+  │◄──────────────────────────────────────200 OK / data─────────────────────────────────────│
+
+  (if invalid/missing token → 401 Unauthorized, controller never reached)
+
+
+
+
+
+
+
+1. pom.xml → add spring-security + jjwt dependencies
+2. SecurityConfig → define SecurityFilterChain
+       ├─ csrf().disable()
+       ├─ sessionManagement → STATELESS
+       ├─ authorizeHttpRequests → permitAll("/auth/**"), authenticated(rest)
+       └─ addFilterBefore(JwtAuthFilter, UsernamePasswordAuthenticationFilter)
+3. CustomUserDetailsService → bridges DB ↔ Spring Security
+4. PasswordEncoder bean (BCrypt)
+5. AuthenticationProvider + AuthenticationManager beans
+6. JwtUtil → generate/validate token logic
+7. JwtAuthFilter → intercepts every request, sets SecurityContext
+8. AuthController → exposes /login, /register endpoints
+
+
+
+
+"Login generates the token once; every subsequent request passes through JwtAuthFilter, which validates the token and populates SecurityContext before the request reaches the controller — that's what makes it stateless."
+
+
+The BCrypt password encoder uses the Blowfish cipher hashing algorithm.
+
+
+
+
+keycloak:
+Keycloak is an open-source Identity and Access Management (IAM) server that centralizes authentication and authorization.
+
+Your app simply trusts and verifies the tokens Keycloak provides.
+
+
+
+
+
+ BCryptPasswordEncoder:
+What it is: A one-way hashing algorithm to store passwords securely in the database.
+One-way — you cannot reverse a BCrypt hash back to the original password
+Salted automatically — same password → different hash every time (prevents rainbow table attacks)
+Slow by design — deliberately CPU-intensive (adaptive cost factor) to resist brute-force attacks
+
+Spring never decrypts the stored hash — it re-hashes the input and compares hashes.
+
+
+
+
+The Core Problem in Microservices
+
+"In a monolith, one app does login + validation. In microservices, you have an Auth Service issuing tokens, and multiple other services (Order, Payment, Inventory) that need to validate tokens — but shouldn't all share the same secret key or call Auth Service on every request."
+
+Signature Key: Symmetric vs Asymmetric (the big shift)
+❌ Symmetric (HMAC) — bad fit for microservices
+javaKeys.hmacShaKeyFor(SECRET.getBytes());
+Problem: Every microservice needs the same secret to verify tokens → if you distribute the secret to 10 services, and one gets compromised, attacker can forge tokens for the entire system.
+
+
+✅ Asymmetric (RSA/EC) — correct approach
+
+Interview one-liner:
+
+"In microservices, we sign with RS256 (private key) at the Auth Service and distribute only the public key to other services for verification — this way, no service other than Auth can forge a token, even if compromised."
+
+
+┌──────────────────┐
+                          │   Auth Service     │
+                          │  (has PRIVATE key)  │
+                          │  issues JWT         │
+                          └─────────┬──────────┘
+                                    │ JWT token
+                                    ▼
+                    Client stores token, sends with every call
+                                    │
+        ┌───────────────────────────┼───────────────────────────┐
+        ▼                           ▼                           ▼
+┌───────────────┐         ┌───────────────┐         ┌───────────────┐
+│ Order Service   │         │ Payment Service │         │Inventory Service│
+│ (PUBLIC key only)│         │(PUBLIC key only)│         │(PUBLIC key only)│
+│ validates JWT    │         │ validates JWT    │         │ validates JWT    │
+│ NO DB call needed│         │ NO DB call needed│         │ NO DB call needed│
+└───────────────┘         └───────────────┘         └───────────────┘
+
+
+
+Where the Public Key Comes From (2 common patterns)
+Pattern 1: Shared config / secret vault
+Public key stored in Config Server (Spring Cloud Config) or Vault, pulled at startup by each service.
+Pattern 2: JWKS endpoint (industry standard — used by Keycloak, Auth0, Okta)
+
+
+
+Pattern 2: JWKS endpoint (industry standard — used by Keycloak, Auth0, Okta)
+java// application.yml in each microservice
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://auth-service:8080/.well-known/jwks.json
+Spring Security auto-fetches and caches the public key from this endpoint — no manual key management needed.
+
+
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+</dependency>
+
+
+
+API Gateway Pattern (common real-world setup)
+Client → API Gateway (validates JWT once) → routes to internal services
+                                              (trust header, e.g. X-User-Id)
+Some architectures validate JWT only at the Gateway, and internal service-to-service calls trust an internal header/mTLS instead of re-validating JWT every hop — reduces redundant CPU cost.
+
+
+
+┌─────────┐        ┌──────────────────────┐        ┌────────────────┐
+│ Client   │──JWT──►│    API Gateway         │──X-User-Id──►│  Order Service   │
+│          │        │  (Spring Cloud Gateway) │  X-User-Role  │  (no JWT logic)  │
+│          │        │                        │              └────────────────┘
+│          │        │  1. Extract JWT        │        ┌────────────────┐
+│          │        │  2. Verify signature   │──X-User-Id──►│ Payment Service  │
+│          │        │  3. Check expiry       │  X-User-Role  │  (no JWT logic)  │
+│          │        │  4. Extract claims     │              └────────────────┘
+│          │        │  5. Add trusted headers│        ┌────────────────┐
+│          │        │  6. Strip original JWT │──X-User-Id──►│Inventory Service │
+│          │        │     (optional)         │  X-User-Role  │  (no JWT logic)  │
+└─────────┘        └──────────────────────┘              └────────────────┘
+
+
+
+
+# api-gateway application.yml
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: order-service
+          uri: http://order-service:8081
+          predicates:
+            - Path=/api/orders/**
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://auth-service:8080/.well-known/jwks.json
+
+
+
+@RestController
+public class OrderController {
+
+    @GetMapping("/api/orders")
+    public List<Order> getOrders(@RequestHeader("X-User-Id") String userId,
+                                  @RequestHeader("X-User-Role") String role) {
+        // No JWT parsing here — Gateway already verified identity
+        return orderService.getOrdersForUser(userId);
+    }
+}
+
+
+"If services just trust X-User-Id header, what stops someone from bypassing the Gateway and calling Order Service directly with a fake header?"
+
+
+Solution 2: mTLS (mutual TLS) between Gateway and services
+Gateway ──[client cert]──► Order Service ──[verifies Gateway's cert]──► accepts request
+
+Each service verifies the caller's certificate, not just trusts any request blindly
+Even if someone bypasses network isolation, they can't forge a valid mTLS handshake without the Gateway's private key
+
+
+
+
+Secret Key
+A password known only to your server, used to sign and verify tokens.
+javaString SECRET = "my-super-secret-key-12345";
+Think of it like a stamp only your server owns. Nobody else has this stamp.
+
+Signature
+The proof that a token is genuine and untouched — created by combining the token's data with the secret key.
+Signature = Hash(Header + Payload, SECRET_KEY)
+JWT looks like this:
+eyJhbGc...  .  eyJzdWI...  .  SflKxwRJ...
+  HEADER          PAYLOAD        SIGNATURE
+
+How it works — simple flow
+1. Server creates token (login time)
+Data: "username=thiru"
+Server stamps it with SECRET_KEY → Signature: "abc123xyz"
+Token sent to client: username=thiru + abc123xyz
+2. Client sends token back (every request)
+Client sends: username=thiru + abc123xyz
+3. Server checks (every request)
+Server re-calculates: Hash("username=thiru", SECRET_KEY) 
+If result == abc123xyz → ✅ Valid, not tampered
+If result != abc123xyz → ❌ Rejected, someone modified it
+
+
+
+=====================================================
+JWT SECRET KEY - PRODUCTION BEST PRACTICES
+=====================================================
+
+BAD PRACTICE                      GOOD PRACTICE
+-----------------------------------------------------
+Hardcoded in code:                Stored in environment variable /
+String SECRET = "abc123"          Vault / AWS Secrets Manager
+
+
+Same key used forever,            Key rotation - changed
+never changed                     periodically (e.g. every 90 days)
+
+
+Same key across                   Different key per environment
+dev / staging / prod              (dev / staging / prod separate keys)
+
+
+
+
+
+WHY TWO TOKENS? (the core problem)
+-----------------------------------------------------
+- Long-lived token = if stolen, attacker has access
+  for a long time (dangerous)
+- Short-lived token = safer, but forces user to
+  login again and again (bad experience)
+- Solution: use BOTH → short-lived access token +
+  long-lived refresh token
+
+
+
+ACCESS TOKEN
+-----------------------------------------------------
+Purpose   : Used to access protected APIs/resources
+Lifespan  : Short (5-15 mins typically)
+Sent in   : Authorization: Bearer <token> header,
+            on every API request
+Contains  : username, roles, expiry
+Risk if   : Low - expires quickly, limited damage
+
+
+
+REFRESH TOKEN
+-----------------------------------------------------
+Purpose   : Used ONLY to get a new access token
+            (not used to access APIs directly)
+Lifespan  : Long (7-30 days, sometimes months)
+Sent in   : Only to a dedicated /refresh-token endpoint
+Contains  : minimal info, often just a reference/ID
+Risk if   : High - long-lived, so must be protected
+stolen      carefully (HttpOnly secure cookie)
+
+
+
+FLOW
+-----------------------------------------------------
+1. Login → server issues:
+     - Access Token (short life)
+     - Refresh Token (long life)
+
+2. Client calls APIs using Access Token
+
+3. Access Token expires (15 min later)
+
+4. Client calls /refresh-token with Refresh Token
+
+5. Server validates refresh token (checks DB/Redis)
+   → issues NEW access token (+ optionally new
+     refresh token if rotation enabled)
+
+6. Client continues using new access token
+   -- user never had to "login" again
+
+
+
+
+WHY THIS DESIGN (real world reasoning)
+-----------------------------------------------------
+- Access token: stateless, fast, but short-lived
+  → limits damage if leaked
+- Refresh token: stateful (DB-backed), so it CAN be
+  revoked/blacklisted → gives control back to server
+  → balances SECURITY + USER EXPERIENCE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+oauth2 resource server  for key cloak public key validate
+
+
+Here is exactly how you implement this setup in your microservices step-by-step, along with the interview concepts you need to know.Step 1: Add the Standard Native DependencyEvery microservice that needs to protect its APIs acts as a Resource Server. In the pom.xml of each microservice (e.g., Order-Service, Payment-Service), add:XML<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+</dependency>
+Step 2: Configure application.ymlPoint each microservice directly to your Auth Server's JWKS endpoint.  YAMLspring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Microservice uses this to fetch the public keys for signature validation
+          jwk-set-uri: http://auth-service:8080/.well-known/jwks.json
+Step 3: Minimal Security Configuration ClassCreate this configuration class inside each microservice. It tells Spring Security to validate incoming tokens against the jwk-set-uri specified in your YAML file.Java@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity // Allows @PreAuthorize on your controllers
+public class ResourceServerConfig {
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable()) // Stateless APIs don't need CSRF
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/v1/public/**").permitAll()
+                .anyRequest().authenticated()
+            )
+            // Tells Spring Boot to act as a Resource Server and expect JWTs
+            .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+
+        return http.build();
+    }
+}
+Step 4: Protect Endpoints in the MicroserviceNow, your controllers can instantly grant access based on the token context. By default, Spring Security maps JWT scopes to permissions prefixed with SCOPE_.  Java@RestController
+@RequestMapping("/api/v1/orders")
+public class OrderController {
+
+    @PostMapping
+    @PreAuthorize("hasAuthority('SCOPE_write:orders')") // Standard OAuth2 scope check
+    public ResponseEntity<String> createOrder() {
+        return ResponseEntity.ok("Order processed inside Order-Service!");
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+=====================================================
+CSRF vs XSS vs CORS - SPRING SECURITY HANDLING
+=====================================================
+
+-----------------------------------------------------
+1. CSRF (Cross-Site Request Forgery)
+-----------------------------------------------------
+WHAT IT IS:
+- Attacker tricks a LOGGED-IN user's browser into
+  sending an unwanted request to your site
+  (using the browser's auto-sent session cookie)
+
+EXAMPLE:
+- You're logged into bank.com (session cookie active)
+- You visit evil.com which has:
+  <img src="bank.com/transfer?amount=5000&to=hacker">
+- Browser auto-attaches your bank.com cookie
+- Transfer happens WITHOUT you knowing
+
+WHO IS VULNERABLE:
+- Cookie/session based auth (browser auto-sends cookies)
+
+SPRING SECURITY HANDLING:
+- Default: CSRF protection ENABLED for session-based apps
+- Spring generates a CSRF token, must be sent back in
+  every state-changing request (POST/PUT/DELETE)
+- Attacker's page can't read/know this token → blocked
+
+  http.csrf(csrf -> csrf
+      .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()));
+
+FOR JWT (STATELESS) APPS:
+- CSRF is usually DISABLED
+- WHY: JWT sent in Authorization header manually by
+  JS code, NOT auto-attached by browser like cookies
+- Attacker's page CANNOT read your JWT from
+  localStorage/memory → CSRF attack not possible
+
+  http.csrf(csrf -> csrf.disable());
+
+REAL WORLD RULE:
+- Session/cookie auth → CSRF protection ON
+- JWT header-based auth → CSRF protection OFF (not needed)
+
+=====================================================
+
+2. XSS (Cross-Site Scripting)
+-----------------------------------------------------
+WHAT IT IS:
+- Attacker injects malicious JavaScript into your
+  website (via input fields, comments, URL params)
+  which runs in OTHER users' browsers
+
+EXAMPLE:
+- Comment box accepts: <script>stealCookie()</script>
+- If not sanitized, this script runs for every user
+  who views that comment → steals their token/cookie
+
+HOW IT STEALS JWT:
+- If JWT stored in localStorage → JS-accessible
+  → XSS script can read it: localStorage.getItem("token")
+  → sent to attacker's server
+
+SPRING SECURITY / APP-LEVEL HANDLING:
+- Spring Security sets security headers by default:
+
+  http.headers(headers -> headers
+      .contentSecurityPolicy(csp -> csp
+          .policyDirectives("script-src 'self'"))
+      .xssProtection(Customizer.withDefaults()));
+
+- X-Content-Type-Options: nosniff
+- Content-Security-Policy (CSP) - restricts which
+  scripts can run
+- Input validation/sanitization at code level
+  (escape HTML, use libraries like OWASP Java Encoder)
+- Frontend: use frameworks like React/Angular which
+  auto-escape output by default
+
+BEST PRACTICE FOR JWT STORAGE (XSS defense):
+- DON'T store JWT in localStorage (JS-readable)
+- STORE in HttpOnly Secure Cookie (JS CANNOT read it,
+  even if XSS script runs)
+
+REAL WORLD RULE:
+- Sanitize all user input
+- Set CSP headers
+- Prefer HttpOnly cookies for tokens over localStorage
+
+=====================================================
+
+3. CORS (Cross-Origin Resource Sharing)
+-----------------------------------------------------
+WHAT IT IS:
+- Browser security rule: JS on domainA.com CANNOT call
+  API on domainB.com UNLESS domainB.com explicitly
+  allows it
+- NOT an attack itself - it's a BROWSER PROTECTION,
+  but must be configured correctly or legit frontend
+  calls get blocked
+
+EXAMPLE:
+- Frontend: myapp.com (React/Angular)
+- Backend API: api.myapp.com
+- Browser blocks the call unless backend sends
+  proper CORS headers allowing myapp.com
+
+SPRING SECURITY HANDLING:
+
+  @Bean
+  public CorsConfigurationSource corsConfigurationSource() {
+      CorsConfiguration config = new CorsConfiguration();
+      config.setAllowedOrigins(List.of("https://myapp.com"));
+      config.setAllowedMethods(List.of("GET","POST","PUT","DELETE"));
+      config.setAllowedHeaders(List.of("Authorization","Content-Type"));
+      config.setAllowCredentials(true);
+
+      UrlBasedCorsConfigurationSource source =
+          new UrlBasedCorsConfigurationSource();
+      source.registerCorsConfiguration("/**", config);
+      return source;
+  }
+
+  http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
+
+REAL WORLD RULE:
+- NEVER use allowedOrigins("*") in production with
+  allowCredentials(true) - security hole
+- Whitelist ONLY known frontend domains
+- Different CORS config per environment
+  (localhost:4200 for dev, real domain for prod)
+
+=====================================================
+
+QUICK COMPARISON TABLE
+-----------------------------------------------------
+           CSRF              XSS               CORS
+Type       Attack            Attack            Browser rule
+Target     Session cookies   Steals data/token Cross-origin
+                                                 API calls
+Defense    CSRF token /      Sanitize input,   Whitelist
+           disable for JWT   CSP headers,      allowed
+                              HttpOnly cookie   origins
+Relevant   Cookie/session    Any web app       Any app with
+for         auth apps                          separate FE/BE
+
+=====================================================
+
+INTERVIEW ONE-LINER:
+"CSRF is prevented via tokens for cookie-based auth
+(disabled for stateless JWT since browsers don't
+auto-attach headers). XSS is prevented via input
+sanitization, CSP headers, and storing JWT in HttpOnly
+cookies instead of localStorage. CORS is configured
+via Spring's CorsConfigurationSource to whitelist only
+trusted frontend origins, especially important when
+frontend and backend are on different domains."
+
+=====================================================
+
+

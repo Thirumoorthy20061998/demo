@@ -1,0 +1,95 @@
+in spring boot main class 
+
+@springbootapplication  = @configuration,@enable auto configuration,@componentscan
+which order it executes i want complete flow easy understanding 
+
+
+
+The Executive Summary: The Execution OrderWhen you launch your app, the process runs in this specific order:@ComponentScan runs First (Phase 1) to find your code.@Configuration processing happens In Parallel / Middle to register any manual bean recipes you wrote.@EnableAutoConfiguration runs Last (Phase 2) to fill in the gaps with Spring Boot’s starter magic.The Complete Technical Flow (Step-by-Step)Here is exactly what the IoC Container is doing behind the scenes from the moment your main() method calls SpringApplication.run().1.Phase 
+
+
+1: Component Scanning (@ComponentScan):Finding Your Code.Spring Boot looks at the package where your main class lives. It treats this as the "root" folder and scans downward through all sub-packages.The Action: It reads every Java file looking for your custom classes marked with @Component, @Service, @Repository, or @RestController.The Result: It creates basic blueprints (BeanDefinitions) for all your custom code. It does not create the final objects yet; it is just mapping them out.2.Phase 
+
+
+
+2: Processing Custom Configs (@Configuration):Reading Your Recipes.While scanning, Spring finds any classes you marked with @Configuration.The Action: It parses all the methods inside them marked with @Bean.The Result: It adds these custom bean recipes to its master blueprint list alongside the components it found in Step 1.3.Phase 
+
+
+
+
+3: The Auto-Config Hook (@EnableAutoConfiguration):Evaluating the Starters.This is where Spring Boot's smart magic happens. Spring Boot looks inside the META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports file inside the Spring Boot JARs you imported (like spring-boot-starter-web).The Action: It loads a massive list of potential configurations (hundreds of them, like DataSourceAutoConfiguration, JacksonAutoConfiguration, etc.).4.Phase 
+
+
+
+
+4: Conditional Filtering:The Smart Sorting.Spring Boot takes that massive list of auto-configurations and passes them through Conditional Checks (like @ConditionalOnClass or @ConditionalOnMissingBean).The Rule: If it sees DataSourceAutoConfiguration, it asks: "Did the developer already create their own DataSource bean in Phase 2?" If yes, Spring Boot steps back and skips its auto-config. If no, it adds its own recipe to the blueprint list.
+
+5.Phase 5: Object Creation & Injection:Container Ignition.Now that the master blueprint list is locked and finalized (Your Components + Your Custom Beans + Spring Boot's Auto-Configs), the IoC container finally instantiates the Java objects using reflection and injects the dependencies between them.A Simple Conceptual SummaryThink of the execution flow like a smart assistant setting up a workspace for you:@ComponentScan: The assistant cleans up and organizes all the tools you brought to the desk first.@Configuration: The assistant reads the custom assembly notes you wrote for special tools.@EnableAutoConfiguration: The assistant looks at what tools are still missing to make a functional desk (e.g., you imported a web starter, but didn't build a web server). It provides the standard factory defaults for whatever you left out, making sure it never overrides your custom tools.
+
+
+
+The Three Most Common "If-Statements"
+Spring Boot checks three main conditions before it creates an object for you:
+
+Rule 1: @ConditionalOnMissingBean (The "Did you already make it?" check)
+This is the most famous rule. It means: "I will only create this object if the developer has NOT created one themselves."
+
+Example: You add the spring-boot-starter-data-jpa library because you want to connect to a database.
+
+Spring Boot's Internal Logic:
+
+Plaintext
+IF (Developer has NOT created a @Bean called 'dataSource') {
+    Spring Boot says: "Okay, I will create a default DataSource for you!"
+} ELSE {
+    Spring Boot says: "Oh, I see you made your own DataSource bean. I will step back and do nothing!"
+}
+Rule 2: @ConditionalOnClass (The "Is the library even inside the project?" check)
+This means: "I will only configure this tool if the required library jar file is actually present in your project dependency list (pom.xml / build.gradle)."
+
+Example: Spring Boot has auto-configuration code written for an In-Memory Database called H2.
+
+Spring Boot's Internal Logic:
+
+Plaintext
+IF (The H2 Database library jar file exists in the project classpath) {
+    Spring Boot says: "Great, the developer wants H2. Let me set up the database automatically."
+} ELSE {
+    Spring Boot says: "The H2 library isn't here. Skip this setup completely."
+}
+Rule 3: @ConditionalOnProperty (The "Did you turn it on in application.properties?" check)
+This means: "I will only activate this feature if you explicitly toggled it to 'true' in your settings file."
+
+Example: You want to enable a global caching feature.
+
+Spring Boot's Internal Logic:
+
+Plaintext
+IF (application.properties contains 'spring.cache.type=redis') {
+    Spring Boot says: "Got it! Activating the Redis caching beans."
+} ELSE {
+    Spring Boot says: "Property not found. Keeping caching turned off."
+}
+
+
+
+
+
+
+
+
+
+@enableautoconfiguration
+
+Technically, Phase 3 is just a file-reading step using the Java ClassLoader.
+
+Here is the exact technical flow in short:
+
+The Trigger: The @EnableAutoConfiguration annotation calls an internal Spring class named AutoConfigurationImportSelector.
+
+The File Read: This class uses ClassLoader.getResources() to find and open a specific text file hidden inside the Spring Boot JAR files:
+META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports
+
+The Data: It reads this file line-by-line. The file contains a hardcoded list of fully qualified Java class names (like org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration).
+
+The Output: It converts those text lines into a standard Java String[] array of class names and saves it in memory.

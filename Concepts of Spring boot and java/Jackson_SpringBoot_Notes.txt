@@ -1,0 +1,254 @@
+JACKSON IN SPRING BOOT - NOTES
+===========================================
+
+1. WHAT IS JACKSON?
+------------------------
+Jackson is the JSON library Spring Boot uses BY DEFAULT to:
+- Convert Java objects -> JSON (Serialization)
+- Convert JSON -> Java objects (Deserialization)
+
+Included automatically with spring-boot-starter-web
+(via jackson-databind dependency) - no extra setup needed.
+
+Example:
+Java Object (Employee) <--Jackson--> JSON {"id":1,"name":"Thiru"}
+
+
+2. REAL WORLD ANALOGY
+---------------------------
+Think of Jackson as a TRANSLATOR at an airport:
+- Java speaks "Object" language
+- Frontend/API clients speak "JSON" language
+- Jackson translates both ways automatically, so a REST controller can just
+  return a Java object and the client receives clean JSON - no manual
+  conversion code needed.
+
+
+3. BASIC FLOW IN SPRING BOOT
+----------------------------------
+Client sends JSON --> @RequestBody --> Jackson converts JSON to Java Object
+                                              |
+                                       Controller/Service logic runs
+                                              |
+Java Object --> Jackson converts to JSON --> @ResponseBody --> Client receives JSON
+
+@RestController already implies @ResponseBody, so this happens automatically.
+
+
+4. SIMPLE EXAMPLE
+-----------------------
+public class Employee {
+    private Long id;
+    private String name;
+    private double salary;
+    // getters and setters
+}
+
+@RestController
+@RequestMapping("/employees")
+public class EmployeeController {
+
+    @PostMapping
+    public Employee createEmployee(@RequestBody Employee employee) {
+        // JSON from client automatically converted to Employee object
+        return employee; // automatically converted back to JSON in response
+    }
+}
+
+Request JSON:
+{ "id": 1, "name": "Thiru", "salary": 75000 }
+
+Response JSON: (same object serialized back)
+{ "id": 1, "name": "Thiru", "salary": 75000.0 }
+
+
+5. COMMON JACKSON ANNOTATIONS (MOST ASKED IN INTERVIEWS)
+----------------------------------------------------------------
+
+@JsonProperty("fieldName")
+   - Maps a Java field to a different JSON key name
+   Example:
+   @JsonProperty("emp_name")
+   private String name;
+   -> JSON: {"emp_name": "Thiru"}
+
+@JsonIgnore
+   - Excludes a field from JSON output (both serialize & deserialize)
+   Example: hiding password field from API response
+   @JsonIgnore
+   private String password;
+
+@JsonIgnoreProperties({"field1", "field2"})
+   - Class-level annotation to ignore multiple fields
+   Also useful with ignoreUnknown = true to avoid errors when JSON
+   has extra fields not present in the Java class
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+   - Skip null fields from JSON output (cleaner API responses)
+   Example:
+   @JsonInclude(JsonInclude.Include.NON_NULL)
+   public class Employee { ... }
+   -> if "salary" is null, it won't appear in JSON at all
+
+@JsonFormat(pattern = "yyyy-MM-dd")
+   - Formats date/time fields
+   Example:
+   @JsonFormat(pattern = "yyyy-MM-dd")
+   private LocalDate joiningDate;
+   -> JSON: "joiningDate": "2026-07-18"
+
+@JsonCreator + @JsonProperty (on constructor)
+   - Used when class has no default constructor, tells Jackson how to
+     build the object from JSON
+   Example:
+   @JsonCreator
+   public Employee(@JsonProperty("id") Long id, @JsonProperty("name") String name) {
+       this.id = id;
+       this.name = name;
+   }
+
+@JsonAlias({"emp_id", "employeeId"})
+   - Accepts multiple JSON key names as input for the same field
+   (useful when different clients send slightly different key names)
+
+@JsonManagedReference / @JsonBackReference
+   - Solves infinite recursion problem in bidirectional relationships
+     (like JPA @OneToMany / @ManyToOne)
+   Example: Employee <-> Department circular reference
+   @JsonManagedReference  -> on the "parent" side (forward reference, serialized)
+   @JsonBackReference     -> on the "child" side (back reference, NOT serialized)
+
+
+6. GLOBAL CONFIGURATION (application.yml)
+-----------------------------------------------
+spring:
+  jackson:
+    default-property-inclusion: non_null   # skip nulls globally
+    serialization:
+      write-dates-as-timestamps: false     # use ISO date format, not epoch millis
+      indent-output: true                  # pretty-print JSON
+    deserialization:
+      fail-on-unknown-properties: false    # don't fail if JSON has extra fields
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Kolkata
+
+
+7. CUSTOM OBJECTMAPPER BEAN (ADVANCED CONFIG)
+----------------------------------------------------
+When application.yml settings aren't enough, define a custom ObjectMapper bean:
+
+@Configuration
+public class JacksonConfig {
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());       // support LocalDate/LocalDateTime
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        return mapper;
+    }
+}
+
+Spring Boot auto-detects this bean and uses it everywhere instead of the
+default ObjectMapper.
+
+
+8. HANDLING LocalDate / LocalDateTime (COMMON PAIN POINT)
+------------------------------------------------------------------
+By default, Jackson doesn't know how to serialize Java 8 date/time types.
+Fix: add dependency (usually already included in Spring Boot):
+
+<dependency>
+    <groupId>com.fasterxml.jackson.datatype</groupId>
+    <artifactId>jackson-datatype-jsr310</artifactId>
+</dependency>
+
+And register the module (auto-configured in Spring Boot, but manually if
+using custom ObjectMapper):
+mapper.registerModule(new JavaTimeModule());
+
+
+9. REAL PRODUCTION EXAMPLE (BANKING/FINTECH CASE)
+--------------------------------------------------------
+Scenario: API response should NOT expose sensitive fields like password
+or internal audit fields, and dates must be in a clean format.
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class Account {
+
+    private Long accountId;
+    private String accountHolderName;
+
+    @JsonIgnore
+    private String internalAuditCode;   // never exposed in API
+
+    @JsonProperty("balance")
+    private BigDecimal accountBalance;  // renamed in JSON
+
+    @JsonFormat(pattern = "dd-MM-yyyy")
+    private LocalDate accountOpenedDate;
+
+    // getters/setters
+}
+
+Response JSON:
+{
+  "accountId": 101,
+  "accountHolderName": "Thiru",
+  "balance": 50000.00,
+  "accountOpenedDate": "18-07-2026"
+}
+
+Notice: internalAuditCode is completely hidden, balance is renamed,
+date is custom formatted, and any null field is skipped automatically.
+
+
+10. JACKSON EXCEPTIONS YOU'LL SEE IN REAL PROJECTS
+----------------------------------------------------------
+- JsonMappingException
+    -> mismatch between JSON structure and Java class
+- UnrecognizedPropertyException
+    -> JSON has a field that doesn't exist in the Java class
+       (fix: fail-on-unknown-properties: false OR @JsonIgnoreProperties)
+- InvalidFormatException
+    -> wrong data type in JSON (e.g. sending "abc" for an int field)
+- HttpMessageNotReadableException
+    -> generic wrapper Spring throws when Jackson deserialization fails
+       (usually caught in a @ControllerAdvice global exception handler)
+
+
+11. INTERVIEW QUESTIONS QUICK REFERENCE
+--------------------------------------------
+Q: What is Jackson used for in Spring Boot?
+A: Default library for JSON serialization/deserialization between Java
+   objects and JSON in REST APIs.
+
+Q: How do you hide a field from JSON response?
+A: @JsonIgnore on the field, or @JsonIgnoreProperties at class level.
+
+Q: How do you rename a JSON field?
+A: @JsonProperty("customName") on the Java field.
+
+Q: How do you skip null fields in JSON output?
+A: @JsonInclude(JsonInclude.Include.NON_NULL) on class or field,
+   or globally via spring.jackson.default-property-inclusion=non_null.
+
+Q: How do you handle circular references (e.g. bidirectional JPA entities)?
+A: @JsonManagedReference on parent side, @JsonBackReference on child side.
+
+Q: What happens if JSON has an extra field not in the Java class?
+A: Throws UnrecognizedPropertyException by default; disable with
+   fail-on-unknown-properties: false or @JsonIgnoreProperties(ignoreUnknown=true).
+
+Q: How does Jackson handle LocalDate/LocalDateTime?
+A: Needs jackson-datatype-jsr310 module registered
+   (auto-configured by Spring Boot in most cases).
+
+Q: Difference between @JsonIgnore and @JsonIgnoreProperties?
+A: @JsonIgnore is field-level (one field); @JsonIgnoreProperties is
+   class-level (multiple fields, also handles unknown properties).
+
+===========================================
+END OF NOTES

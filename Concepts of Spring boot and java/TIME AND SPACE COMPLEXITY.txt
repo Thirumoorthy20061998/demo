@@ -1,0 +1,380 @@
+TIME Complexity (Speed)Time $O(1)$ (Constant Time): The execution speed stays exactly the same, whether you have 10 items or 10 million items.Example: Accessing a value in a HashMap by its key.Time $O(N)$ (Linear Time): The execution time grows matching the size of your input data.Example: Running a standard for-loop through an array of size $N$.2. SPACE Complexity (Memory)Space $O(1)$ (Constant Space): The code uses the same fixed amount of memory no matter how large the input data is. You don't create any new scaling structures.Example: Updating a primitive counter variable inside a loop.Space $O(N)$ (Linear Space): The memory used grows directly with the input size. You are dynamically building a new collection to hold the data.Example: Creating a new ArrayList and copying all $N$ elements from an array into it.Quick Cheat Sheet ExampleLook at this simple function that copies an array:Javapublic void copyArray(int[] input) {
+    int size = input.length;                  // Space O(1) for this single int variable
+    int[] newArray = new int[size];           // Space O(N) because we allocate a brand new array of size N
+    
+    for(int i = 0; i < size; i++) {           // Time O(N) because this loop runs N times
+        newArray[i] = input[i];
+    }
+}
+Summary:Time = How long it takes to execute.Space = How much RAM it consumes.
+
+
+
+
+
+
+What happens if you have an ArrayList of 1 million items and you remove the first element?"The Trap: Many people think it's $O(1)$.The Truth: It is $O(n)$. Because the element at index 0 is removed, every single other element (999,999 of them) must be shifted one position to the left.
+
+3. "Why is ArrayList not thread-safe?"ArrayList is not synchronized. If two threads try to add() or remove() from it simultaneously, the internal state (like the size counter or the array structure) can get corrupted, leading to ConcurrentModificationException or data loss.How to fix it? Use Collections.synchronizedList(new ArrayList<>()) or CopyOnWriteArrayList (for thread-safe scenarios).
+
+
+
+"How can you optimize an ArrayList if you know the number of elements in advance?"
+The Answer: Always use the constructor that accepts initial capacity, e.g., new ArrayList<>(1000);.
+
+Why? This prevents the "resize and copy" operation from happening repeatedly. If you don't set it, the array will keep resizing (10 -> 15 -> 22 -> 33...), which wastes CPU cycles on array copying.
+
+
+
+
+
+
+                              ArrayList	                                                                    Vector (Legacy)
+Synchronization	Not Synchronized. It is not thread-safe.	Synchronized. Every structural method (add, remove, etc.) is thread-safe.
+Performance	Fast. Because there is no locking overhead, it runs at maximum speed.	Slow. The synchronization overhead bottlenecks performance, even in single-threaded apps.
+Resizing Growth	Increases its capacity by 50% (1.5x) when full.	Doubles its capacity by 100% (2x) when full.
+Introduction	Added in Java 1.2 as part of the modern Collections Framework.	Present since Java 1.0 (Legacy class).
+
+
+
+
+The 3 Rules of How it Works Internally
+1. Scattered Memory (Not a Block)When you create a Linked List, the computer does not allocate one big chunk of memory. It allocates tiny, individual pockets of memory wherever it can find space.
+2. The "Node" AnatomyEach pocket of memory is called a Node. It is strictly split into two halves:The Data Box: Stores the actual value (e.g., the number 42 or a String).The Pointer Box: Stores the exact memory address of where the next node is hiding.
+3. The LinksThe Start (Head): The computer only remembers the memory address of the very first node. That's your entry point.The Middle: To find the third item, the computer must go to the first node, read its pointer to find the second node, and then read the second node's pointer to find the third.The End (Null): The very last node stores null (zero/nothing) in its pointer box. 
+
+This tells the computer, "Stop, the hunt is over."Why does the interviewer care? (The Payoff)Want to add an item at the beginning? It takes $O(1)$ constant time. You just create a new node, point it to the old Head, and make the new node the Head. No other elements have to move.Want to find an item in the middle? It takes $O(N)$ linear time. You can't skip ahead because you don't know where the next node is until you read the current one. You have to walk the chain link by link.
+
+
+IN ARRAYLIST:
+
+The Direct Formula MathBecause all elements are parked right next to each other in one unbroken block, the computer doesn't need to follow clues. It calculates the exact location instantly using this internal formula:$$\text{Element Address} = \text{Base Address of Array} + (\text{Index} \times \text{Size of Data Type})$$
+
+
+LinkedList: Starts with nothing. When you add an element, it allocates memory for exactly one node and hooks it to the chain. It grows organically, one node at a time.
+
+
+
+
+
+
+
+
+
+
+
+
+
+HashMap:
+
+The Core Concept (The "Elevator Pitch")A HashMap is an array of buckets where each bucket points to a linked list (or a tree) of entries. It provides $O(1)$ average time complexity for both get() and put() operations by using hashing to find the array index directly.
+
+
+
+
+====================================================
+JAVA HASHMAP - WALKTHROUGH EXAMPLE (put/get)
+====================================================
+
+Imagine your HashMap is an array with 16 slots 
+(buckets) numbered 0 to 15.
+
+
+STEP 1: You call map.put("Apple", 100);
+----------------------------------------------------
+You are telling Java to store the key "Apple" with 
+the value 100.
+
+
+STEP 2: Java finds the Bucket Number
+----------------------------------------------------
+Java cannot just put "Apple" anywhere; it needs a 
+specific slot number between 0 and 15.
+
+  - It calls "Apple".hashCode() which generates a 
+    large number (e.g., 67392).
+  - It runs a quick math formula: 
+        67392 % 16 (Array Length)
+  - Let's say the result is Index 4.
+        -> Slot 4 is your target bucket.
+
+
+STEP 3: Checking Slot 4 (The 3 Scenarios)
+----------------------------------------------------
+
+  Scenario A: Slot 4 is EMPTY
+  --------------------------------
+  Java creates a small object called a Node containing 
+  ("Apple", 100). It places this Node directly into 
+  Slot 4. Done!
+
+  Scenario B: Slot 4 has data (Collision), 
+              different key
+  --------------------------------
+  Imagine "Banana" is already sitting in Slot 4.
+    - Java compares: Does "Apple".equals("Banana")? No.
+    - Java links them together. It attaches the new 
+      "Apple" Node to the bottom of the "Banana" Node 
+      like a chain (Linked List).
+
+  Scenario C: Slot 4 has data, SAME key
+  --------------------------------
+  Imagine ("Apple", 50) was already sitting in Slot 4.
+    - Java compares: Does "Apple".equals("Apple")? Yes.
+    - Java simply replaces the old value 50 with the 
+      new value 100. No new node is created.
+
+
+STEP 4: The Advanced "Upgrade" (Java 8+)
+----------------------------------------------------
+If you get highly unlucky and 8 different keys end up 
+in Slot 4, the chain becomes too long and slow to 
+search through.
+
+  - Java automatically upgrades Slot 4 from a straight 
+    chain (Linked List) into a mini-search tree 
+    (Red-Black Tree).
+  - This keeps lookups lightning fast even when 
+    collisions happen.
+
+
+HOW map.get("Apple") WORKS:
+----------------------------------------------------
+It does the exact same steps in reverse:
+
+  1. Calculates the hash code for "Apple" 
+        -> finds Slot 4.
+  2. Goes to Slot 4 and looks at the keys using 
+     .equals().
+  3. Finds "Apple" and returns 100.
+
+====================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+====================================================
+JAVA HASHMAP - INTERNAL WORKING NOTES
+====================================================
+
+1. THE CORE INFRASTRUCTURE
+----------------------------------------------------
+* Array Structure   : Internally, a HashMap is an array 
+                       of Node objects (often called Buckets).
+
+* Default Capacity   : The default array size is 16 
+                       (always grows as a power of 2: 
+                       16 -> 32 -> 64).
+
+* What is a Node?     A small object that holds 4 pieces 
+                       of data:
+                       1. int hash   -> The processed hash code
+                       2. K key      -> The user's key
+                       3. V value    -> The user's value
+                       4. Node next  -> Pointer to the next 
+                                        node in case of collision
+
+
+2. HOW put(key, value) WORKS STEP-BY-STEP
+----------------------------------------------------
+* Step A (Hashing):
+    Java calls key.hashCode() and applies a secondary 
+    hash function to scramble the bits (minimizes 
+    collisions).
+
+* Step B (Index Mapping):
+    It calculates the exact array slot using the fast 
+    bitwise formula:
+        Index = hash & (capacity - 1)
+
+* Step C (Handling the Bucket):
+    - If bucket is empty:
+          The node is placed directly at that index.
+
+    - If bucket has a duplicate key:
+          Java finds it using key.equals(), overwrites 
+          the value, and stops.
+
+    - If bucket has a collision (different key):
+          It uses Separate Chaining to append the new 
+          node to the end of a Linked List at that index.
+
+
+3. THE PERFORMANCE TUNING (ADVANCED CONFIGURATION)
+----------------------------------------------------
+* Load Factor (Default 0.75):
+    The threshold that decides when the map is getting 
+    too full.
+
+* Rehashing:
+    When the map hits the threshold (e.g., 12 out of 16 
+    buckets filled), the array capacity doubles. A new 
+    array is created, and all existing elements are 
+    re-mapped to new indexes.
+
+* Treeification (Java 8+):
+    If a single Linked List chain grows greater than 8 
+    elements (and total map capacity is >= 64), Java 
+    upgrades that specific bucket into a balanced 
+    Red-Black Tree. This drops worst-case lookup time 
+    from O(n) to O(log n).
+
+====================================================
+
+
+
+if i want insert key apple value 50 and another key apple value 100
+
+in different buckets its possible 
+
+
+
+No, it is not possible to insert the same key (apple) into two different buckets.
+
+
+The Rule of Determinism
+Same Key = Same Hash Code: The string "apple" will always produce the exact same hash code value every single time you calculate it during the program's execution.
+
+Same Hash Code = Same Bucket: Because the bucket index is calculated using a strict mathematical formula (Index = hash & (capacity - 1)), the same hash code will always point to the exact same bucket number.
+
+
+equals() — The Identicator
+Why we use it: To confirm whether two objects are exactly identical in value, not just sharing the same bucket.
+
+Usage in HashMap:
+
+Once Java navigates to the specific bucket using the hash code, it faces a chain of nodes (due to collisions).
+
+Java uses key.equals(currentNode.key) to walk down the chain until it finds the exact match.
+
+
+
+Tricky Question 1: "If two objects have the same hashCode, are they always equal?"
+The Answer: No.
+
+Tricky Question 2: "If two objects are equal via .equals(), can they have different hash codes?"
+The Answer: Absolutely not.
+
+Tricky Question 3: "What happens if a hashCode() method always returns a constant value, like return 42;?"The Answer: The HashMap will still function correctly, but performance degrades completely to $O(n)$ or $O(\log n)$.The Explanation: Because every single key returns 42, every single entry will map to the exact same bucket index. Your beautiful, fast HashMap turns into one giant, slow Linked List (or Red-Black Tree) in that single bucket. The constant time lookup benefit is entirely lost.
+
+
+Tricky Question 4: "Can you use a mutable (changeable) object as a HashMap key?"
+The Answer: You can, but it is highly dangerous and considered bad practice.
+
+
+
+Tricky Question 1: "What happens if you override hashCode() but forget to override equals()?"
+
+====================================================
+BUG: OVERRIDE hashCode() BUT FORGET equals()
+====================================================
+
+SETUP: Two separate objects, same content
+----------------------------------------------------
+
+   new Apple("A")                    new Apple("A")
+   hashCode = 555                    hashCode = 555
+   address  = 0x001                  address  = 0x002
+
+        \                                  /
+         \                                /
+          \-----> Bucket 4 <-------------/
+                (both hash to
+                 the same bucket)
+
+
+CHECK: equals() was NOT overridden
+----------------------------------------------------
+   Java falls back to Object.equals()
+   which only compares MEMORY ADDRESSES (==)
+
+        0x001  ==  0x002   ?   NO (different addresses)
+
+
+RESULT: Java treats them as different keys
+----------------------------------------------------
+
+   Bucket 4:
+   +---------------------+     +---------------------+
+   | Node 1: Apple "A"   | --> | Node 2: Apple "A"    |
+   | address: 0x001      |     | address: 0x002       |
+   +---------------------+     +---------------------+
+
+   -> Two nodes for what SHOULD be the same key
+   -> This is a DUPLICATE KEY bug
+
+
+
+
+====================================================
+Q4: CAN hashCode() RETURN A RANDOM NUMBER EVERY TIME?
+====================================================
+
+SHORT ANSWER: Technically yes, but it BREAKS HashMap.
+It violates the hashCode-equals contract.
+----------------------------------------------------
+
+
+THE RULE HASHCODE MUST FOLLOW
+----------------------------------------------------
+   If obj.equals(obj) is true,
+   then obj.hashCode() MUST return the 
+   SAME value every time, for the SAME object.
+
+   (as long as the object's fields don't change)
+
+
+WHAT HAPPENS IF hashCode() IS RANDOM
+----------------------------------------------------
+
+  map.put("Apple", 100);
+        |
+        v
+  hashCode() call #1 -> returns 555 -> goes to Bucket 4
+  (Node stored in Bucket 4)
+
+
+  map.get("Apple");
+        |
+        v
+  hashCode() call #2 -> returns 999 (random again!)
+  -> Java looks in Bucket 9 (wrong bucket)
+  -> Bucket 9 is empty
+  -> returns null
+
+  RESULT: You just inserted "Apple" but get() 
+  says it doesn't exist!
+
+REMEMBER THIS LINE
+----------------------------------------------------
+   hashCode() is a PROMISE: 
+   "I will always point to the same street 
+    for the same object."
+
+   Break that promise (random hashCode) -> 
+   the map can never find its way back to 
+   what it stored.
+
+====================================================
+
+
+
+
+
+Why do we need both?
+
+hashCode() is used to find the bucket.
+
+equals() is used to find the exact key within that bucket (in case of a collision).
+
+Rule: If you override equals(), you must override hashCode(). If you don't, two identical keys might return different hash codes, ending up in different buckets, effectively breaking the Map.

@@ -1,0 +1,1084 @@
+
+What is Stateless?
+
+A stateless API means the server does not remember any client information between requests.
+
+Each request must contain all the information needed to process it.
+
+
+
+
+
+Examples of Stateful Applications
+1. HTTP Session (Java Servlet/Spring MVC)
+
+Old JSP/Servlet applications
+Spring MVC with HttpSession
+
+
+
+SOAP
+Can be Stateful or Stateless
+
+
+
+
+
+
+
+
+
+design rest api what types of design patterns use  with each one real world scnerios example
+
+
+MVC (Model-View-Controller) Pattern ⭐⭐⭐⭐⭐
+
+Most common pattern in Spring Boot.
+
+Structure
+Client
+   │
+Controller
+   │
+Service
+   │
+Repository
+   │
+Database
+Real-world Scenario
+
+Banking Application
+
+GET /accounts/101
+
+Controller
+
+@RestController
+public class AccountController {
+
+    @GetMapping("/accounts/{id}")
+    public Account getAccount(@PathVariable Long id) {
+        return accountService.getAccount(id);
+    }
+}
+
+Service
+
+public Account getAccount(Long id){
+    return repository.findById(id).orElseThrow();
+}
+
+Repository
+
+public interface AccountRepository extends JpaRepository<Account, Long> {
+}
+
+Why?
+
+Separation of concerns
+Easy testing
+Easy maintenance
+2. DTO Pattern (Data Transfer Object) ⭐⭐⭐⭐⭐
+
+Never expose Entity directly.
+
+Without DTO
+Database Entity
+↓
+
+{
+ id,
+ username,
+ password,
+ ssn,
+ salary
+}
+
+API returns everything.
+
+Bad practice.
+
+With DTO
+User Entity
+
+↓
+
+UserResponseDTO
+
+↓
+
+{
+ id,
+ username
+}
+
+Example
+
+public class UserResponse {
+
+    private Long id;
+    private String username;
+}
+
+Real-world
+
+Employee API
+
+GET /employees
+
+Database
+
+id
+salary
+password
+email
+
+Client only receives
+
+id
+email
+3. Builder Pattern ⭐⭐⭐⭐⭐
+
+Useful for objects with many fields.
+
+Instead of
+
+Employee e =
+new Employee(1,"John",25,"IT",10000,"USA",....);
+
+Use
+
+Employee e = Employee.builder()
+        .name("John")
+        .department("IT")
+        .salary(10000)
+        .build();
+
+Real-world
+
+Creating Order Response
+
+OrderResponse.builder()
+      .orderId(100)
+      .status("SUCCESS")
+      .amount(5000)
+      .build();
+
+
+
+
+The 5-Star Spring Boot Way (Using Lombok)
+In 99% of modern Spring Boot applications, developers use the Lombok library to generate the Builder pattern automatically. This eliminates hundreds of lines of boilerplate code and is heavily used for Data Transfer Objects (DTOs).
+
+The Class
+Add the @Builder annotation to your class.
+
+Java
+import lombok.Builder;
+import lombok.Getter;
+import java.util.List;
+
+@Getter
+@Builder
+public class UserResponseDto {
+    private final Long id;
+    private final String username;
+    private final String email;
+    private final boolean isActive;
+    private final List<String> roles;
+}
+The Usage (e.g., in a Service or Controller)
+Notice how readable this is compared to new UserResponseDto(1L, "johndoe", "john@email.com", true, roles).
+
+Java
+import org.springframework.stereotype.Service;
+import java.util.List;
+
+@Service
+public class UserService {
+
+    public UserResponseDto getUserDetails() {
+        // Constructing the object step-by-step
+        return UserResponseDto.builder()
+                .id(101L)
+                .username("johndoe")
+                .email("john@example.com")
+                .isActive(true)
+                .roles(List.of("ROLE_USER", "ROLE_ADMIN"))
+                .build();
+    }
+}
+2. The Manual Way (Vanilla Java)
+If you aren't using Lombok, or if you need custom validation logic during the build process, you have to write the builder manually. You do this by creating a static inner class.
+
+The Class
+Java
+public class Product {
+    private final String name;
+    private final double price;
+    private final String sku;
+
+    // 1. Private constructor so people MUST use the Builder
+    private Product(ProductBuilder builder) {
+        this.name = builder.name;
+        this.price = builder.price;
+        this.sku = builder.sku;
+    }
+
+    // Getters only (no setters, keeping it immutable)
+    public String getName() { return name; }
+    public double getPrice() { return price; }
+    public String getSku() { return sku; }
+
+    // 2. Static inner Builder class
+    public static class ProductBuilder {
+        private String name;
+        private double price;
+        private String sku;
+
+        // 3. Methods that return the Builder itself for chaining
+        public ProductBuilder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public ProductBuilder price(double price) {
+            this.price = price;
+            return this;
+        }
+
+        public ProductBuilder sku(String sku) {
+            this.sku = sku;
+            return this;
+        }
+
+        // 4. The final build method
+        public Product build() {
+            if (this.price < 0) {
+                throw new IllegalArgumentException("Price cannot be negative");
+            }
+            return new Product(this);
+        }
+    }
+}
+The Usage
+Java
+Product product = new Product.ProductBuilder()
+        .name("Mechanical Keyboard")
+        .price(129.99)
+        .sku("KB-001")
+        .build();
+3. Native Spring Boot Builders
+Spring Boot actually uses the Builder pattern extensively under the hood. You will see it constantly when building HTTP responses or making API calls.
+
+Example: ResponseEntity (in a Controller)
+
+Java
+@GetMapping("/users/{id}")
+public ResponseEntity<UserResponseDto> getUser(@PathVariable Long id) {
+    UserResponseDto user = userService.getUserDetails(id);
+    
+    // Spring's built-in ResponseEntity builder
+    return ResponseEntity
+            .status(HttpStatus.OK)
+            .header("Custom-Header", "Spring-Boot-Rules")
+            .body(user);
+}
+Example: WebClient (for making external API calls)
+
+Java
+WebClient client = WebClient.builder()
+        .baseUrl("https://api.example.com")
+        .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+        .build();
+A Quick Warning on JPA Entities: If you use @Builder on a JPA @Entity, Hibernate will complain because it requires a public or protected no-argument constructor. To fix this, you must add @NoArgsConstructor, @AllArgsConstructor, and @Builder together on the entity class.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+4. Factory Pattern ⭐⭐⭐⭐
+
+Object creation depends on input.
+
+Example
+
+Payment
+
+Payment Method
+
+↓
+
+Credit Card
+
+UPI
+
+Net Banking
+
+Wallet
+Payment payment = PaymentFactory.getPayment("UPI");
+payment.pay();
+
+Real-world
+
+POST /payments
+
+Body
+
+{
+ "paymentType":"UPI"
+}
+
+Factory decides
+
+UPIPayment
+
+or
+
+CardPayment
+
+
+
+The Problem it Solves: It removes new keywords from your business logic, decoupling your code from concrete implementations.
+Interview Buzzwords to drop: "Loose Coupling," "Single Responsibility Principle" (moves creation logic out of business logic), and "Open/Closed Principle" (you can add new types without changing existing code).
+
+
+
+
+The Interface & Implementations
+Java
+public interface Notification {
+    void notifyUser();
+}
+
+public class EmailNotification implements Notification {
+    @Override
+    public void notifyUser() {
+        System.out.println("Sending an email...");
+    }
+}
+
+public class SmsNotification implements Notification {
+    @Override
+    public void notifyUser() {
+        System.out.println("Sending an SMS...");
+    }
+}
+The Factory
+Java
+public class NotificationFactory {
+    
+    // The Factory Method
+    public static Notification createNotification(String channel) {
+        if (channel == null) {
+            return null;
+        }
+        return switch (channel.toUpperCase()) {
+            case "SMS" -> new SmsNotification();
+            case "EMAIL" -> new EmailNotification();
+            default -> throw new IllegalArgumentException("Unknown channel " + channel);
+        };
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+5. Strategy Pattern ⭐⭐⭐⭐⭐
+
+Multiple algorithms.
+
+Real-world
+
+Shipping Charges
+
+Standard Shipping
+
+Express Shipping
+
+International Shipping
+
+Each has different calculation.
+
+ShippingStrategy
+       ↑
+------------------------
+Standard
+Express
+International
+strategy.calculate(price);
+
+Another example
+
+Discount
+
+Festival Discount
+
+Member Discount
+
+Coupon Discount
+
+Instead of
+
+if()
+else if()
+else
+
+Use Strategy.
+
+
+
+
+In vanilla Java, the Strategy pattern requires a Context class. The Context doesn't execute the algorithm itself; instead, it holds a reference to a Strategy interface and delegates the work.
+
+
+Java
+public interface DiscountStrategy {
+    double applyDiscount(double orderTotal);
+}
+
+public class VipDiscount implements DiscountStrategy {
+    @Override
+    public double applyDiscount(double orderTotal) {
+        return orderTotal * 0.80; // 20% off
+    }
+}
+
+public class SeasonalDiscount implements DiscountStrategy {
+    @Override
+    public double applyDiscount(double orderTotal) {
+        return orderTotal * 0.90; // 10% off
+    }
+}
+The Context Class
+Java
+public class CheckoutContext {
+    private DiscountStrategy discountStrategy;
+
+    // The strategy can be swapped at runtime
+    public void setDiscountStrategy(DiscountStrategy discountStrategy) {
+        this.discountStrategy = discountStrategy;
+    }
+
+    public double calculateTotal(double orderTotal) {
+        if (discountStrategy == null) {
+            return orderTotal;
+        }
+        // Delegating the behavior to the strategy
+        return discountStrategy.applyDiscount(orderTotal);
+    }
+}
+Interview trap: The interviewer might ask, "How does the Context know which strategy to use?"
+Your answer: "In a pure Strategy pattern, the client (whoever is calling the Context) is responsible for choosing and injecting the correct strategy based on the current state or user input."
+
+
+
+
+
+
+
+
+6. Singleton Pattern ⭐⭐⭐⭐
+
+Only one object exists.
+
+Spring Beans are Singleton by default.
+
+Example
+
+@Service
+public class UserService{
+}
+
+Only one UserService object.
+
+Real-world
+
+Email Service
+
+Notification Service
+
+Cache Manager
+
+Configuration Manager
+7. Repository Pattern ⭐⭐⭐⭐⭐
+
+Spring Data JPA already uses it.
+
+Service
+
+↓
+
+Repository
+
+↓
+
+Database
+public interface UserRepository
+extends JpaRepository<User,Long>{
+}
+
+Real-world
+
+Find Customer
+
+Save Customer
+
+Delete Customer
+
+Database logic stays inside Repository.
+
+8. Dependency Injection (DI) ⭐⭐⭐⭐⭐
+
+Spring injects dependencies.
+
+Without DI
+
+UserService service =
+new UserService();
+
+With DI
+
+@Service
+public class UserController{
+
+    private final UserService service;
+
+    public UserController(UserService service){
+        this.service=service;
+    }
+}
+
+Real-world
+
+OrderController
+
+↓
+
+OrderService
+
+↓
+
+PaymentService
+
+↓
+
+Repository
+
+Spring injects automatically.
+
+9. Exception Handling Pattern ⭐⭐⭐⭐⭐
+
+Instead of
+
+try
+catch
+
+everywhere.
+
+Use
+
+@ControllerAdvice
+@RestControllerAdvice
+public class GlobalExceptionHandler{
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<?> handle(){
+    }
+}
+
+Real-world
+
+GET /users/100
+
+Output
+
+{
+ "message":"User not found"
+}
+10. API Response Wrapper Pattern ⭐⭐⭐⭐
+
+Always return same response structure.
+
+Instead of
+
+Sometimes
+
+{
+name:"John"
+}
+
+Sometimes
+
+{
+status:true
+}
+
+Use
+
+{
+   "status":"SUCCESS",
+   "message":"Employee Found",
+   "data":{
+       "id":1,
+       "name":"John"
+   }
+}
+
+Real-world
+
+Used in Banking APIs.
+
+11. Pagination Pattern ⭐⭐⭐⭐⭐
+
+Instead of
+
+GET /employees
+
+returning
+
+10 lakh records
+
+Use
+
+GET /employees?page=0&size=20
+
+Spring
+
+Page<Employee> findAll(Pageable pageable);
+
+Real-world
+
+Amazon products
+
+Flipkart products
+
+Employee list
+
+12. API Versioning Pattern ⭐⭐⭐⭐
+
+Version APIs.
+
+/api/v1/users
+
+/api/v2/users
+
+Real-world
+
+Old Mobile App
+
+↓
+
+Works with v1
+
+New App
+
+↓
+
+Uses v2
+
+13. Circuit Breaker Pattern (Microservices) ⭐⭐⭐⭐⭐
+
+Used with Resilience4j.
+
+Order Service
+
+↓
+
+Payment Service
+
+
+Payment service down.
+
+Instead of waiting forever,
+
+Fallback Response
+
+Real-world
+
+Order placed
+
+Payment service unavailable
+
+Try later
+14. Retry Pattern ⭐⭐⭐⭐
+
+Temporary failure.
+
+Order Service
+
+↓
+
+Inventory Service
+
+Retry
+
+3 times
+
+before failure.
+
+15. API Gateway Pattern ⭐⭐⭐⭐⭐
+Client
+
+↓
+
+API Gateway
+
+↓
+
+User Service
+
+Order Service
+
+Payment Service
+
+Real-world
+
+Instead of client calling
+
+10 services
+
+It calls only
+
+Gateway
+16. CQRS (Command Query Responsibility Segregation) ⭐⭐⭐
+
+Separate reads and writes.
+
+POST /orders
+
+Write Database
+
+GET /orders
+
+Read Database
+
+Real-world
+
+E-commerce
+
+Heavy read traffic.
+
+17. Observer Pattern ⭐⭐⭐⭐
+
+One event notifies many listeners.
+
+Real-world
+
+Order Placed
+
+↓
+
+Inventory
+
+↓
+
+Email
+
+↓
+
+SMS
+
+↓
+
+Loyalty Points
+
+Often implemented using Kafka or Spring Events.
+
+
+
+The Problem it Solves: It stops objects from tightly binding to one another. If a user registers, you might need to send a welcome email, provision a workspace, and send an admin alert. The UserService shouldn't have to inject and call EmailService, WorkspaceService, and AlertService.
+
+Interview Buzzwords to drop: "Event-Driven," "Publish/Subscribe (Pub/Sub)," "Loose Coupling," and "Separation of Concerns."
+
+
+ep 1: The Event (The State Change)
+This is just a simple data class (a Java 17 record is perfect for this).
+
+Java
+public record UserRegisteredEvent(Long userId, String email) {}
+Step 2: The Publisher (The Subject)
+Notice how clean the UserService is. It doesn't know who cares about a new user; it just announces that it happened.
+
+Java
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserService {
+
+    private final ApplicationEventPublisher eventPublisher;
+    private final UserRepository userRepository;
+
+    public UserService(ApplicationEventPublisher eventPublisher, UserRepository userRepository) {
+        this.eventPublisher = eventPublisher;
+        this.userRepository = userRepository;
+    }
+
+    public void registerUser(String email, String password) {
+        // 1. Save user to database
+        User user = userRepository.save(new User(email, password));
+
+        // 2. Publish the event
+        eventPublisher.publishEvent(new UserRegisteredEvent(user.getId(), user.getEmail()));
+    }
+}
+Step 3: The Listeners (The Observers)
+Any bean in your application can listen for this event using the @EventListener annotation.
+
+Java
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+
+@Component
+public class EmailNotificationListener {
+
+    @EventListener
+    public void handleUserRegistration(UserRegisteredEvent event) {
+        System.out.println("Sending welcome email to: " + event.email());
+    }
+}
+
+@Component
+public class WorkspaceProvisioningListener {
+
+    @EventListener
+    public void setupDefaultWorkspace(UserRegisteredEvent event) {
+        System.out.println("Setting up workspace for user ID: " + event.userId());
+    }
+}
+
+
+
+
+1. Synchronous vs. Asynchronous (Performance Trap)
+By default, Spring @EventListener is synchronous. If sending the welcome email takes 5 seconds, the registerUser method in the UserService blocks for 5 seconds. The user's browser is left spinning.
+
+The Fix: You annotate the listener with @Async (and add @EnableAsync to your main class) so it runs on a separate thread, returning an immediate response to the user.
+
+2. Transaction Integrity (The DB Rollback Trap)
+If you publish the event, the email sends successfully, but then the database transaction fails (e.g., a constraint violation), you just emailed a welcome letter to a user who doesn't exist in your database.
+
+The Fix: Use Spring's @TransactionalEventListener. This tells Spring to only trigger the observers after the database commit is 100% successful.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+: The WebSocket Configuration
+You must configure the message broker and register the endpoint where the frontend (like an Angular app) will connect.
+
+Java
+import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
+import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
+import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+
+@Configuration
+@EnableWebSocketMessageBroker
+public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    @Override
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        // The endpoint your Angular frontend will connect to (e.g., ws://localhost:8080/ws-logistics)
+        // SockJS is a fallback option for older browsers that don't support raw WebSockets
+        registry.addEndpoint("/ws-logistics").setAllowedOriginPatterns("*").withSockJS();
+    }
+
+    @Override
+    public void configureMessageBroker(MessageBrokerRegistry registry) {
+        // Prefix for messages sent FROM the server TO the client
+        registry.enableSimpleBroker("/topic", "/queue");
+        
+        // Prefix for messages sent FROM the client TO the server
+        registry.setApplicationDestinationPrefixes("/app");
+    }
+}
+Step 2: The Data Record
+A simple Java record to hold the update data.
+
+Java
+public record OrderStatusUpdate(String trackingId, String currentStatus, String location) {}
+Step 3: The Service (Server Push)
+You don't always need a Controller to receive messages. Often, your backend generates an event (e.g., a courier updates an order status in the database), and you just need to push that update to whoever is listening.
+
+You do this using the SimpMessagingTemplate.
+
+Java
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Service;
+
+@Service
+public class OrderTrackingService {
+
+    private final SimpMessagingTemplate messagingTemplate;
+
+    public OrderTrackingService(SimpMessagingTemplate messagingTemplate) {
+        this.messagingTemplate = messagingTemplate;
+    }
+
+    public void updateOrderStatus(String trackingId, String status, String location) {
+        // 1. Update the database (Logic omitted)
+        
+        // 2. Create the payload
+        OrderStatusUpdate update = new OrderStatusUpdate(trackingId, status, location);
+
+        // 3. Push the update to any client subscribed to this specific order's topic
+        String destination = "/topic/orders/" + trackingId;
+        messagingTemplate.convertAndSend(destination, update);
+        
+        System.out.println("Pushed live update to " + destination);
+    }
+}
+Frontend perspective: An Angular client tracking order ORD-999 would simply subscribe to /topic/orders/ORD-999 and instantly receive the JSON object whenever this service method runs.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+18. Chain of Responsibility ⭐⭐⭐⭐
+
+Request passes through a chain of handlers.
+
+Real-world (Spring Security)
+
+Request
+  ↓
+Authentication Filter
+  ↓
+JWT Filter
+  ↓
+Authorization Filter
+  ↓
+Controller
+
+Each filter performs one responsibility.
+
+REST API Design Example (E-commerce)
+Client
+   │
+   ▼
+Controller
+   │
+   ▼
+Service
+   │
+   ├── Factory Pattern (choose payment method)
+   ├── Strategy Pattern (discount calculation)
+   ├── Builder Pattern (build response DTO)
+   ├── Observer Pattern (publish order event)
+   └── Repository Pattern (database access)
+   │
+   ▼
+Database
+

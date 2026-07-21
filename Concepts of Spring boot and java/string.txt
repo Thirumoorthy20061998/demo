@@ -1,0 +1,107 @@
+Two Ways to Create a String
+This is a classic warm-up interview question: "What is the difference between these two lines of code?"
+
+Java
+String s1 = "Hello";                  // 1. String Literal
+String s2 = new String("Hello");      // 2. Using the 'new' keyword
+To understand the difference, we have to look at how Java handles memory. Java divides its memory into different areas, two of which are the Heap (where objects live) and a special sub-section inside the heap called the String Constant Pool (SCP).
+
+. The String Literal ("Hello")
+When you create a string using double quotes, Java checks the String Constant Pool first.
+
+If "Hello" already exists in the pool, Java doesn't create a new object. It simply points s1 to that existing memory address.
+
+If it does not exist, Java creates it in the pool.
+
+Why? Optimization. If 100 variables hold the string "admin", Java only allocates memory once.
+
+2. The new Keyword (new String("Hello"))
+When you use new, you are explicitly forcing Java to bypass the pool optimization.
+
+Java will always create a brand-new object in the normal Heap memory, even if "Hello" already exists in the pool.
+
+Let's Prove It (The == vs .equals() Trap)
+Interviewers love to test if you know the difference between comparing references (memory addresses) and comparing actual content.
+
+== checks if two variables point to the exact same memory location.
+
+.equals() checks if the actual text content inside the objects is identica
+
+
+public class StringMemoryDemo {
+    public static void main(String[] args) {
+        String s1 = "Java"; // Placed in the String Pool
+        String s2 = "Java"; // Points to the existing "Java" in the pool
+        String s3 = new String("Java"); // Forces a new object in the normal Heap
+
+        // Comparing s1 and s2
+        System.out.println(s1 == s2);      // TRUE (They point to the exact same pool object)
+        System.out.println(s1.equals(s2)); // TRUE (The text "Java" matches "Java")
+
+        // Comparing s1 and s3
+        System.out.println(s1 == s3);      // FALSE (One is in the pool, one is in the general heap!)
+        System.out.println(s1.equals(s3)); // TRUE (The text contents are exactly the same)
+    }
+}
+
+
+
+
+
+1. StringBuffer is Synchronized (Blocking)
+2. StringBuilder is NOT Synchronized (Non-Blocking)
+
+2. StringBuffer (Multi-Threaded / Safe but Slower)
+it uses internal locks (synchronized). If two threads try to modify it at the exact same time, one must wait for the other. This prevents data corruption.
+
+When to use: Only when multiple threads share and modify the same string object simultaneously.
+
+
+1. StringBuilder (Single-Threaded / Fast)
+How it works: It doesn't use locks. It runs at full speed because it assumes only one thread is using it.
+
+When to use: Default choice for loops, algorithms, and 99% of everyday coding.
+
+
+
+
+When you create a StringBuilder without specifying a size:
+
+It defaults to a starting capacity of 16 characters.
+
+
+$$\text{New Capacity} = (\text{Old Capacity} \times 2) + 2$$
+
+
+
+
+
+Enter the Helpers: StringBuilder and StringBuffer
+To solve this problem, Java gives us mutable (changeable) companions. They don't create new objects when modified; instead, they maintain a flexible internal array that they grow or shrink in place.
+
+
+
+
+Pro-Tip: If you know your final string size will be large, initialize it with a capacity to save memory cycles: new StringBuilder(5000);.
+
+
+Garbage Collection (GC) Impact: Doing massive string concatenations (+) inside a loop creates thousands of temporary String objects. This triggers the Java Garbage Collector to run frequently, slowing down the application. StringBuilder prevents this GC pressure.
+
+
+
+
+The design decision to make String immutable comes down to three massive pillars: Security, Thread Safety, and Hash-based Collections (like HashMap).
+
+
+This is a classic senior-level interview question: "Why makes String the perfect key for a HashMap?"
+
+To understand this, let's look at how a HashMap stores data. When you put a key-value pair into a Map, Java calls hashCode() on the key object to calculate where (in which bucket) to store the value.
+
+Because the contents of a String never change, its hashCode will always be exactly the same.
+
+
+What if String was mutable?
+If you could change the string "Alex" to "Bob" after putting it in the map, its hash code would change.
+The map would look in the bucket calculated for "Bob", but your data is sitting in the bucket calculated for "Alex". Your data becomes permanently lost and corrupted inside the map!
+
+

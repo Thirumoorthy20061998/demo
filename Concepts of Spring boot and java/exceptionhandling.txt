@@ -1,0 +1,370 @@
+None selected
+
+Skip to content
+Using Programming.com Mail with screen readers
+Enable desktop notifications for Programming.com Mail.
+   OK  No thanks
+
+5 of 317
+(no subject)
+Inbox
+
+Thirumoorthy Muthu <thirumoorthy.muthu@programming.com>
+Attachments
+Jul 15, 2026, 4:19 PM (5 days ago)
+to me
+
+
+ 3 Attachments
+  •  Scanned by Gmail
+List<UserOrderRow> tableData = Arrays.asList(
+            new UserOrderRow(1, "Alice", 101),
+            new UserOrderRow(2, "Bob", 102),
+            new UserOrderRow(1, "Alice", 103),
+            new UserOrderRow(3, "Charlie", 104),
+            new UserOrderRow(2, "Bob", 105),
+            new UserOrderRow(2, "Bob", 106)
+        );
+
+        // Step 1: Group by Username and count the number of rows (orders) for each
+        Map<String, Long> userOrderCounts = tableData.stream()
+            .collect(Collectors.groupingBy(UserOrderRow.getUsername, Collectors.counting()));
+
+        // Step 2: Find the maximum order count using Collections.max()
+        long maxOrders = userOrderCounts.isEmpty() ? 0L : Collections.max(userOrderCounts.values());
+
+        // Step 3: Filter out the user(s) who match that maximum count (handles ties)
+        List<String> topUsers = userOrderCounts.entrySet().stream()
+            .filter(entry -> entry.getValue() == maxOrders)
+            .map(Map.Entry::getKey)
+            .collect(Collectors.toList());
+
+
+
+Create a Standard Error Response Structure
+Before catching exceptions, define what the error message looks like to the outside world. This keeps your API responses uniform.
+
+import java.time.LocalDateTime;
+
+public class ErrorResponse {
+    private LocalDateTime timestamp;
+    private int status;
+    private String error;
+    private String message;
+    private String path;
+
+    public ErrorResponse(int status, String error, String message, String path) {
+        this.timestamp = LocalDateTime.now();
+        this.status = status;
+        this.error = error;
+        this.message = message;
+        this.path = path;
+    }
+
+    // Getters and Setters
+}
+
+
+Custom Exceptions (e.g., ResourceNotFoundException)
+
+Spring Validation Exceptions (e.g., when @Valid fails on input arguments)
+
+Global/Fallback Exceptions (e.g., generic Exception for server errors)
+
+
+
+
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
+
+import java.nio.file.AccessDeniedException;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+@RestControllerAdvice
+@Slf4j
+public class RealTimeGlobalExceptionHandler {
+
+    // 1. ALL CUSTOM BUSINESS EXCEPTIONS (Clean & Centralized)
+    @ExceptionHandler(BaseBusinessException.class)
+    public ResponseEntity<ApiErrorResponse> handleBusinessExceptions(BaseBusinessException ex, WebRequest request) {
+        log.warn("Business rule violation: {} - Code: {}", ex.getMessage(), ex.getErrorCode());
+        
+        ApiErrorResponse response = buildErrorResponse(ex.getHttpStatus(), ex.getMessage(), ex.getErrorCode(), request);
+        return new ResponseEntity<>(response, ex.getHttpStatus());
+    }
+
+    // 2. SPRING VALIDATION EXCEPTIONS (When DTO validation e.g., @NotBlank fails)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex, WebRequest request) {
+        log.warn("Validation failed for request: {}", request.getDescription(false));
+        
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+
+        ApiErrorResponse response = ApiErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
+                .customErrorCode("VALIDATION_ERROR")
+                .message("Input payload validation failed")
+                .validationErrors(errors)
+                .path(request.getDescription(false).replace("uri=", ""))
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    // 3. DATABASE CONSTRAINT VIOLATIONS (Catching unique constraint drops before they leak)
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDatabaseConstraints(DataIntegrityViolationException ex, WebRequest request) {
+        log.error("Database constraint violation detected!", ex);
+        
+        ApiErrorResponse response = buildErrorResponse(
+                HttpStatus.CONFLICT, 
+                "Database error: Data integrity violation or duplicate key.", 
+                "DB_CONSTRAINT_ERROR", 
+                request
+        );
+        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+    }
+
+    // 4. SECURITY / AUTHORIZATION EXCEPTIONS
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccessDenied(AccessDeniedException ex, WebRequest request) {
+        log.warn("Unauthorized access attempt on path: {}", request.getDescription(false));
+        
+        ApiErrorResponse response = buildErrorResponse(
+                HttpStatus.FORBIDDEN, 
+                "You do not have permission to access this resource.", 
+                "AUTH_FORBIDDEN", 
+                request
+        );
+        return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+    }
+
+    // 5. THE ULTIMATE CATCH-ALL (Prevents raw stack traces from exposing system internals)
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiErrorResponse> handleAllUncaughtExceptions(Exception ex, WebRequest request) {
+        // Critical: Log the full stack trace internally so developers can fix it via logs
+        log.error("CRITICAL UNCAUGHT EXCEPTION: ", ex);
+        
+        ApiErrorResponse response = buildErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR, 
+                "A critical internal server error occurred. Please contact support.", 
+                "SYS_INTERNAL_ERROR", 
+                request
+        );
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    // Helper method to keep code DRY
+    private ApiErrorResponse buildErrorResponse(HttpStatus status, String message, String customCode, WebRequest request) {
+        return ApiErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(status.value())
+                .error(status.getReasonPhrase())
+                .customErrorCode(customCode)
+                .message(message)
+                .path(request.getDescription(false).replace("uri=", ""))
+                .build();
+    }
+}
+
+
+
+
+Never return ex.getMessage() on raw Exception.class: If a database connection fails, returning ex.getMessage() could leak database URLs, usernames, or table schemas to a malicious client.
+
+Use Profile-based Logging: Ensure your logging system (like Logback/Log4j2 configured to ELK stack or Splunk) captures the entire stack trace for 500 errors, while your API client only sees a generic "An internal server error occurred" message.
+
+
+
+What is the difference between @ControllerAdvice and @RestControllerAdvice?
+What they are testing: Your understanding of Spring MVC basics.
+
+The Answer: @RestControllerAdvice is a convenience annotation that combines @ControllerAdvice and @ResponseBody.
+
+With @ControllerAdvice, methods return a view name (HTML page) by default unless you add @ResponseBody to every method.
+
+With @RestControllerAdvice, Spring automatically serializes the returned object (like your ErrorResponse) directly into JSON/XML in the HTTP response body.
+
+
+
+How do you handle exceptions that occur before reaching the Controller (e.g., in a Filter or Spring Security)?
+What they are testing: Understanding the Spring request lifecycle.
+
+The Answer: @RestControllerAdvice only catches exceptions thrown within the DispatcherServlet's scope (Controller, Service, Repository layers). It cannot catch exceptions thrown inside Servlet Filters or Spring Security filters because filters execute before the request ever reaches the dispatcher. To handle filter exceptions, you must either handle them inside the filter directly or configure an AuthenticationEntryPoint / AccessDeniedHandler in your Spring Security configuration.
+
+
+If two @ExceptionHandler methods match the same exception hierarchy (e.g., one catches IOException and another catches Exception), which one will run?
+What they are testing: Spring's exception matching algorithm.
+
+The Answer: Spring always looks for the most specific match first. If an IOException is thrown, the handler explicitly annotated for IOException will execute. The generic Exception handler will only pick it up if a more specific handler doesn't exist.
+
+
+How do you maintain the order of execution if you have multiple @RestControllerAdvice classes?
+What they are testing: Microservices or modular architecture design.
+
+The Answer: If you have multiple advice classes (e.g., one in a shared library module and one in your main application), you can control their priority using the @Order annotation or by implementing the Ordered interface. Lower values have higher priority (e.g., @Order(1) runs before @Order(2)).
+
+
+f a controller method has a try-catch block, will @RestControllerAdvice still catch that exception?
+What they are testing: Your understanding of Java basics and Spring's interceptor lifecycle.
+The Answer: No. Spring's AOP (Aspect-Oriented Programming) proxy intercepts exceptions after they escape the controller layer. If you catch and handle the exception inside the controller method, it never bubbles up to Spring, so the global exception handler will never see it.
+not understand     
+
+
+
+
+How do you handle exceptions that occur before reaching the Controller (e.g., in a Filter or Spring Security)?
+What they are testing: Understanding the Spring request lifecycle.
+
+The Answer: @RestControllerAdvice only catches exceptions thrown within the DispatcherServlet's scope (Controller, Service, Repository layers). It cannot catch exceptions thrown inside Servlet Filters or Spring Security filters because filters execute before the request ever reaches the dispatcher. To handle filter exceptions, you must either handle them inside the filter directly or configure an AuthenticationEntryPoint / AccessDeniedHandler in your Spring Security configuration.
+
+
+Feature@ControllerAdvice@RestControllerAdvicePrimary TargetTraditional Web Apps (UI/Views)REST APIs (JSON/XML)Response TypeHTML views (unless @ResponseBody is added)Object serialized to JSON/XML directlyAnnotation Composition@Component@ControllerAdvice + @ResponseBody
+
+
+
+
+
+
+
+
+
+
+
+public class Main {
+    public static void main(String[] args) {
+        HashSet<Student> studentSet = new HashSet<>();
+
+        Student alex1 = new Student(101, "Alex");
+        Student alex2 = new Student(101, "Alex"); // Duplicate!
+
+        studentSet.add(alex1);
+        
+        // NOW, YOU TRY TO ADD THE DUPLICATE:
+        studentSet.add(alex2); 
+    }
+}
+
+What Java does behind the scenes on studentSet.add(alex2):
+Java calls alex2.hashCode(): It gets the number 101. Java instantly jumps straight to the "Bucket 101" in memory. It doesn't look anywhere else.
+
+Java looks inside Bucket 101: It sees alex1 is already sitting there.
+
+Java calls alex1.equals(alex2): It checks if the names and IDs match perfectly. They do!
+
+Result: Java says, "Ah, this is a duplicate!" and rejects alex2.
+
+Without hashCode(), Java would have to scan the entire memory to find alex1. Without equals(), Java wouldn't know for sure if they were actually the same person.
+
+
+. Extending ResponseEntityExceptionHandler (The Enterprise Way)
+When you write a custom @RestControllerAdvice, you are building from scratch. However, Spring Boot already has internal logic to handle standard exceptions (like HttpRequestMethodNotSupportedException when someone calls a POST route with a GET).
+
+If you don't handle these, Spring falls back to its default WhiteLabel error page for them. To maintain a consistent JSON format across everything, you should extend ResponseEntityExceptionHandler:
+
+Java
+@RestControllerAdvice
+public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+
+
+
+The @ResponseStatus Shortcut (For Custom Exceptions)
+
+@ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "The requested product is out of stock")
+public class ProductOutOfStockException extends RuntimeException {
+    public ProductOutOfStockException(String message) {
+        super(message);
+
+
+
+Since @RestControllerAdvice belongs to the Spring MVC context, it only kicks in after the request clears the filter chain and reaches the DispatcherServlet. When a Spring Security filter throws an exception (like an expired JWT or unauthorized access), the request hasn't reached the servlet yet, so your advice class is completely blind to it.
+
+To bridge this gap, you need to intercept the security exception within the filter chain and explicitly hand it over to Spring MVC's HandlerExceptionResolver.
+
+
+
+
+Database Patterns (How to manage data)
+Data is arguably the hardest part of microservices. Sharing a database creates tight coupling, but separating them creates consistency issues.
+
+Database per Service: The golden rule of microservices. Each service owns its database, and other services can only access that data through the owning service's API. This ensures loose coupling.
+
+Saga Pattern: Because you can't easily use traditional ACID transactions across multiple databases, a Saga manages distributed transactions as a sequence of local transactions. If one step fails, the Saga executes compensating transactions to undo the preceding steps.
+
+
+Strangler Fig Pattern: Used for migrating a legacy monolith to microservices. You incrementally extract functionalities into new microservices and route traffic to them, gradually "strangling" the old monolith until it can be retired.
+
+
+
+Integration & Routing Patterns (How they communicate)
+Clients (web, mobile) need a cohesive way to talk to dozens of fragmented backend services.
+
+API Gateway: Acts as a single entry point into the system for all clients. It handles request routing, composition, and cross-cutting concerns like authentication, rate limiting, and SSL termination.
+
+BFF (Backend for Frontend): A variation of the API Gateway where you create a separate API Gateway for each type of UI (e.g., one for the mobile app, one for the web app). This prevents a single gateway from becoming a bottleneck and allows each client to get exactly the data shape it needs.
+
+
+
+
+
+
+
+
+
+502 Bad Gateway error
+
+
+
+The Upstream Service is Down or Unreachable
+This is the most common cause. The gateway is trying to route traffic to a service that is not there.
+
+Application Crash: The Spring Boot application has crashed (e.g., due to an OutOfMemoryError or fatal exception) and the process has terminated.
+
+Deployment Downtime: During a CI/CD pipeline deployment, if zero-downtime deployment (like blue-green or rolling updates) is not configured correctly, requests hitting the gateway while the new instance is starting up will result in a 502.
+
+Failed Health Checks: The container orchestration system (like Kubernetes) or load balancer marks the Spring Boot pod/instance as unhealthy and terminates it, but the gateway hasn't updated its routing table yet.
+
+2. Service Discovery (Registry) Sync Issues
+If you are using a service registry like Netflix Eureka, HashiCorp Consul, or Kubernetes CoreDNS, the gateway relies on this registry to know where services live.
+
+Stale Registry Data: When a Spring Boot instance scales down or crashes, it takes a few seconds (or minutes, depending on your cache configurations) for the registry to remove it. During this window, the API Gateway still routes traffic to the dead IP address.
+
+Missing Instances: The service is running, but it failed to register itself with the discovery server due to misconfiguration (e.g., wrong eureka.client.serviceUrl.defaultZone).
+
+3. Resource Exhaustion (Tomcat/Undertow)
+Even if the Spring Boot application is technically "running," it might be in a state where it cannot accept or process new TCP connections.
+
+Thread Pool Exhaustion: Spring Boot’s embedded server (Tomcat by default) has a maximum number of worker threads (default server.tomcat.threads.max=200). If all threads are busy (often due to blocked database queries or slow external API calls), the server will reject new connections, causing the gateway to throw a 502.
+
+Connection Queue Full: If the thread pool is full, Tomcat places requests in a queue (the accept-count, default 100). If this queue also fills up, subsequent connections are immediately refused by the OS.
+
+
+
+Firewall/Security Groups:
+
+
+Check the Gateway Logs First: Find the exact IP and port the gateway was trying to reach when the 502 occurred.
+
+Verify the IP: Check your Service Registry (Eureka/Consul) or Kubernetes Endpoints. Does that IP actually exist right now?
+
+Check Upstream Logs: Look at the logs of the specific Spring Boot instance. If there are no logs for the request, the request never reached it (pointing to Network/Registry issues). If there are OutOfMemory or database timeout logs, you have a resource exhaustion issue.
+
+ListUserOrderRow tableData = Arrays.txt
+Displaying ListUserOrderRow tableData = Arrays.txt.

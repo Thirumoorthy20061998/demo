@@ -1,0 +1,100 @@
+Phase 1: The Basics (What & Why)
+Think of a hashCode() as a digital fingerprint for an object. It takes the data inside an object and crunches it down into a single 32-bit integer.
+
+Why do we need it? Speed.
+If you have a collection of 10,000 users and want to check if "John" is in there, comparing his name against all 10,000 takes too long. Instead, Java hashes "John" to a number (e.g., 4023), and goes straight to bucket 4023 to find him.
+
+💡 The Golden Rule: If two objects are equal according to equals(), they must return the exact same integer from hashCode(). If you override equals(), you must override hashCode().
+
+
+The Problem (No hashCode)
+Imagine a User class where equals() only checks the name:
+
+Java
+User u1 = new User("Alice");
+User u2 = new User("Alice");
+
+System.out.println(u1.equals(u2)); // Prints: true (They are equal!)
+Now, we put u1 into a HashSet (which uses hash codes to store objects):
+
+Java
+HashSet<User> set = new HashSet<>();
+set.add(u1); 
+
+System.out.println(set.contains(u2)); // Prints: false !!! (Wait, what?)
+Why did it fail?
+Because we forgot to override hashCode(), Java gave u1 and u2 different hash codes (based on their random memory addresses).
+
+Java stored u1 in Locker #14.
+
+When we searched for u2, Java calculated its hash code and looked in Locker #99.
+
+Locker #99 was empty, so Java said: "Not found!"
+
+The Fix
+Simply override hashCode() so that equal names always produce the same number:
+
+Java
+@Override
+public int hashCode() {
+    return Objects.hash(name); // Now both "Alice" objects return the exact same locker number!
+}
+Now, set.contains(u2) will successfully print true.
+
+
+
+
+Best Practices for the Pro Developer
+Immutability: Ideally, the fields you use in hashCode() should be final. If you change an object's field after adding it to a HashSet, its hash code changes, and you will lose the object inside the set forever!
+
+Use Modern Java: Stick to Objects.hash(field1, field2). It handles null values safely and uses good hashing math under the hood.
+
+
+
+
+This is the classic "vanishing object" trap, and it catches a lot of developers off guard.
+
+When you put an object into a HashSet, Java calculates its hashCode() and places it into a specific bucket based on that number. If you modify a field that is used to calculate that hash code after it's already in the set, the object's hash code changes.
+
+
+
+How to Prevent It
+There are two industry-standard ways to prevent this bug.
+
+Strategy A: Make it Immutable (Highly Recommended)
+The absolute best defense is to make the fields used in equals and hashCode final. If you can't change the object, you can't break the hash map.
+
+If you are using modern Java (Java 14+), you should use a Record. Records make all fields final by default and generate perfect equals() and hashCode() methods automatically under the hood.
+
+Java
+
+
+Java
+// A Record is immutable out of the box. No setters allowed!
+public record User(String username) { }
+If you are using a standard class, mark your fields as final and do not provide setters for them:
+
+Java
+public class User {
+    private final String username; // Cannot be changed after creation
+
+    public User(String username) {
+        this.username = username;
+    }
+
+
+
+A Java Record is like a locked box. You can't change what is inside the box, but if you put a mutable object (like a normal List or Array) inside, the contents of that object can still change.
+
+
+Why this is dangerous:
+If you change the list inside the record, the record's hashCode() will change. If this record is saved in a HashMap or HashSet, it is now lost forever in memory because Java will look for it in the wrong place.
+
+
+The Golden Rule for Records:
+Only put truly unchangeable things inside your records:
+
+Primitives/Strings: int, double, String
+
+Unmodifiable Lists: Use List.of() or List.copyOf() instead of a regular ArrayList.
+

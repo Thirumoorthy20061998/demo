@@ -1,0 +1,213 @@
+CONNECTION POOLING IN SPRING BOOT - NOTES
+===========================================
+
+1. WHY CONNECTION POOLING?
+---------------------------
+Creating a raw JDBC connection is expensive:
+- TCP handshake with DB server
+- Authentication
+- Session/memory allocation on DB side
+(approx 50-100ms per connection)
+
+If app gets 1000 requests/sec and creates+destroys a connection each time,
+DB and app both get overloaded.
+
+CONNECTION POOL = keep a set of ready-to-use DB connections open and reuse them
+instead of creating new ones every time.
+
+
+2. REAL WORLD ANALOGY
+-----------------------
+Restaurant with 10 tables:
+- Pool = the 10 tables
+- Customer waits if all tables are full = request waits if pool exhausted
+- Table cleaned & reused for next customer = connection reset & reused for next query
+- Restaurant doesn't build a new table for every customer = app doesn't open new
+  DB connection per request
+
+
+3. HIKARICP - SPRING BOOT DEFAULT POOL
+-----------------------------------------
+- Default pool since Spring Boot 2.x
+- Auto-included with spring-boot-starter-data-jpa / spring-boot-starter-jdbc
+- Fastest, most lightweight pool in Java
+- No extra dependency needed
+
+
+4. BASIC CONFIGURATION (application.yml)
+--------------------------------------------
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/mydb
+    username: root
+    password: root
+    hikari:
+      pool-name: MyHikariPool
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      validation-timeout: 5000
+
+
+5. WHAT EACH PROPERTY MEANS
+-------------------------------
+maximum-pool-size   -> Max connections open at once
+                        (Restaurant has only 10 tables total)
+
+minimum-idle        -> Min connections kept ready even when idle
+                        (5 tables always pre-cleaned & ready)
+
+connection-timeout  -> How long a request waits for a free connection
+                        before throwing SQLException
+                        (Customer waits max 30s for a table, then leaves)
+
+idle-timeout        -> Idle connection closed after this time
+                        (only if pool size > minimum-idle)
+                        (Unused extra table removed after sitting empty too long)
+
+max-lifetime        -> Connection force-closed & replaced after this time
+                        (prevents stale/broken connections)
+                        (Table replaced every 30 min for maintenance)
+
+validation-timeout  -> Time allowed to check "is this connection alive?"
+                        before giving up
+                        (Quick check "is table clean?" before seating)
+
+
+6. INTERNAL FLOW
+--------------------
+Request comes in
+   -> Spring Boot needs a DB connection
+   -> HikariCP checks: Is there an idle connection in pool?
+        YES -> Reuse it immediately
+        NO  -> Is pool size < maximum-pool-size?
+                 YES -> Create new connection
+                 NO  -> Wait (up to connection-timeout)
+                          -> Still none free? -> Throw Exception
+
+
+7. HOW TO SIZE THE POOL (IMPORTANT)
+----------------------------------------
+Common mistake: "more connections = more speed" -> WRONG
+
+HikariCP formula (based on PostgreSQL research):
+   connections = (core_count * 2) + effective_spindle_count
+
+For most web apps on modern hardware with SSD:
+   pool size = (number_of_CPU_cores * 2) + 1
+
+Example: 4-core server -> maximum-pool-size: 9 is usually enough.
+Setting it to 100 can actually make things SLOWER due to context-switching
+and DB-side thread contention.
+
+Real incident: team sets maximum-pool-size: 200 thinking it handles more load.
+DB only allows 100 max connections -> DB crashes with "too many connections"
+error, or app slows down because DB spends more time managing threads than
+running queries.
+
+
+8. MONITORING WITH ACTUATOR
+-------------------------------
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
+  metrics:
+    enable:
+      hikaricp: true
+
+Check live pool usage at:
+/actuator/metrics/hikaricp.connections.active
+
+
+9. REAL PRODUCTION EXAMPLE (FinTech/Payment API)
+-----------------------------------------------------
+@Service
+public class PaymentService {
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    public void processPayment(Payment payment) {
+        // Borrows a connection from HikariCP pool,
+        // runs query, RETURNS connection to pool (does not physically close it)
+        jdbcTemplate.update(
+            "INSERT INTO transactions(acc_id, amount) VALUES (?, ?)",
+            payment.getAccountId(), payment.getAmount()
+        );
+    }
+}
+
+If maximum-pool-size = 10 and 50 concurrent payment requests hit at once:
+- 10 served immediately
+- 40 queue up, waiting for a free connection (up to connection-timeout)
+- If queries are fast (20ms each) -> queue clears in ~100ms, no problem
+- If queries are slow (2s, e.g. missing index) -> requests start timing out
+  -> CASCADING FAILURE
+
+Lesson: pool tuning + query optimization must go together.
+
+
+10. MULTIPLE DATASOURCES (MICROSERVICES CASE)
+--------------------------------------------------
+@Configuration
+public class DataSourceConfig {
+
+    @Bean
+    @ConfigurationProperties("spring.datasource.primary.hikari")
+    public HikariDataSource primaryDataSource() {
+        return DataSourceBuilder.create().type(HikariDataSource.class).build();
+    }
+
+    @Bean
+    @ConfigurationProperties("spring.datasource.secondary.hikari")
+    public HikariDataSource secondaryDataSource() {
+        return DataSourceBuilder.create().type(HikariDataSource.class).build();
+    }
+}
+
+application.yml:
+spring:
+  datasource:
+    primary:
+      url: jdbc:mysql://localhost:3306/orders_db
+      hikari:
+        maximum-pool-size: 10
+    secondary:
+      url: jdbc:mysql://localhost:3306/logistics_db
+      hikari:
+        maximum-pool-size: 5
+
+Each pool is independent, sized based on that specific DB's load.
+
+
+11. INTERVIEW QUESTIONS QUICK REFERENCE
+--------------------------------------------
+Q: Why is connection pooling needed?
+A: Creating raw JDBC connections is expensive (TCP + auth); pooling reuses them.
+
+Q: Default pool in Spring Boot?
+A: HikariCP
+
+Q: What happens if pool is exhausted?
+A: New requests wait up to connection-timeout, then throw SQLException.
+
+Q: How to size a pool?
+A: (cores * 2) + 1, not "as high as possible."
+
+Q: Difference between minimum-idle and maximum-pool-size?
+A: minimum-idle = always-ready connections; maximum-pool-size = hard ceiling.
+
+Q: Why does max-lifetime exist if pool works fine?
+A: DB/network devices can silently kill long-lived connections;
+   force-recycling avoids "stale connection" errors.
+
+Q: Does close() on a pooled connection disconnect from DB?
+A: No - it just returns the connection to the pool, doesn't physically
+   close the socket.
+
+===========================================
+END OF NOTES

@@ -1,0 +1,2879 @@
+google map api
+Accuracy: It cleans up messy, user-entered addresses (Places API) so drivers don't waste time looking for non-existent locations.
+
+Efficiency: It calculates the fastest multi-stop delivery sequences and real-time ETAs (Routes & Distance Matrix APIs) to save fuel and time.
+
+Visibility: It lets dispatchers track drivers on a map and gives customers live updates on where their delivery is (Maps SDK & Fleet Engine).
+
+
+Timeout – stops your app from waiting forever if the third-party API is slow or hangs. Without it, a single slow call can block threads and cascade into your whole service becoming unresponsive.
+Retry – handles transient failures (network blip, momentary 5xx, rate limit) by automatically trying again instead of failing immediately, improving reliability without user-visible errors.
+
+
+THIRD PARTY API:
+
+
+SPRING BOOT + THIRD PARTY API (GOOGLE) - STEPS
+
+Add dependency
+spring-boot-starter-webflux (for WebClient)
+Store API key in application.yml
+google.api.key=${GOOGLE_API_KEY}
+google.api.base-url=https://www.googleapis.com
+Create WebClient bean (Config class)
+@Bean
+public WebClient googleWebClient() {
+return WebClient.builder().baseUrl(baseUrl).build();
+}
+Create DTOs for request/response
+record PlaceSearchResponse(List<Place> results, String status) {}
+Create Service class
+
+inject WebClient
+call API using .get().uri().retrieve().bodyToMono()
+add timeout + retry
+
+
+Create Controller
+
+expose your own endpoint
+call service method
+return Mono/response
+
+
+Add Global Exception Handler
+
+catch API errors, return proper status
+
+
+Add resilience
+
+.timeout(Duration.ofSeconds(5))
+.retryWhen(Retry.backoff(2, Duration.ofMillis(500)))
+
+
+Write tests
+
+mock external call using WireMock/MockWebServer
+
+
+If OAuth needed (Gmail/Calendar/Drive):
+
+register app in Google Cloud Console
+add spring-boot-starter-oauth2-client
+configure client-id/secret in yml
+use @RegisteredOAuth2AuthorizedClient to get token
+
+
+
+FLOW: Config -> WebClient -> DTO -> Service -> Controller -> Error Handling -> Resilience -> Tests
+
+
+
+
+
+
+============================================
+ELK STACK WITH SPRING BOOT - NO DOCKER SETUP
+============================================
+
+STEP 1: DOWNLOAD (use same version for all 3, example 8.13.4)
+----------------------------------------------------------------
+Elasticsearch: https://www.elastic.co/downloads/elasticsearch
+Logstash:      https://www.elastic.co/downloads/logstash
+Kibana:        https://www.elastic.co/downloads/kibana
+
+Extract all 3 zip/tar files to separate folders.
+
+
+STEP 2: START ELASTICSEARCH
+----------------------------------------------------------------
+Go into elasticsearch folder -> config -> elasticsearch.yml
+Add this line at the end:
+xpack.security.enabled: false
+
+Then run:
+Windows: bin\elasticsearch.bat
+Linux/Mac: ./bin/elasticsearch
+
+Check in browser: http://localhost:9200
+(should show JSON output)
+
+
+STEP 3: START KIBANA
+----------------------------------------------------------------
+Go into kibana folder and run:
+Windows: bin\kibana.bat
+Linux/Mac: ./bin/kibana
+
+Check in browser: http://localhost:5601
+
+
+STEP 4: CREATE LOGSTASH CONFIG FILE
+----------------------------------------------------------------
+Go into logstash folder, create a new file:
+logstash-springboot.conf
+
+Paste this content inside it:
+
+input {
+  tcp {
+    port => 5000
+    codec => json_lines
+  }
+}
+
+filter {
+}
+
+output {
+  elasticsearch {
+    hosts => ["http://localhost:9200"]
+    index => "springboot-logs-%{+YYYY.MM.dd}"
+  }
+  stdout { codec => rubydebug }
+}
+
+
+STEP 5: START LOGSTASH
+----------------------------------------------------------------
+Windows: bin\logstash.bat -f logstash-springboot.conf
+Linux/Mac: ./bin/logstash -f logstash-springboot.conf
+
+
+STEP 6: ADD DEPENDENCY IN SPRING BOOT pom.xml
+----------------------------------------------------------------
+<dependency>
+    <groupId>net.logstash.logback</groupId>
+    <artifactId>logstash-logback-encoder</artifactId>
+    <version>7.4</version>
+</dependency>
+
+
+STEP 7: CREATE logback-spring.xml
+----------------------------------------------------------------
+Path: src/main/resources/logback-spring.xml
+
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>localhost:5000</destination>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>{"application":"springboot-app"}</customFields>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="LOGSTASH"/>
+    </root>
+</configuration>
+
+
+STEP 8: TEST CONTROLLER TO GENERATE LOGS
+----------------------------------------------------------------
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class TestController {
+
+    private static final Logger log = LoggerFactory.getLogger(TestController.class);
+
+    @GetMapping("/test")
+    public String test() {
+        log.info("Test endpoint hit - checking ELK pipeline");
+        log.error("Sample error log for ELK verification");
+        return "ok";
+    }
+}
+
+
+STEP 9: START ORDER (IMPORTANT)
+----------------------------------------------------------------
+1. Start Elasticsearch first, wait till fully up
+2. Start Kibana
+3. Start Logstash with the conf file
+4. Start Spring Boot application
+5. Hit http://localhost:8080/test a few times
+
+
+STEP 10: HOW TO CHECK LOGS
+----------------------------------------------------------------
+OPTION A - Logstash terminal
+Just watch the terminal running logstash, logs print live there.
+
+OPTION B - Kibana (recommended)
+1. Open http://localhost:5601
+2. Go to Menu -> Stack Management -> Data Views
+3. Create data view
+   Pattern: springboot-logs-*
+   Time field: @timestamp
+4. Go to Menu -> Discover
+5. Select your data view
+6. See all logs, filter by level, message, logger_name etc
+
+OPTION C - Direct check via curl
+curl -X GET "localhost:9200/springboot-logs-*/_search?pretty"
+
+
+
+
+
+
+
+============================================
+FILEBEAT - WHAT IT IS AND HOW TO USE IT
+============================================
+
+WHAT IS FILEBEAT
+----------------------------------------------------------------
+Filebeat is a lightweight "log shipper" agent. Instead of your
+Spring Boot app sending logs directly over TCP to Logstash
+(like we did with logstash-logback-encoder), Filebeat sits on
+the server, WATCHES a log file, and forwards new lines to
+Logstash or Elasticsearch as they are written.
+
+Think of it like: Spring Boot writes logs to a normal .log file
+on disk -> Filebeat tails that file -> pushes each new line to
+Logstash/Elasticsearch.
+
+
+WHY USE FILEBEAT INSTEAD OF DIRECT TCP APPENDER
+----------------------------------------------------------------
+- App doesn't need network dependency on Logstash to log
+  (if Logstash is down, app still writes to file safely,
+  Filebeat resends later)
+- Filebeat is very lightweight (low CPU/RAM) compared to
+  running Logstash on every server
+- Standard practice in real production/microservices setup
+- Works well when you have MANY servers - install Filebeat on
+  each, all forward to one central Logstash/Elasticsearch
+- Has built-in backpressure handling and retry if Logstash/ES
+  is temporarily down
+
+
+FILEBEAT vs DIRECT TCP APPENDER (what we set up earlier)
+----------------------------------------------------------------
+DIRECT TCP APPENDER (logstash-logback-encoder):
+  Spring Boot app --(TCP, live)--> Logstash --> Elasticsearch
+  - Simple, fewer moving parts
+  - If Logstash is down when app logs, that log line is LOST
+  - Good for single app / dev / small setup
+
+FILEBEAT:
+  Spring Boot app --> log file --> Filebeat --> Logstash -->
+  Elasticsearch
+  - One extra component (Filebeat) but safer, no data loss
+  - Good for production, multiple servers, microservices
+  - Industry standard approach
+
+
+STEP 1: MAKE SPRING BOOT WRITE LOGS TO A FILE
+----------------------------------------------------------------
+Update logback-spring.xml (src/main/resources) to write to file
+instead of/along with console:
+
+
+Note: LogstashEncoder here writes each log line as JSON into
+the file, so Filebeat/Logstash can parse it easily later.
+
+
+STEP 2: DOWNLOAD AND INSTALL FILEBEAT
+----------------------------------------------------------------
+Download from: https://www.elastic.co/downloads/beats/filebeat
+(match version with your Elasticsearch/Logstash, e.g. 8.13.x)
+
+wget https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-8.13.4-linux-x86_64.tar.gz
+tar -xzf filebeat-8.13.4-linux-x86_64.tar.gz
+cd filebeat-8.13.4-linux-x86_64/
+
+
+STEP 3: CONFIGURE FILEBEAT
+----------------------------------------------------------------
+Edit filebeat.yml (inside the extracted folder):
+
+filebeat.inputs:
+  - type: filestream
+    enabled: true
+    paths:
+      - /path/to/your/springboot/logs/springboot-app.log
+
+output.logstash:
+  hosts: ["localhost:5044"]
+
+(Comment out or remove the default output.elasticsearch
+section if present, since we are sending to Logstash first)
+
+
+STEP 4: UPDATE LOGSTASH CONFIG TO RECEIVE FROM FILEBEAT
+----------------------------------------------------------------
+Filebeat sends using the "beats" protocol on port 5044
+(different from the TCP port 5000 we used before).
+
+Update/create logstash-filebeat.conf:
+
+input {
+  beats {
+    port => 5044
+  }
+}
+
+filter {
+  json {
+    source => "message"
+  }
+}
+
+output {
+  elasticsearch {
+    hosts => ["http://localhost:9200"]
+    index => "springboot-filebeat-%{+YYYY.MM.dd}"
+  }
+  stdout { codec => rubydebug }
+}
+
+Run Logstash with this config:
+./bin/logstash -f logstash-filebeat.conf
+
+
+STEP 5: START FILEBEAT
+----------------------------------------------------------------
+Windows: filebeat.exe -e -c filebeat.yml
+Linux/Mac: ./filebeat -e -c filebeat.yml
+
+(-e means log to stderr so you can see it working live)
+
+
+STEP 6: START ORDER (FULL PIPELINE WITH FILEBEAT)
+----------------------------------------------------------------
+1. Start Elasticsearch
+2. Start Kibana
+3. Start Logstash (with beats input config, port 5044)
+4. Start Filebeat (pointing to your Spring Boot log file)
+5. Start Spring Boot app
+6. Hit your endpoints to generate logs
+7. Filebeat picks up new lines from the log file automatically
+
+
+STEP 7: CHECK LOGS
+----------------------------------------------------------------
+Same as before:
+- Logstash terminal shows live rubydebug output
+- Kibana -> Data View -> pattern "springboot-filebeat-*"
+  -> Discover tab to search/filter
+- curl -X GET "localhost:9200/springboot-filebeat-*/_search?pretty"
+
+Extra check specific to Filebeat:
+- ./filebeat test config    (validates yml syntax)
+- ./filebeat test output    (checks connection to Logstash/ES)
+
+
+
+
+
+
+
+Here's a step-by-step guide to using VisualVM for detecting memory leaks in a Spring Boot application:
+1. Install/Launch VisualVM
+
+Download from https://visualvm.github.io/ (not bundled with JDK since Java 9+)
+Extract and run visualvm (or visualvm.exe on Windows)
+Ensure you're using the same JDK version (or compatible) as your Spring Boot app
+
+2. Enable JMX on Your Spring Boot App
+Run your app with these JVM flags to allow remote monitoring:
+bashjava -Dcom.sun.management.jmxremote \
+     -Dcom.sun.management.jmxremote.port=9010 \
+     -Dcom.sun.management.jmxremote.authenticate=false \
+     -Dcom.sun.management.jmxremote.ssl=false \
+     -jar your-app.jar
+If running locally, VisualVM auto-detects local JVM processes — no JMX flags needed.
+3. Connect VisualVM to Your Application
+
+Open VisualVM
+In the left panel, under Local, find your Spring Boot app (by PID/jar name)
+Double-click to open its monitoring dashboard
+If remote: right-click Remote → Add Remote Host → enter IP → Add JMX Connection → host:9010
+
+4. Install Required Plugins
+
+Go to Tools → Plugins
+Install:
+
+Visual GC (heap generation visualization)
+VisualVM-MBeans (optional, for custom MBeans)
+
+
+
+5. Monitor Heap Usage (Detect the Leak Symptom)
+
+Go to the Monitor tab
+Watch the Heap graph over time
+Leak indicator: heap usage keeps climbing even after GC runs (sawtooth pattern that trends upward instead of returning to baseline)
+
+Normal:  /\  /\  /\  (returns to baseline after GC)
+Leak:    /\/\/\/\/\  (baseline keeps rising)
+6. Trigger GC Manually
+
+Click Perform GC button in the Monitor tab
+If memory doesn't drop significantly after GC, it strongly suggests a leak
+
+7. Take Heap Dumps for Comparison
+
+Take a heap dump early (after warm-up): right-click app → Heap Dump
+Let the app run under load for a while
+Take a second heap dump
+Compare object counts between the two using Compare Heap Dumps
+
+8. Analyze the Heap Dump
+In the Classes tab of the heap dump:
+
+Sort by Size or Instance Count
+Look for suspicious growth in:
+
+Custom domain objects (Entities, DTOs)
+Collections (HashMap, ArrayList) growing unexpectedly
+ThreadLocal instances (common Spring leak source)
+
+
+
+9. Find GC Roots (Trace the Leak)
+
+Right-click a suspicious class → Show in Instances View
+Select an instance → Show Nearest GC Root
+This shows what's holding a reference and preventing GC — usually the root cause
+
+10. Common Spring Boot Leak Sources to Check
+SourceCause@Autowired singleton caching unbounded dataGrowing Map/List fields in @Service/@ComponentThreadLocal not clearedMissing .remove() in filters/interceptorsUnclosed resourcesConnection, InputStream, EntityManager not closedEvent listenersApplicationListener beans holding referencesCaching (Caffeine/Guava) misconfiguredNo eviction policy / max size setStatic collectionsstatic List<> used as pseudo-cache
+11. Monitor Threads Tab (Bonus)
+
+Check the Threads tab for thread leaks (e.g., unclosed executor pools) — often paired with memory leaks in Spring apps using async/@Async
+
+12. Fix and Re-verify
+
+Apply the fix (e.g., add .remove(), bound the cache, close resources in finally/try-with-resources)
+Re-run steps 5–7 under the same load test to confirm the heap now stabilizes
+
+
+
+
+ISSUE IDENTIFY AND  IAM FIX 
+Scenario: Unbounded Static Cache (Most Common Interview Answer)
+
+sessionCache is static → lives for the entire application lifetime, tied to the class, not GC'd with request scope.
+Entries are added on every login but never removed on logout/timeout.
+Over days/weeks, heap keeps growing → eventually OutOfMemoryError.
+
+
+Open VisualVM → Monitor tab → heap graph keeps climbing even after GC (sawtooth trending upward).
+Take two heap dumps (early vs after load) → compare in VisualVM.
+Sort by instance count → see HashMap$Node and User objects growing linearly with traffic, never dropping.
+Right-click User instances → Show Nearest GC Root → traces back to UserSessionService.sessionCache (a static field) → confirms it's the root holding
+
+
+
+Scenario 3: Unclosed Resources (Connection/InputStream)
+❌ Leaky Code:
+javapublic void readData(String path) throws IOException {
+    FileInputStream fis = new FileInputStream(path);
+    // process file
+    // forgot fis.close() — leaks file handle + native memory
+}
+Leak: Stream/connection never closed → native/heap memory piles up with every call → eventually OutOfMemoryError or "too many open files."
+
+
+
+ Fix (try-with-resources):
+javapublic void readData(String path) throws IOException {
+    try (FileInputStream fis = new FileInputStream(path)) {
+        // process file
+    } // auto-closed, even on exception
+}
+One-liner: "Unclosed InputStream/Connection — detected via rising thread/file-handle count in VisualVM, fixed using try-with-resources for guaranteed cleanup."
+
+
+
+
+
+
+Public IP vs VPC — Short Explanation
+Public IP
+
+An IP address accessible from the internet (anyone, anywhere can reach it)
+Used when external users/clients need to connect (e.g., your website, public API)
+Risk: exposed to internet attacks if not secured properly
+
+VPC (Virtual Private Cloud)
+
+A private, isolated network inside cloud (AWS/Azure) where your servers talk to each other internally — not exposed to the internet
+Services inside VPC use Private IPs to communicate with each other securely
+
+
+Real-Time Use Case (Why Use Both Differently)
+Example: E-commerce app on AWS
+Internet Users 
+     ↓ (Public IP)
+API Gateway / Load Balancer  ← ONLY this is public-facing
+     ↓ (Private IP, inside VPC)
+Order Service  ←→  Payment Service  ←→  Inventory Service  ←→  Zipkin Server  ←→  MySQL DB
+
+API Gateway: gets a Public IP — users need to reach it from the internet to place orders
+Order Service, Payment Service, Inventory Service, Database, Zipkin: stay inside VPC with Private IPs only — no direct internet access, safer from attacks
+
+Why: If Payment Service or your DB had a public IP, hackers could directly attack it. By keeping them inside VPC (private), only your API Gateway is exposed — internal services talk to each other securely without internet exposure.
+
+One-liner to say in interview: "I use a Public IP only for the entry point, like an API Gateway or Load Balancer, so external users can reach the app. All internal microservices, databases, and tools like Zipkin stay inside a VPC using private IPs — so they can communicate with each other securely without being exposed to the internet, 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ZIPKIN IMPLEMENTATION IN MICROSERVICES - STEP BY STEP (NO DOCKER)
+====================================================================
+
+STEP 1: DOWNLOAD ZIPKIN SERVER (STANDALONE JAR)
+--------------------------------------------------
+Open browser and go to:
+https://search.maven.org/remote_content?g=io.zipkin&a=zipkin-server&v=LATEST&c=exec
+
+This downloads: zipkin-server-x.x.x-exec.jar
+
+OR use curl:
+curl -sSL https://zipkin.io/quickstart.sh | bash -s
+
+
+STEP 2: RUN ZIPKIN SERVER
+--------------------------------------------------
+Open terminal/cmd in the folder where jar is downloaded:
+
+java -jar zipkin-server-x.x.x-exec.jar
+
+Zipkin will start on:
+http://localhost:9411
+
+
+STEP 3: ADD DEPENDENCIES IN EACH MICROSERVICE (pom.xml)
+--------------------------------------------------
+<dependency>
+    <groupId>io.micrometer</groupId>
+    <artifactId>micrometer-tracing-bridge-brave</artifactId>
+</dependency>
+
+<dependency>
+    <groupId>io.zipkin.reporter2</groupId>
+    <artifactId>zipkin-reporter-brave</artifactId>
+</dependency>
+
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+
+
+STEP 4: ADD CONFIG IN application.yml (EACH SERVICE)
+--------------------------------------------------
+server:
+  port: 8081   (use different port for each service, e.g 8082, 8083)
+
+spring:
+  application:
+    name: order-service   (change per service: payment-service, user-service etc)
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name},%X{traceId:-},%X{spanId:-}]"
+
+
+STEP 5: CREATE SERVICE A - ORDER SERVICE (CALLS PAYMENT SERVICE)
+--------------------------------------------------
+@RestController
+public class OrderController {
+
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @GetMapping("/order")
+    public String placeOrder() {
+        String response = restTemplate.getForObject(
+            "http://localhost:8082/payment", String.class);
+        return "Order placed, Payment status: " + response;
+    }
+}
+
+@Configuration
+public class AppConfig {
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
+}
+
+
+STEP 6: CREATE SERVICE B - PAYMENT SERVICE
+--------------------------------------------------
+@RestController
+public class PaymentController {
+
+    @GetMapping("/payment")
+    public String processPayment() {
+        return "Payment Success";
+    }
+}
+
+
+STEP 7: RUN BOTH SERVICES
+--------------------------------------------------
+Run Order Service   -> port 8081
+Run Payment Service -> port 8082
+Run Zipkin Server    -> port 9411 (already running from Step 2)
+
+
+STEP 8: HIT THE API
+--------------------------------------------------
+Open browser or Postman:
+http://localhost:8081/order
+
+Response: "Order placed, Payment status: Payment Success"
+
+
+STEP 9: VIEW TRACE IN ZIPKIN UI
+--------------------------------------------------
+Go to browser:
+http://localhost:9411
+
+Click "Run Query" / "Find Traces"
+You will see one trace with 2 spans:
+   - order-service (span 1)
+   - payment-service (span 2)
+
+Click on trace -> see timeline, duration, which service took longer
+
+
+STEP 10: WHAT TO CHECK IN ZIPKIN UI
+--------------------------------------------------
+- Trace ID        -> same across both services (proves propagation works)
+- Span duration    -> shows time taken by each service
+- Dependency graph -> Zipkin UI has "Dependencies" tab showing 
+                       order-service -> payment-service call graph
+
+
+ONE LINE INTERVIEW ANSWER
+--------------------------------------------------
+"I ran Zipkin as a standalone jar (no Docker needed), added Micrometer 
+Tracing + Zipkin reporter dependency in each microservice, configured 
+the Zipkin endpoint in application.yml, then called Service A -> Service B 
+via RestTemplate. Zipkin UI showed a single Trace ID split into 2 spans, 
+letting me see latency per service and the call dependency graph."
+
+====================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Real Project Example
+Scenario: You have an E-commerce app (like your Logistics/FinTech projects). User clicks "Place Order":
+User → API Gateway → Order Service → Payment Service → Inventory Service → Notification Service
+Problem without Zipkin:
+
+User complains: "Order placement is taking 8 seconds!"
+You have 5 different services, each with its own logs
+You manually SSH into each server, search logs by timestamp — takes hours to find which service is slow
+
+API Gateway        [====] 200ms
+Order Service       [======] 400ms
+Payment Service          [========================] 6500ms  ← FOUND IT!
+Inventory Service                                    [===] 300ms
+Notification Service                                     [==] 200ms
+
+
+
+Problem: Order Service randomly fails 1 in 20 requests — no clear pattern in logs (each service logs separately, hard to correlate).
+With Zipkin:
+
+Search failed Trace ID in Zipkin UI
+See span marked red/error → e.g., Inventory Service span shows 500 error
+Drill into that span → tags show: error: Connection timeout to inventory-db
+Root cause found: Inventory Service's DB connection pool was exhausted under load (too few connections, no timeout handling)
+
+Fix: Increase HikariCP pool size + add circuit breaker (Resilience4j) around that call.
+
+
+Span ID — Short Answer
+Span ID = unique ID for one single unit of work (e.g., one service call/operation) within a trace.
+
+Trace ID: abc123 (whole request)
+├── Span 1 (id: s1): API Gateway        - 5ms
+│   └── Span 2 (id: s2, parent: s1): Order Service   - 20ms
+│       └── Span 3 (id: s3, parent: s2): Payment Service - 15ms
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+==================================================================
+AWS CLOUDWATCH WITH SPRING BOOT MICROSERVICES - COMPLETE GUIDE
+==================================================================
+
+WHAT IS CLOUDWATCH?
+--------------------
+AWS CloudWatch is a monitoring and observability service used to:
+- Collect and track LOGS
+- Collect and track METRICS
+- Set ALARMS on thresholds
+- Visualize data using DASHBOARDS
+- Trigger automated actions (via EventBridge/Alarms)
+
+==================================================================
+WAYS / FEATURES USED WITH SPRING BOOT MICROSERVICES
+==================================================================
+
+1. CLOUDWATCH LOGS
+   - Centralized logging for all microservices
+   - Replaces scattered log files across EC2/ECS/EKS instances
+
+2. CLOUDWATCH METRICS
+   - CPU, Memory, JVM heap, thread count, request latency, error rate
+   - Custom business metrics (orders processed, payment failures, etc.)
+
+3. CLOUDWATCH ALARMS
+   - Auto-notify via SNS/Email/Slack when thresholds breach
+   - Example: CPU > 80% for 5 mins -> trigger alarm
+
+4. CLOUDWATCH DASHBOARDS
+   - Visual graphs for logs/metrics in one place
+   - Used by DevOps/Support teams for real-time monitoring
+
+5. CLOUDWATCH LOGS INSIGHTS
+   - Query language to search/filter logs quickly
+   - Similar to SQL, used for debugging production issues
+
+6. CLOUDWATCH AGENT
+   - Installed on EC2 to push OS-level + application logs to CloudWatch
+
+7. CLOUDWATCH EVENTS / EVENTBRIDGE
+   - Trigger Lambda/SNS based on log patterns or scheduled events
+
+==================================================================
+HOW TO USE - STEP BY STEP (WITH REAL WORLD SCENARIO)
+==================================================================
+
+SCENARIO: 
+You have a Spring Boot microservice "payment-service" deployed on 
+AWS EC2. It processes payments. You need to:
+- See application logs in AWS instead of SSH into server
+- Get alerted if error rate increases
+- Monitor JVM memory usage
+
+------------------------------------------------------------------
+STEP 1: ADD DEPENDENCY (Logs via CloudWatch Appender)
+------------------------------------------------------------------
+pom.xml:
+
+<dependency>
+    <groupId>ca.pjer</groupId>
+    <artifactId>logback-awslogs-appender</artifactId>
+    <version>1.6.0</version>
+</dependency>
+
+------------------------------------------------------------------
+STEP 2: CONFIGURE LOGBACK TO PUSH LOGS TO CLOUDWATCH
+------------------------------------------------------------------
+logback-spring.xml:
+
+<appender name="CLOUDWATCH" class="ca.pjer.logback.AwsLogsAppender">
+    <layout>
+        <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </layout>
+    <logGroupName>payment-service-logs</logGroupName>
+    <logStreamUuidPrefix>payment-service-</logStreamUuidPrefix>
+    <logRegion>ap-south-1</logRegion>
+    <maxBatchLogEvents>50</maxBatchLogEvents>
+    <maxFlushTimeMillis>30000</maxFlushTimeMillis>
+</appender>
+
+<root level="INFO">
+    <appender-ref ref="CLOUDWATCH" />
+</root>
+
+RESULT: Every log.info(), log.error() in your Spring Boot code 
+automatically appears in CloudWatch Log Group "payment-service-logs"
+
+------------------------------------------------------------------
+STEP 3: ATTACH IAM ROLE TO EC2 (PERMISSIONS)
+------------------------------------------------------------------
+Attach IAM Policy to EC2 instance role:
+- logs:CreateLogGroup
+- logs:CreateLogStream
+- logs:PutLogEvents
+- cloudwatch:PutMetricData
+
+(Without this, logs will NOT reach CloudWatch)
+
+------------------------------------------------------------------
+STEP 4: PUSH CUSTOM METRICS (Business Metrics)
+------------------------------------------------------------------
+Example: Track number of failed payment transactions
+
+@Autowired
+private AmazonCloudWatch cloudWatchClient;
+
+public void recordPaymentFailure() {
+    MetricDatum datum = new MetricDatum()
+        .withMetricName("PaymentFailureCount")
+        .withUnit(StandardUnit.Count)
+        .withValue(1.0);
+
+    PutMetricDataRequest request = new PutMetricDataRequest()
+        .withNamespace("PaymentService/Metrics")
+        .withMetricData(datum);
+
+    cloudWatchClient.putMetricData(request);
+}
+
+Call this method inside your catch block whenever payment fails.
+
+------------------------------------------------------------------
+STEP 5: CREATE CLOUDWATCH ALARM
+------------------------------------------------------------------
+AWS Console -> CloudWatch -> Alarms -> Create Alarm
+- Metric: PaymentFailureCount
+- Condition: Greater than 10 in 5 minutes
+- Action: Send notification to SNS Topic -> Email/Slack
+
+RESULT: Team gets alerted immediately if payment failures spike.
+
+------------------------------------------------------------------
+STEP 6: MONITOR JVM METRICS (via Micrometer + CloudWatch)
+------------------------------------------------------------------
+pom.xml:
+
+<dependency>
+    <groupId>io.micrometer</groupId>
+    <artifactId>micrometer-registry-cloudwatch2</artifactId>
+</dependency>
+
+application.yml:
+
+management:
+  metrics:
+    export:
+      cloudwatch:
+        namespace: payment-service
+        step: 1m
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+
+RESULT: JVM heap usage, GC time, thread count auto-pushed to 
+CloudWatch every 1 minute — visible on Dashboard.
+
+------------------------------------------------------------------
+STEP 7: SEARCH LOGS QUICKLY USING LOGS INSIGHTS
+------------------------------------------------------------------
+Use case: Find all errors related to a specific transaction ID
+during production issue.
+
+Query (paste in CloudWatch Logs Insights):
+
+fields @timestamp, @message
+| filter @message like /TXN12345/
+| filter @message like /ERROR/
+| sort @timestamp desc
+| limit 50
+
+------------------------------------------------------------------
+STEP 8: BUILD DASHBOARD FOR TEAM VISIBILITY
+------------------------------------------------------------------
+AWS Console -> CloudWatch -> Dashboards -> Create Dashboard
+Add widgets:
+- Graph: PaymentFailureCount (last 24 hrs)
+- Graph: JVM Heap Usage
+- Graph: API Latency (p99)
+- Number widget: Total Requests Today
+
+RESULT: One single screen for entire team (Dev/QA/Support) to 
+monitor "payment-service" health in real time.
+
+==================================================================
+REAL WORLD END-TO-END SCENARIO SUMMARY
+==================================================================
+Company: FinTech company running "payment-service" microservice
+
+Problem: 
+Production issue - customers reported failed payments, but team 
+had no visibility, had to SSH into EC2 and grep logs manually.
+
+Solution using CloudWatch:
+1. Logback pushes application logs -> CloudWatch Log Group
+2. Custom metric "PaymentFailureCount" tracked via SDK
+3. Alarm set -> triggers SNS -> Slack notification to on-call dev
+4. On alert, dev uses Logs Insights query to filter errors by 
+   transaction ID within seconds (no SSH needed)
+5. Root cause found: DB connection pool exhausted
+6. Fix deployed, JVM/heap dashboard confirms stability restored
+
+BUSINESS IMPACT: 
+Reduced MTTR (Mean Time To Resolve) from 45 mins to 5 mins.
+
+==================================================================
+QUICK INTERVIEW ANSWER (ONE-LINER SUMMARY)
+==================================================================
+"We used CloudWatch Logs to centralize microservice logs via 
+Logback appender, CloudWatch Metrics + Micrometer to track JVM 
+and custom business metrics, CloudWatch Alarms with SNS for 
+real-time alerting, and Logs Insights for fast production 
+debugging - reducing our incident resolution time significantly."
+
+==================================================================
+
+
+
+
+
+
+MONITORING & PROFILING TOOLS - LOCAL vs PRODUCTION
+(Spring Boot Microservices, No Docker)
+=========================================================
+
+LOCAL DEVELOPMENT
+---------------------------------------------------------
+VisualVM          -> USE     - Free, zero-setup, attach directly to local JVM PID. Best for heap/thread/GC debugging while coding.
+
+JMeter             -> USE     - Run quick load tests against localhost:8080 to catch obvious bottlenecks before pushing code.
+
+Prometheus+Grafana  -> USE (lightweight) - Run standalone JARs locally to verify /actuator/prometheus metrics and custom Micrometer counters before deploying.
+
+Zipkin              -> OPTIONAL - Only needed locally if testing multi-service call chains on your machine. Skip if running only one service at a time.
+
+ELK                 -> SKIP    - Too heavy for a laptop (Elasticsearch needs 2-4GB+ RAM). Use console/file logs locally instead.
+
+CloudWatch          -> SKIP    - AWS-only; irrelevant until deployed.
+
+JProfiler           -> SKIP    - Paid, heavyweight. Save for diagnosing a specific hard-to-reproduce production issue, not daily local dev.
+
+LOCAL SUMMARY: VisualVM + JMeter + (optionally) local Prometheus/Grafana. That's it.
+
+
+PRODUCTION (EC2, No Docker)
+---------------------------------------------------------
+Prometheus+Grafana  -> USE (PRIMARY) - Main metrics/dashboard/alerting stack. Run as systemd services on a dedicated monitoring EC2 instance.
+
+ELK                 -> USE (PRIMARY) - Centralized logs across all microservice instances. Essential once you have more than 1-2 services (can't SSH into every box to tail -f logs).
+
+Zipkin              -> USE     - Critical for tracing a single request across 5+ services to find latency/error sources. Sample at 10%, not 100%, to reduce overhead.
+
+CloudWatch          -> USE (SECONDARY/BACKUP) - Since already on EC2, use as safety net for infra-level alarms (CPU, disk, auto-scaling triggers). Complements ELK/Prometheus, doesn't replace them.
+
+JProfiler           -> USE (SITUATIONAL) - Attach remotely via SSH tunnel (never expose port publicly) only when diagnosing a specific memory leak or CPU spike. Not left running always-on.
+
+VisualVM            -> RARE    - Can be used similarly via remote JMX for quick checks, but JProfiler is the better production-grade choice if available.
+
+JMeter              -> USE     - Run from a SEPARATE EC2 instance (not production app servers) to load-test staging/production before major releases.
+
+PRODUCTION SUMMARY: Prometheus+Grafana + ELK + Zipkin running always-on, CloudWatch as backup layer, JProfiler/JMeter used on-demand.
+
+
+INTERVIEW ONE-LINER
+---------------------------------------------------------
+"Locally I rely on VisualVM and JMeter for quick profiling and load
+checks. In production, we run Prometheus+Grafana for metrics, ELK for
+centralized logging, and Zipkin for distributed tracing - all as
+systemd services on EC2 without containers - with CloudWatch as a
+secondary safety net, and JProfiler for deep-dive investigations when
+needed."
+=========================================================
+
+
+
+
+
+/health:
+
+SCENARIO 1: EC2 + Nginx Load Balancer Health Check
+=====================================================
+Context:
+You run 2-3 Spring Boot instances on separate EC2 machines 
+behind an Nginx load balancer. Nginx needs to know if an 
+instance is alive before routing traffic to it.
+
+SCENARIO 2: Custom HealthIndicator for DB + External API
+=====================================================
+Context:
+Your microservice depends on MySQL and an external 
+payment gateway API. You want /health to reflect the 
+TRUE status of these dependencies, not just "app is up".
+
+
+
+/metrics
+
+SCENARIO 1: JVM Memory & GC Monitoring for Production Alerts
+------------------------------------------------------
+Reason:
+Your Spring Boot app runs on an EC2 instance with limited 
+RAM (say 2GB). Over time you notice the app slows down or 
+crashes with OutOfMemoryError during peak load.
+
+
+SCENARIO 2: HTTP Request Latency Tracking Per API
+------------------------------------------------------
+Reason:
+You have a microservice exposing multiple REST APIs 
+(e.g. /orders, /payments, /inventory). One API starts 
+getting customer complaints about slowness, but you don't 
+know which one or why.
+
+
+SCENARIO 3: Database Connection Pool Exhaustion Detection
+------------------------------------------------------
+Reason:
+Your app uses HikariCP with a fixed pool size (say 10 
+connections) talking to PostgreSQL. During high traffic, 
+requests start timing out, but the app logs don't clearly 
+say why.
+
+
+
+
+
+=====================================================
+/actuator/prometheus - 3 Real Application Scenarios
+(Reason/Use-case only, no code)
+=====================================================
+
+SCENARIO 1: Centralized Monitoring Without Docker/K8s
+------------------------------------------------------
+Reason:
+You run 3-4 Spring Boot microservices on separate EC2 
+instances (Order Service, Payment Service, Inventory 
+Service). Checking each app's logs manually to know if 
+something is wrong is slow and reactive.
+
+You expose /actuator/prometheus on each service, and a 
+standalone Prometheus server (installed directly on an 
+EC2 instance, not containerized) is configured to SCRAPE 
+this endpoint every 15s from all 3-4 services. This gives 
+you ONE central place to see the health and performance of 
+your entire microservice landscape, instead of SSH-ing 
+into each server separately.
+
+
+SCENARIO 2: Grafana Dashboard for Business + Technical KPIs
+------------------------------------------------------
+Reason:
+Management wants a live dashboard showing: how many 
+orders are being placed per minute, average API response 
+time, and error rate — not just "is the server up".
+
+Prometheus scrapes /actuator/prometheus metrics 
+(http.server.requests, custom counters like 
+orders.placed.count) from your microservices, and Grafana 
+queries Prometheus to render real-time graphs. This lets 
+both DevOps AND business stakeholders see live system 
+health and business activity on one screen, without 
+touching code or logs.
+
+
+SCENARIO 3: Alerting Before Customers Notice Problems
+------------------------------------------------------
+Reason:
+Your Payment Service occasionally has a spike in failed 
+transactions due to a downstream bank API timing out, but 
+by the time customers complain and you check logs, damage 
+is already done (lost sales, trust issues).
+
+Prometheus continuously scrapes error-rate and latency 
+metrics from /actuator/prometheus, and Alertmanager 
+(paired with Prometheus) is configured with a rule like 
+"if error rate > 5% for 2 minutes, send Slack/Email alert 
+to Ops team". This gives you PROACTIVE alerting — the team 
+gets notified and can act BEFORE a large number of 
+customers are affected, instead of finding out from 
+customer support tickets.
+=====================================================
+
+
+
+
+
+=====================================================
+/actuator/threaddump - 3 Real Application Scenarios
+(Reason/Use-case only, no code)
+=====================================================
+
+SCENARIO 1: Diagnosing App Freeze / Hang in Production
+------------------------------------------------------
+Reason:
+Your Spring Boot app on EC2 suddenly stops responding to 
+requests — no crash, no error in logs, just hangs. CPU 
+usage looks normal, but users get timeouts.
+
+You hit /actuator/threaddump to capture a snapshot of ALL 
+threads at that moment. You look for threads stuck in 
+"BLOCKED" or "WAITING" state for a long time — e.g. 
+multiple threads waiting on the same lock (like a 
+synchronized method or a database connection). This tells 
+you EXACTLY where the app is stuck, instead of restarting 
+the server blindly and losing the chance to find the root 
+cause.
+
+
+SCENARIO 2: Detecting Deadlock Between Two Shared Resources
+------------------------------------------------------
+Reason:
+Your app has a batch job that updates both an in-memory 
+cache and a database record, and occasionally two 
+requests hang forever together, both waiting on each 
+other.
+
+You take a threaddump and search for "Found Java-level 
+deadlock" in the output. It clearly lists Thread-A waiting 
+to lock Resource-2 (held by Thread-B), and Thread-B waiting 
+to lock Resource-1 (held by Thread-A). This gives you 
+concrete proof of a deadlock and the exact code path 
+(class + line number) causing it, so you can fix lock 
+ordering in your code instead of guessing.
+
+
+SCENARIO 3: High CPU Usage Investigation on EC2 Instance
+------------------------------------------------------
+Reason:
+Your EC2 instance shows 95% CPU usage during peak hours, 
+but you don't know which part of the app is causing it — 
+could be a bad loop, excessive logging, or inefficient 
+JSON parsing.
+
+You take a threaddump, then cross-check it against the 
+Linux "top -H" output (which shows CPU usage per OS 
+thread). By matching the thread ID (nid) from the 
+threaddump to the high-CPU OS thread ID, you find the 
+EXACT Java thread and its stack trace consuming CPU — 
+e.g. a thread stuck in an infinite retry loop calling an 
+external API — so you can fix that specific code, instead 
+of just scaling up the EC2 instance size as a workaround.
+=====================================================
+
+
+
+
+
+=====================================================
+/actuator/heapdump - 3 Real Application Scenarios
+(Reason/Use-case only, no code)
+=====================================================
+
+SCENARIO 1: Investigating Memory Leak Before OutOfMemoryError
+------------------------------------------------------
+Reason:
+Your Spring Boot app on EC2 has been running fine for days, 
+but memory usage keeps climbing slowly (checked via 
+/actuator/metrics/jvm.memory.used) and never comes back 
+down even after GC runs. You suspect a memory leak but 
+don't know which object is piling up.
+
+You trigger /actuator/heapdump to download a .hprof file, 
+then open it in a tool like Eclipse MAT (Memory Analyzer 
+Tool) on your local machine. MAT shows you the "Dominator 
+Tree" — e.g. a List inside a Singleton Service that keeps 
+growing because entries are added but never removed. This 
+gives you the EXACT class and field holding onto memory, 
+so you can fix the code, instead of just restarting the 
+app every few days as a temporary fix.
+
+
+SCENARIO 2: Finding Root Cause of Recurring OutOfMemoryError Crashes
+------------------------------------------------------
+Reason:
+Your app crashes with "java.lang.OutOfMemoryError: Java 
+heap space" every 2-3 days in production, and by the time 
+you check logs after a crash, the JVM has already 
+restarted (via systemd) and lost the state.
+
+You configure the JVM startup flag 
+-XX:+HeapDumpOnOutOfMemoryError so a heap dump is 
+AUTOMATICALLY saved to disk at the moment of the crash 
+(instead of relying on manually hitting the endpoint 
+before it's too late). You then analyze that dump to see 
+what object was consuming the most memory right before the 
+crash — e.g. a huge List<byte[]> from unclosed file 
+uploads — giving you the real cause instead of just seeing 
+"OutOfMemoryError" in the log with no context.
+
+
+SCENARIO 3: Comparing Before/After Heap Dumps to Confirm a Fix
+------------------------------------------------------
+Reason:
+You suspect a caching layer (e.g. a custom in-memory Map 
+used for storing session data) is not evicting old 
+entries properly, but you're not 100% sure, and you don't 
+want to push a "fix" to production without proof.
+
+You take one heapdump BEFORE your code fix (showing, say, 
+50,000 entries in the cache Map after a load test) and 
+another heapdump AFTER applying your fix (with eviction 
+logic corrected), running the same load test again. 
+Comparing both dumps in Eclipse MAT shows the entry count 
+now stays capped (e.g. at 1,000), giving you concrete 
+evidence the fix works, instead of just hoping it's fixed 
+and finding out later in production.
+=====================================================
+
+
+deadlock:
+
+Scenario: When an order is placed, the app locks the Order record (to update status) and the Inventory/Stock record (to reduce quantity) — in one transaction.
+
+Thread-1 (placing new order): locks Order, then tries to lock Inventory to deduct stock
+Thread-2 (warehouse restock/cancellation job updating inventory + syncing order status): locks Inventory, then tries to lock Order to update its status
+
+
+Both threads now wait on each other's lock foreve
+
+
+
+
+
+
+
+## CloudWatch Trigger → Alarm → Auto Scaling (Short Version)
+
+### IEX Logistics — Peak Hour Dispatch Spike
+
+**Scenario:** Every day 9-11 AM, order dispatch volume spikes as businesses assign drivers.
+
+1. CloudWatch Agent tracks CPU on `dispatch-service` EC2 instances.
+2. **Alarm:** CPU > 70% for 3 minutes → ALARM state.
+3. **Trigger:** Alarm fires → calls Auto Scaling policy.
+4. **Auto Scaling:** ASG adds 2 new EC2 instances, they join the ALB, traffic spreads out, CPU drops back to normal.
+5. Once traffic settles (CPU < 30% for 5 min), scale-in removes the extra instances.
+
+**One-liner:** *"CloudWatch monitored CPU on dispatch-service; when it crossed 70% during peak hours, an alarm triggered Auto Scaling to add instances, and scaled back down once traffic normalized."*
+
+---
+
+### IFM-UK — ETA Calculation Load Spike
+
+**Scenario:** A new client onboards with thousands of new routes never cached in Redis before, so `route-service` calls Google Maps API heavily, spiking CPU.
+
+1. CloudWatch tracks CPU on `route-service`.
+2. **Alarm:** CPU > 70% for 3 minutes → ALARM.
+3. **Trigger:** Alarm calls the scaling policy.
+4. **Auto Scaling:** ASG adds instances to absorb the load until Redis cache warms up and Maps API calls drop.
+5. CPU normalizes, scale-in removes extra instances.
+
+**One-liner:** *"When Redis cache misses caused heavier Google Maps API calls and CPU spiked past 70%, CloudWatch alarm triggered Auto Scaling to add instances until the cache warmed up and load normalized."*
+
+
+
+New client scenario: 5,000 brand new routes = all "1st time" requests = all slow = CPU spikes.
+
+
+
+
+
+
+
+
+
+
+JMETER LOCALHOST - MEDIUM & EASY SCENARIOS
+(Java Backend Developer - Spring Boot)
+=========================================================
+
+SETUP (One-Time)
+---------------------------------------------------------
+1. Download JMeter, extract, run:
+   cd apache-jmeter-5.6/bin
+   ./jmeter.sh
+
+2. Start Spring Boot app:
+   mvn spring-boot:run
+   (or) java -jar target/order-service.jar
+
+3. Confirm app is up:
+   curl http://localhost:8080/actuator/health
+
+
+SCENARIO 1: New API - Quick Load Check
+---------------------------------------------------------
+Situation: Built POST /api/orders, want to check if it handles
+multiple users at once.
+
+Steps:
+1. Start Spring Boot app.
+2. JMeter -> Add Thread Group -> 50 users, ramp-up 5 sec.
+3. Add HTTP Request -> localhost:8080/api/orders, POST, JSON body.
+4. Add Summary Report listener.
+5. Run it -> check average response time and failed requests.
+
+Result: If response time is under 500ms with no errors, API
+handles basic concurrent load fine.
+
+
+SCENARIO 2: DB Connection Pool Check
+---------------------------------------------------------
+Situation: Check if app can handle many DB writes at the same time.
+
+Steps:
+1. Check application.yml -> maximum-pool-size: 10
+2. JMeter: 30 threads, ramp-up 2 sec, hit an endpoint that saves to DB.
+3. Run it - if response time is high, check logs for:
+   "Connection is not available, request timed out"
+4. Increase pool size to 20, restart app, run JMeter again.
+5. Compare response times before and after.
+
+Result: Confirms pool size was the bottleneck; fixed with proof.
+
+
+SCENARIO 3: Redis Cache - Before vs After
+---------------------------------------------------------
+Situation: Added @Cacheable to ETA method, want proof it works.
+
+Steps:
+1. Temporarily disable @Cacheable, restart app.
+2. JMeter: 20 threads, same route ID repeated, loop count 20.
+   Note average response time (e.g., 450ms).
+3. Enable @Cacheable again, restart app.
+4. Run same JMeter test. Note new average response time (e.g., 15ms).
+
+Result: Clear proof - caching dropped response time from 450ms to 15ms.
+
+
+SCENARIO 4: WebSocket Connection Load
+---------------------------------------------------------
+Situation: Built a live tracking WebSocket endpoint, want to check
+how many connections it can handle.
+
+Steps:
+1. Install WebSocket Sampler plugin in JMeter (via Plugins Manager).
+2. Add Thread Group: 100 threads (simulating 100 drivers).
+3. Add WebSocket Open Connection sampler -> ws://localhost:8080/tracking-socket
+4. Add a timer of 15 sec (simulating real location updates).
+5. Run it, open VisualVM alongside to watch memory usage.
+
+Result: See how many connections app can hold before memory
+climbs too high.
+
+
+SCENARIO 5: Before/After Code Change Check
+---------------------------------------------------------
+Situation: Changed some code, want to make sure it didn't slow
+things down.
+
+Steps:
+1. Save a JMeter test file (order-api-test.jmx) - 20 users,
+   30 seconds, hitting localhost:8080/api/orders.
+2. Run before change:
+   jmeter -n -t order-api-test.jmx -l before.jtl
+3. Make code change.
+4. Run again:
+   jmeter -n -t order-api-test.jmx -l after.jtl
+5. Compare before.jtl and after.jtl average response times.
+
+Result: If "after" is slower, catch performance drop immediately,
+before pushing code.
+
+
+ONE-LINE SUMMARY (Interview Answer)
+---------------------------------------------------------
+"I use JMeter locally to load-test new APIs, check DB pool limits,
+verify Redis caching improvements, test WebSocket connection limits,
+and compare performance before/after code changes - all before
+pushing to production."
+====================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+==========================================================
+SPRING BOOT + PROMETHEUS + GRAFANA - STEP BY STEP (NO DOCKER)
+==========================================================
+
+STEP 1: ADD DEPENDENCIES (pom.xml)
+----------------------------------
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.micrometer</groupId>
+    <artifactId>micrometer-registry-prometheus</artifactId>
+</dependency>
+
+
+STEP 2: APPLICATION.YML CONFIG
+-------------------------------
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics
+  metrics:
+    tags:
+      application: order-service
+  endpoint:
+    prometheus:
+      enabled: true
+
+
+STEP 3: VERIFY METRICS ENDPOINT
+--------------------------------
+mvn spring-boot:run
+curl http://localhost:8080/actuator/prometheus
+
+
+STEP 4: INSTALL PROMETHEUS (BINARY)
+------------------------------------
+Download: https://prometheus.io/download/
+tar -xvzf prometheus-2.x.x.linux-amd64.tar.gz
+cd prometheus-2.x.x.linux-amd64
+
+Edit prometheus.yml:
+
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'spring-boot-app'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['localhost:8080']
+
+Run:
+./prometheus --config.file=prometheus.yml
+
+Check: http://localhost:9090 -> Status -> Targets -> should show UP
+
+
+STEP 5: INSTALL GRAFANA (BINARY)
+---------------------------------
+Download: https://grafana.com/grafana/download
+tar -xvzf grafana-x.x.x.linux-amd64.tar.gz
+cd grafana-x.x.x
+./bin/grafana-server
+
+Open: http://localhost:3000
+Default login: admin / admin
+
+
+STEP 6: CONNECT GRAFANA TO PROMETHEUS
+--------------------------------------
+Grafana -> Connections -> Data Sources -> Add data source -> Prometheus
+URL: http://localhost:9090
+Save & Test
+
+
+STEP 7: IMPORT DASHBOARD
+--------------------------
+Grafana -> Dashboards -> Import
+Use ID 4701 (JVM Micrometer) or 12900 (Spring Boot Statistics)
+Select Prometheus as data source -> Import
+
+
+PORT NOTES:
+Spring Boot app  -> 8080
+Prometheus       -> 9090
+Grafana          -> 3000
+Start order: Spring Boot app -> Prometheus -> Grafana
+
+
+==========================================================
+USE CASE 1: API LATENCY & ERROR RATE (ORDER TRACKING)
+==========================================================
+
+@RestController
+public class OrderController {
+
+    private final MeterRegistry meterRegistry;
+
+    public OrderController(MeterRegistry meterRegistry) {
+        this.meterRegistry = meterRegistry;
+    }
+
+    @GetMapping("/order/{id}")
+    public ResponseEntity<Order> getOrder(@PathVariable String id) {
+        Timer.Sample sample = Timer.start(meterRegistry);
+        try {
+            Order order = orderService.findById(id);
+            return ResponseEntity.ok(order);
+        } catch (Exception e) {
+            meterRegistry.counter("order.fetch.errors", "reason", e.getClass().getSimpleName()).increment();
+            throw e;
+        } finally {
+            sample.stop(meterRegistry.timer("order.fetch.latency"));
+        }
+    }
+}
+
+Prometheus Query (P95 latency):
+histogram_quantile(0.95, sum(rate(order_fetch_latency_seconds_bucket[5m])) by (le))
+
+Prometheus Query (error rate):
+rate(order_fetch_errors_total[5m])
+
+Grafana Panel: two graphs - P95 latency and error rate
+Alert if latency > 2s OR error rate > 5%
+
+
+==========================================================
+USE CASE 2: DB CONNECTION POOL HEALTH (BANKING TXN SERVICE)
+==========================================================
+
+application.yml:
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 20
+      pool-name: TxnPool
+
+(No extra code needed - HikariCP metrics auto exposed)
+
+Metrics exposed:
+hikaricp_connections_active
+hikaricp_connections_pending
+hikaricp_connections_max
+
+Prometheus Query:
+hikaricp_connections_active{pool="TxnPool"} / hikaricp_connections_max{pool="TxnPool"}
+
+Alert if ratio > 0.8 for more than 2 minutes
+Grafana Panel: stacked graph of active vs idle vs pending connections
+
+
+==========================================================
+QUICK EXAMPLE: LOGIN ATTEMPTS COUNTER
+==========================================================
+
+@RestController
+public class AuthController {
+
+    private final Counter loginSuccessCounter;
+    private final Counter loginFailureCounter;
+
+    public AuthController(MeterRegistry registry) {
+        this.loginSuccessCounter = Counter.builder("login.attempts")
+                .tag("result", "success")
+                .register(registry);
+
+        this.loginFailureCounter = Counter.builder("login.attempts")
+                .tag("result", "failure")
+                .register(registry);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody LoginRequest req) {
+        boolean valid = authService.validate(req);
+        if (valid) {
+            loginSuccessCounter.increment();
+            return ResponseEntity.ok("Login success");
+        } else {
+            loginFailureCounter.increment();
+            return ResponseEntity.status(401).body("Login failed");
+        }
+    }
+}
+
+Prometheus Query:
+rate(login_attempts_total{result="failure"}[5m])
+
+Alert if failure rate > 10/min
+
+
+==========================================================
+LOGISTICS EXAMPLE: DELIVERY SLA BREACH TRACKER
+==========================================================
+
+@Service
+public class DeliveryService {
+
+    private final Counter slaBreachCounter;
+
+    public DeliveryService(MeterRegistry registry) {
+        this.slaBreachCounter = Counter.builder("delivery.sla.breach")
+                .tag("region", "unspecified")
+                .register(registry);
+    }
+
+    public void markDelivered(Shipment shipment) {
+        shipment.setDeliveredAt(Instant.now());
+
+        if (shipment.getDeliveredAt().isAfter(shipment.getPromisedTime())) {
+            Metrics.counter("delivery.sla.breach", "region", shipment.getRegion())
+                    .increment();
+        }
+    }
+}
+
+Prometheus Query:
+sum(rate(delivery_sla_breach_total[10m])) by (region)
+
+Grafana Panel: bar/line graph grouped by region
+
+
+==========================================================
+GRAFANA ALERTING - HOW IT WORKS
+==========================================================
+
+FLOW:
+1. Create Alert Rule -> Alerting -> Alert rules -> New rule
+2. Define Query -> e.g. rate(delivery_sla_breach_total[10m]) > 5
+3. Set Condition -> "IS ABOVE 5"
+4. Set Evaluation Interval -> e.g. every 1 minute
+5. Set "For" Duration -> e.g. must stay breached 5 minutes before firing
+6. Add Contact Point -> Email, Slack, Webhook, MS Teams
+7. Save -> Grafana evaluates rule continuously in background
+
+ALERT STATES:
+Normal -> Pending -> Firing -> Resolved
+
+EXAMPLE:
+Query: sum(rate(delivery_sla_breach_total[10m])) by (region)
+Condition: IS ABOVE 5
+For: 5m
+Contact point: Slack #ops-alerts channel
+
+Core loop: query -> threshold -> wait -> notify
+
+==========================================================
+
+
+
+
+
+
+
+
+WHY KAFKA + WEBSOCKET (YOUR SETUP: BIDDING SERVICE + WEBSOCKET SERVICE + DRIVER SERVICE WITH 2 INSTANCES)
+YOUR SERVICES
+
+Bidding Service       -> creates order/bid, decides nearby drivers
+WebSocket Service     -> holds live socket connections with driver apps
+Driver Service        -> 2 instances (load balanced) -> updates driver location/status
+
+PROBLEM WITHOUT KAFKA
+Bidding Service wants to notify a driver.
+But that driver's live WebSocket connection is sitting inside "WebSocket Service" -
+a completely different service, running as its own process.
+So Bidding Service cannot directly touch that connection.
+It would need to call WebSocket Service over REST/HTTP just to say
+"push this to driver X" - this creates tight coupling:
+Bidding Service --> HTTP call --> WebSocket Service --> push to driver
+Problems with this direct HTTP approach:
+
+If WebSocket Service is restarting/deploying/crashed for a few seconds,
+the HTTP call fails and the event is LOST (no retry, no memory of it)
+Bidding Service now has to know WebSocket Service's URL, retry logic, timeouts
+If tomorrow you add Notification Service / Analytics Service / Audit Service,
+Bidding Service needs to call ALL of them one by one -> more coupling, more risk
+
+WHY KAFKA FIXES THIS
+Bidding Service just publishes event to Kafka topic "order-events" and forgets about it.
+It does NOT call WebSocket Service directly. No knowledge of WebSocket Service's
+existence, address, or state.
+Bidding Service --> Kafka topic (order-events)
+WebSocket Service --> subscribes to topic --> pushes to driver
+Benefits in YOUR exact setup:
+
+DECOUPLING
+Bidding Service and WebSocket Service don't call each other directly.
+Bidding Service doesn't care who or how many services read the event.
+NO EVENT LOSS
+If WebSocket Service is down/restarting for a few seconds,
+Kafka just holds the event in the topic.
+When WebSocket Service comes back, it reads from where it left off.
+With direct HTTP call, that event would just be gone forever.
+DRIVER SERVICE HAS 2 INSTANCES - SAME PROBLEM EXISTS THERE TOO
+If Driver Service (2 instances) needs to react to order events too
+(say, to update driver's current job status), both instances can
+independently consume from Kafka without Bidding Service needing to
+know there are 2 instances, or manage load balancing itself.
+Kafka consumer groups handle this automatically - only one instance
+processes a given event, no duplicate processing.
+EASY TO ADD MORE CONSUMERS LATER
+Tomorrow if you add Notification Service (SMS/push) or Audit Service,
+they just subscribe to the same Kafka topic.
+Bidding Service code does NOT change at all.
+HANDLES TRAFFIC BURSTS
+If many bids/orders happen at once, Kafka queues them up.
+WebSocket Service consumes at its own pace instead of getting
+overwhelmed by a sudden spike of direct calls.
+
+WHEN WEBSOCKET ALONE (NO KAFKA) WOULD BE OK
+
+If Bidding Service and WebSocket Service were the SAME service/process
+If you only ever have ONE instance of everything
+If losing an occasional event during a restart is acceptable
+Early prototype / very low traffic
+
+SIMPLE ONE LINE ANSWER
+WebSocket = HOW the message reaches the driver's live connection.
+Kafka = HOW the message reliably GETS FROM Bidding Service TO WebSocket Service
+(and any other service) without them being directly wired to each other,
+without losing events on restart, and without breaking when you scale
+instances or add new services.
+In your case, since Bidding Service, WebSocket Service, and Driver Service are
+3 SEPARATE services (not one app) - Kafka is justified, not overkill.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+==========================================================
+KAFKA CONSUMER LAG - REASONS & SOLUTIONS
+==========================================================
+
+WHAT IS CONSUMER LAG:
+Lag = Producer's latest offset - Consumer's current offset
+= Number of messages published but not yet processed by consumer
+
+
+----------------------------------------------------------
+1. CONSUMER IS SLOW (PROCESSING BOTTLENECK)
+----------------------------------------------------------
+REASON:
+Listener code does heavy work per message - DB calls, WebSocket 
+push, external API calls - each message takes too long.
+
+Example:
+@KafkaListener(topics = "order-events")
+public void onOrderEvent(OrderEvent event) {
+    driverRepository.findById(event.getDriverId()); // slow DB call
+    simpMessagingTemplate.convertAndSend(...);       // network call
+}
+
+SOLUTION:
+- Keep listener lightweight - only essential work (push to WebSocket)
+- Move heavy work (logging, analytics) to async/separate service
+- Cache driver lookups instead of DB call every time
+- Use @Async or push slow tasks to another Kafka topic
+
+
+----------------------------------------------------------
+2. NOT ENOUGH CONSUMER INSTANCES (PARALLELISM ISSUE)
+----------------------------------------------------------
+REASON:
+A topic has multiple partitions. Only one consumer per partition
+can read at a time within a group. Too few instances = bottleneck.
+
+Example:
+Topic: order-events (6 partitions)
+Consumer Group: driver-notify-group
+Only 1 instance running = 1 consumer handling all 6 partitions = SLOW
+
+SOLUTION:
+- Scale consumer instances to match partition count
+- Deploy multiple instances of the app with same group-id
+  Kafka auto-balances partitions across them
+
+application.yml:
+spring:
+  kafka:
+    consumer:
+      group-id: driver-notify-group
+
+
+----------------------------------------------------------
+3. SUDDEN TRAFFIC SPIKE (PEAK HOURS)
+----------------------------------------------------------
+REASON:
+Lunch rush, festival sale, flash promo - orders flood in faster
+than consumer can keep up, even if normally fine.
+
+SOLUTION:
+- Auto-scale consumer instances based on lag metric
+  (Kubernetes HPA with custom Kafka lag metric)
+- Increase partition count in advance of expected high traffic
+  (Note: partitions can only be increased, not decreased)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+----------------------------------------------------------
+4. CONSUMER CRASHED OR RESTARTING
+----------------------------------------------------------
+REASON:
+Service crashed (OOM, deployment restart, pod eviction) - no one
+was consuming for a few minutes, messages piled up.
+
+SOLUTION:
+- Set up health checks / auto-restart (K8s liveness probes,
+  or systemd restart policy if not using K8s)
+- Alert immediately on lag spike to catch crashes fast
+- Fix root cause - check memory limits, heap size (-Xmx), GC logs
+
+
+----------------------------------------------------------
+5. REBALANCING STORMS
+----------------------------------------------------------
+REASON:
+Every time a consumer joins/leaves the group (deploys, crashes,
+scales), Kafka triggers a rebalance - pauses ALL consumers briefly
+to reassign partitions. Frequent restarts = frequent pauses = lag builds.
+
+SOLUTION:
+- Avoid frequent restarts/deployments during peak hours
+- Tune session.timeout.ms and max.poll.interval.ms so Kafka
+  doesn't falsely mark a slow-but-alive consumer as dead
+- Use Cooperative Sticky Assignor instead of default range assignor
+
+application.yml:
+spring:
+  kafka:
+    consumer:
+      properties:
+        partition.assignment.strategy: org.apache.kafka.clients.consumer.CooperativeStickyAssignor
+
+
+----------------------------------------------------------
+6. POISON PILL MESSAGE (STUCK MESSAGE)
+----------------------------------------------------------
+REASON:
+One bad message (malformed JSON, null field causing exception)
+keeps failing and retrying forever, blocking everything behind
+it on that partition.
+
+SOLUTION:
+Add a Dead Letter Topic (DLT) - bad messages get moved aside
+instead of blocking the queue.
+
+Code:
+@Bean
+public DefaultErrorHandler errorHandler(KafkaTemplate<Object, Object> template) {
+    DeadLetterPublishingRecoverer recoverer =
+        new DeadLetterPublishingRecoverer(template);
+    return new DefaultErrorHandler(recoverer, new FixedBackOff(1000L, 3));
+    // retry 3 times then move to DLT
+}
+
+
+----------------------------------------------------------
+7. POOR BATCH/FETCH CONFIG
+----------------------------------------------------------
+REASON:
+Consumer is fetching too few records per poll, wasting round trips.
+
+SOLUTION:
+Tune fetch settings:
+
+application.yml:
+spring:
+  kafka:
+    consumer:
+      max-poll-records: 500      # process more per poll
+      fetch-min-size: 1048576    # 1MB minimum fetch batch
+
+
+-
+
+==========================================================
+CUSTOM ALERT FOR KAFKA CONSUMER LAG (NO DOCKER, NO K8S)
+==========================================================
+
+STEP 1: CHECK METRIC IS EXPOSED
+--------------------------------
+curl http://localhost:8080/actuator/prometheus | grep lag
+
+Should show:
+kafka_consumer_fetch_manager_records_lag_max{...} 3.0
+
+If missing, add to application.yml:
+management:
+  metrics:
+    enable:
+      kafka: true
+
+
+STEP 2: PROMETHEUS SCRAPE CONFIG (prometheus.yml)
+--------------------------------------------------
+scrape_configs:
+  - job_name: 'spring-boot-app'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['localhost:8080']
+
+Restart Prometheus -> check localhost:9090/targets -> should be UP
+
+
+STEP 3: CREATE ALERT RULE IN GRAFANA
+--------------------------------------
+Grafana -> Alerting -> Alert rules -> New alert rule
+
+Rule name: KafkaConsumerLagHigh
+
+Query:
+kafka_consumer_fetch_manager_records_lag_max{topic="order-events"}
+
+Condition: IS ABOVE 100
+Evaluation interval: 30s
+For: 2m
+
+Labels:
+  severity = critical
+  team = logistics
+
+Contact point: Slack #logistics-alerts
+
+
+STEP 4: CREATE CONTACT POINT
+-------------------------------
+Grafana -> Alerting -> Contact points -> New contact point
+
+Name: logistics-alerts
+Type: Slack (or Email)
+Webhook URL: <your Slack webhook URL>
+
+
+==========================================================
+DONE - FLOW SUMMARY
+==========================================================
+Spring Boot exposes lag metric
+        -> Prometheus scrapes it
+        -> Grafana checks threshold every 30s
+        -> if lag > 100 for 2 min -> Slack alert fires
+
+==========================================================
+
+
+
+Topic: order-events
+Offsets: [0] [1] [2] [3] [4] [5] [6] [7] [8] [9]
+                                          ^
+                            Producer has written up to offset 9
+
+Now, your consumer is reading these one by one. Say it has only processed up to offset 6.
+
+Offsets: [0] [1] [2] [3] [4] [5] [6] [7] [8] [9]
+                                  ^           ^
+                          Consumer is here    Producer is here
+
+Lag = Producer's latest offset − Consumer's current offset
+
+Lag = 9 - 6 = 3 messages
+
+
+
+
+
+
+Kafka server / broker	Same thing, two names. One running Kafka process that stores data and handles requests.
+Kafka cluster	A group of multiple brokers working together as one system.
+Picture it like this
+Kafka cluster
+ ├── Broker 1 (a Kafka server running on Machine 1)
+ ├── Broker 2 (a Kafka server running on Machine 2)
+ └── Broker 3 (a Kafka server running on Machine 3)
+
+"Broker" and "Kafka server" are literally the same thing — just two names people use interchangeably for one running instance of Kafka.
+
+"Cluster" is the group of them together.
+
+Your setup right now
+
+You've been running 1 broker = 1 server = technically a cluster of size 1. That's why replication factor had to be 1 — there was only one broker to put data on, nothing else to copy it to.
+
+One line
+
+Broker = server = one Kafka process. Cluster = several brokers teamed up. Everything else we discussed — partitions, replicas, leader election — only becomes meaningful once you have more than one broker in the cluster.
+
+
+Partition	Leader (handles all reads/writes)	Replica copies (standby, kept in sync)
+Partition 0	Broker 1	Broker 2, Broker 3
+Partition 1	Broker 2	Broker 1, Broker 3
+Partition 2	Broker 3	Broker 1, Broker 2
+
+
+
+
+
+What happens if two consumers in the same group try to read the same partition?
+
+It can't happen — Kafka blocks it by design. One partition can only be assigned to one consumer within a group at a time. If a second consumer tries to grab it, a rebalance occurs and Kafka reassigns cleanly — there's never a moment where two consumers in the same group are actively reading the same partition simultaneously.
+
+
+What happens if you have more consumers than partitions?
+
+The extra consumers get zero partitions assigned — they sit idle, doing nothing, just members of the group. They only become active if an existing consumer crashes and a partition needs reassigning. (Example: 3 partitions, 5 consumers → 2 consumers are pure idle standby.)
+
+
+
+What happens if a producer sends a message but never gets an acknowledgment — did it actually get delivered?
+
+The producer sends a message. The broker saves it and sends back "success" — but that success reply gets lost in the network.
+
+The producer never receives the confirmation, so it can't tell if the message was saved or not. To be safe, it resends the same message.
+
+Problem: if the original message did save successfully, you now have it saved twice — a duplicate.
+
+Fix: enable.idempotence: true — Kafka tags each message with a unique sequence number. If the same numbered message arrives twice, the broker recognizes it and ignores the duplicate, keeping only one copy.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Spring Boot’s default caching (without Redis or other providers) uses the Spring Cache abstraction backed by an in‑memory, thread‑safe ConcurrentHashMap via ConcurrentMapCacheManager.
+
+
+
+
+
+==========================================================
+REDIS + SPRING BOOT - ALL ANNOTATIONS WITH 2 EXAMPLES EACH
+(NO DOCKER, NO KUBERNETES)
+==========================================================
+
+SETUP RECAP:
+------------
+pom.xml:
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-redis</artifactId>
+</dependency>
+
+application.yml:
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+
+Enable caching:
+@SpringBootApplication
+@EnableCaching
+public class LogisticsApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(LogisticsApplication.class, args);
+    }
+}
+
+
+==========================================================
+1. @Cacheable - READ FROM CACHE, FETCH+STORE ON MISS
+==========================================================
+
+EXAMPLE 1: Get Order By ID
+---------------------------
+@Service
+@CacheConfig(cacheNames = "orders")
+public class OrderService {
+
+    @Cacheable(key = "#orderId")
+    public Order getOrderById(String orderId) {
+        System.out.println("Fetching from DB: " + orderId);
+        return orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
+    }
+}
+-> First call hits DB. Second call with same orderId served from Redis.
+
+
+EXAMPLE 2: Get Driver Profile By ID
+-------------------------------------
+@Service
+public class DriverService {
+
+    @Cacheable(value = "drivers", key = "#driverId")
+    public Driver getDriverProfile(String driverId) {
+        System.out.println("Fetching driver from DB: " + driverId);
+        return driverRepository.findById(driverId)
+                .orElseThrow(() -> new DriverNotFoundException(driverId));
+    }
+}
+-> Driver profile rarely changes, so cache reduces repeated DB hits
+   when driver app pings profile info often.
+
+
+==========================================================
+2. @CachePut - ALWAYS RUN METHOD, ALWAYS UPDATE CACHE
+==========================================================
+
+EXAMPLE 1: Update Order Status
+---------------------------------
+@Service
+@CacheConfig(cacheNames = "orders")
+public class OrderService {
+
+    @CachePut(key = "#order.id")
+    public Order updateOrderStatus(Order order) {
+        order.setStatus("DELIVERED");
+        order.setUpdatedAt(Instant.now());
+        return orderRepository.save(order);
+    }
+}
+-> Runs every time (unlike @Cacheable) and refreshes cache with
+   the new returned value immediately.
+
+
+EXAMPLE 2: Update Driver Availability
+----------------------------------------
+@Service
+public class DriverService {
+
+    @CachePut(value = "drivers", key = "#driver.id")
+    public Driver updateAvailability(Driver driver, boolean isAvailable) {
+        driver.setAvailable(isAvailable);
+        return driverRepository.save(driver);
+    }
+}
+-> Driver toggles online/offline in app -> cache instantly reflects
+   new status for dispatch matching logic.
+
+
+==========================================================
+3. @CacheEvict - REMOVE ENTRY FROM CACHE
+==========================================================
+
+EXAMPLE 1: Cancel Order
+---------------------------
+@CacheEvict(value = "orders", key = "#orderId")
+public void cancelOrder(String orderId) {
+    orderRepository.deleteById(orderId);
+}
+-> Removes cancelled order from cache so stale data isn't served.
+
+
+EXAMPLE 2: Clear All Cache on Nightly Job
+---------------------------------------------
+@CacheEvict(value = "orders", allEntries = true)
+public void clearAllOrderCache() {
+    System.out.println("All order cache cleared at midnight");
+}
+-> Scheduled nightly cleanup to avoid unbounded cache growth.
+
+@Scheduled(cron = "0 0 0 * * *")
+public void nightlyCacheClear() {
+    clearAllOrderCache();
+}
+
+
+==========================================================
+4. @Caching - COMBINE MULTIPLE CACHE OPERATIONS
+==========================================================
+
+EXAMPLE 1: Reassign Driver to Order
+---------------------------------------
+@Caching(
+    put = { @CachePut(value = "orders", key = "#order.id") },
+    evict = { @CacheEvict(value = "driverOrders", key = "#oldDriverId") }
+)
+public Order reassignDriver(Order order, String oldDriverId, String newDriverId) {
+    order.setDriverId(newDriverId);
+    return orderRepository.save(order);
+}
+-> Updates order cache AND clears old driver's cached order list
+   in a single method call.
+
+
+EXAMPLE 2: Complete Delivery (Update + Evict Related Caches)
+-----------------------------------------------------------------
+@Caching(
+    put = { @CachePut(value = "orders", key = "#order.id") },
+    evict = {
+        @CacheEvict(value = "driverActiveOrders", key = "#order.driverId"),
+        @CacheEvict(value = "regionPendingOrders", key = "#order.region")
+    }
+)
+public Order completeDelivery(Order order) {
+    order.setStatus("DELIVERED");
+    return orderRepository.save(order);
+}
+-> Updates order status cache, clears driver's active-order cache,
+   and clears region's pending-order count cache - all at once.
+
+
+==========================================================
+5. condition / unless - CONDITIONAL CACHING
+==========================================================
+
+EXAMPLE 1: Skip Caching Delivered Orders
+--------------------------------------------
+@Cacheable(
+    value = "orders",
+    key = "#orderId",
+    condition = "#orderId != null",
+    unless = "#result == null or #result.status == 'DELIVERED'"
+)
+public Order getOrderById(String orderId) {
+    return orderRepository.findById(orderId).orElse(null);
+}
+-> Only caches active orders. Delivered orders (rarely re-fetched)
+   are not cached, saving Redis memory.
+
+
+EXAMPLE 2: Only Cache High-Priority Orders
+----------------------------------------------
+@Cacheable(
+    value = "priorityOrders",
+    key = "#orderId",
+    condition = "#priority == 'HIGH'"
+)
+public Order getOrderWithPriority(String orderId, String priority) {
+    System.out.println("Fetching from DB: " + orderId);
+    return orderRepository.findById(orderId).orElseThrow();
+}
+-> Low-priority orders skip cache entirely (accessed less often),
+   only high-priority express deliveries get cached for fast reads.
+
+
+==========================================================
+6. RATE LIMITING (MANUAL - setIfAbsent)
+==========================================================
+
+EXAMPLE 1: Limit Location Update Frequency
+----------------------------------------------
+@Service
+public class RateLimiterService {
+
+    private final RedisTemplate<String, String> redisTemplate;
+
+    public RateLimiterService(RedisTemplate<String, String> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
+
+    public boolean isAllowed(String driverId) {
+        String key = "ratelimit:location:" + driverId;
+        Boolean isFirstCall = redisTemplate.opsForValue()
+                .setIfAbsent(key, "1", Duration.ofSeconds(1));
+        return Boolean.TRUE.equals(isFirstCall);
+    }
+}
+
+@PostMapping("/{driverId}/location")
+public ResponseEntity<?> updateLocation(@PathVariable String driverId, @RequestBody LocationRequest req) {
+    if (!rateLimiterService.isAllowed(driverId)) {
+        return ResponseEntity.status(429).body("Too many requests");
+    }
+    locationService.updateLocation(driverId, req.getLat(), req.getLng());
+    return ResponseEntity.ok().build();
+}
+-> Prevents buggy/retrying mobile client from spamming location API.
+
+
+EXAMPLE 2: Limit Order Creation Per Customer
+------------------------------------------------
+@Service
+public class OrderRateLimiterService {
+
+    private final RedisTemplate<String, String> redisTemplate;
+
+    public OrderRateLimiterService(RedisTemplate<String, String> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
+
+    public boolean canPlaceOrder(String customerId) {
+        String key = "ratelimit:order:" + customerId;
+        Boolean allowed = redisTemplate.opsForValue()
+                .setIfAbsent(key, "1", Duration.ofSeconds(30));
+        return Boolean.TRUE.equals(allowed);
+    }
+}
+-> Stops a customer from spamming duplicate orders within 30 seconds
+   (accidental double-tap on "Place Order" button).
+
+
+==========================================================
+7. DISTRIBUTED LOCK (MANUAL - setIfAbsent)
+==========================================================
+
+EXAMPLE 1: Prevent Double Order Assignment
+-----------------------------------------------
+@Service
+public class OrderAssignmentService {
+
+    private final RedisTemplate<String, String> redisTemplate;
+
+    public OrderAssignmentService(RedisTemplate<String, String> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
+
+    public boolean assignOrder(String orderId, String driverId) {
+        String lockKey = "lock:order:" + orderId;
+        Boolean lockAcquired = redisTemplate.opsForValue()
+                .setIfAbsent(lockKey, driverId, Duration.ofSeconds(10));
+
+        if (Boolean.TRUE.equals(lockAcquired)) {
+            try {
+                orderRepository.assignDriver(orderId, driverId);
+                return true;
+            } finally {
+                redisTemplate.delete(lockKey);
+            }
+        }
+        return false;
+    }
+}
+-> Two dispatch requests race to assign same order -> only one wins.
+
+
+EXAMPLE 2: Prevent Duplicate Inventory Deduction (Warehouse)
+------------------------------------------------------------------
+@Service
+public class InventoryService {
+
+    private final RedisTemplate<String, String> redisTemplate;
+
+    public InventoryService(RedisTemplate<String, String> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
+
+    public boolean deductStock(String itemId, int qty) {
+        String lockKey = "lock:inventory:" + itemId;
+        Boolean lockAcquired = redisTemplate.opsForValue()
+                .setIfAbsent(lockKey, "locked", Duration.ofSeconds(5));
+
+        if (Boolean.TRUE.equals(lockAcquired)) {
+            try {
+                inventoryRepository.reduceStock(itemId, qty);
+                return true;
+            } finally {
+                redisTemplate.delete(lockKey);
+            }
+        }
+        return false;
+    }
+}
+-> Prevents two concurrent orders from both deducting stock for the
+   same item at the same time (avoids overselling).
+
+
+==========================================================
+8. SPRING SESSION + REDIS (SESSION STORE)
+==========================================================
+
+EXAMPLE 1: Dispatcher Web App Login Session
+------------------------------------------------
+pom.xml:
+<dependency>
+    <groupId>org.springframework.session</groupId>
+    <artifactId>spring-session-data-redis</artifactId>
+</dependency>
+
+application.yml:
+spring:
+  session:
+    store-type: redis
+  data:
+    redis:
+      host: localhost
+      port: 6379
+-> No code change needed. HttpSession auto-stored in Redis.
+   Dispatcher stays logged in even if app restarts.
+
+
+EXAMPLE 2: Admin Portal Session with Custom Timeout
+---------------------------------------------------------
+application.yml:
+spring:
+  session:
+    store-type: redis
+    timeout: 30m
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+server:
+  servlet:
+    session:
+      timeout: 30m
+-> Admin portal sessions auto-expire after 30 min of inactivity,
+   stored centrally in Redis (works even if you later run multiple
+   app instances without sticky sessions).
+
+
+==========================================================
+9. TTL / LIVE DATA (setValue with expiry - not annotation)
+==========================================================
+
+EXAMPLE 1: Live Driver GPS Location
+-----------------------------------------
+@Service
+public class DriverLocationService {
+
+    private final RedisTemplate<String, String> redisTemplate;
+
+    public DriverLocationService(RedisTemplate<String, String> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
+
+    public void updateLocation(String driverId, double lat, double lng) {
+        String json = "{\"lat\":" + lat + ",\"lng\":" + lng + "}";
+        redisTemplate.opsForValue().set("driver:location:" + driverId, json, Duration.ofMinutes(5));
+    }
+}
+-> Auto-expires after 5 min if driver stops sending updates
+   (went offline, app closed).
+
+
+EXAMPLE 2: OTP for Driver App Login
+----------------------------------------
+@Service
+public class OtpService {
+
+    private final RedisTemplate<String, String> redisTemplate;
+
+    public OtpService(RedisTemplate<String, String> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
+
+    public void generateOtp(String phoneNumber, String otp) {
+        redisTemplate.opsForValue().set("otp:" + phoneNumber, otp, Duration.ofMinutes(2));
+    }
+
+    public boolean verifyOtp(String phoneNumber, String enteredOtp) {
+        String storedOtp = redisTemplate.opsForValue().get("otp:" + phoneNumber);
+        return enteredOtp.equals(storedOtp);
+    }
+}
+-> OTP auto-expires after 2 minutes, no manual cleanup job needed.
+
+
+==========================================================
+QUICK REFERENCE TABLE
+==========================================================
+ANNOTATION/METHOD     | PURPOSE                | EXAMPLE USE
+------------------------|------------------------|---------------------------
+@Cacheable             | Cache read result      | Get order / driver by ID
+@CachePut              | Always update cache    | Update order status / availability
+@CacheEvict             | Remove from cache      | Cancel order / nightly clear
+@Caching                | Combine multiple ops   | Reassign driver / complete delivery
+condition / unless      | Conditional caching    | Skip delivered orders / priority only
+setIfAbsent (rate limit)| Throttle requests      | Location update / order spam
+setIfAbsent (lock)      | Prevent race condition | Double assignment / inventory
+Spring Session + Redis  | Session storage        | Dispatcher / admin login
+TTL set()               | Auto-expiring data     | GPS location / OTP
+
+==========================================================
+
+
+
+
+
+
+
+
+
+
+
+==========================================================
+READ-THROUGH CACHE - CODE EXAMPLES (SPRING BOOT + REDIS)
+==========================================================
+
+CONCEPT:
+--------
+Cache-Aside: YOUR code checks cache, fetches DB on miss, stores in cache.
+Read-Through: THE CACHE LAYER itself owns "check -> miss -> fetch -> store".
+Spring's @Cacheable gives you read-through BEHAVIOR via AOP proxy.
+
+
+----------------------------------------------------------
+VERSION 1: @Cacheable (SPRING-MANAGED READ-THROUGH)
+----------------------------------------------------------
+
+@Service
+@CacheConfig(cacheNames = "orders")
+public class OrderService {
+
+    private final OrderRepository orderRepository;
+
+    public OrderService(OrderRepository orderRepository) {
+        this.orderRepository = orderRepository;
+    }
+
+    @Cacheable(key = "#orderId")
+    public Order getOrderById(String orderId) {
+        // Spring's proxy wraps this method:
+        // 1. Intercepts the call
+        // 2. Checks Redis for key "orders::orderId"
+        // 3. HIT -> returns cached value, method body never runs
+        // 4. MISS -> runs this method, stores result in Redis, returns it
+        System.out.println("DB HIT - fetching from database: " + orderId);
+        return orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
+    }
+}
+
+NOTE: No manual Redis code here (no redisTemplate.get/set).
+Spring's AOP proxy handles it - this is the "framework-managed" part.
+
+
+----------------------------------------------------------
+VERSION 2: MANUAL READ-THROUGH (BUILD YOUR OWN LOADER PATTERN)
+----------------------------------------------------------
+
+Generic reusable cache class:
+-------------------------------
+@Component
+public class ReadThroughCache<K, V> {
+
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final String cachePrefix;
+    private final Duration ttl;
+
+    public ReadThroughCache(RedisTemplate<String, Object> redisTemplate, String cachePrefix, Duration ttl) {
+        this.redisTemplate = redisTemplate;
+        this.cachePrefix = cachePrefix;
+        this.ttl = ttl;
+    }
+
+    // "loader" = the DB-fetch function passed in by caller
+    public V get(K key, Function<K, V> loader) {
+        String redisKey = cachePrefix + ":" + key;
+
+        // Step 1: Check cache
+        V cached = (V) redisTemplate.opsForValue().get(redisKey);
+        if (cached != null) {
+            System.out.println("CACHE HIT: " + redisKey);
+            return cached;
+        }
+
+        // Step 2: Miss -> cache layer calls the loader (DB fetch)
+        System.out.println("CACHE MISS - loading from source: " + redisKey);
+        V value = loader.apply(key);
+
+        // Step 3: Store result back into cache before returning
+        if (value != null) {
+            redisTemplate.opsForValue().set(redisKey, value, ttl);
+        }
+
+        return value;
+    }
+}
+
+
+Usage in service:
+--------------------
+@Service
+public class OrderService {
+
+    private final OrderRepository orderRepository;
+    private final ReadThroughCache<String, Order> orderCache;
+
+    public OrderService(OrderRepository orderRepository, RedisTemplate<String, Object> redisTemplate) {
+        this.orderRepository = orderRepository;
+        this.orderCache = new ReadThroughCache<>(redisTemplate, "orders", Duration.ofMinutes(10));
+    }
+
+    public Order getOrderById(String orderId) {
+        return orderCache.get(orderId, id ->
+                orderRepository.findById(id)
+                        .orElseThrow(() -> new OrderNotFoundException(id))
+        );
+    }
+}
+
+
+----------------------------------------------------------
+COMPARISON TABLE
+----------------------------------------------------------
+ASPECT                        | @Cacheable (Spring)         | Manual ReadThroughCache
+-------------------------------|------------------------------|---------------------------
+Who checks Redis first        | Spring AOP proxy (hidden)   | ReadThroughCache.get()
+Who calls DB on miss           | Spring proxy invokes method | You pass loader function
+Who writes result to Redis     | Spring proxy (after return) | ReadThroughCache.get()
+Your code writes                | Just DB fetch logic         | Just DB fetch as lambda
+Works outside Spring beans      | No (needs AOP proxy)        | Yes (plain Java, reusable)
+
+BOTTOM LINE:
+Both are read-through in behavior - cache owns fetch-on-miss flow.
+@Cacheable = Spring AOP magic.
+ReadThroughCache = same pattern built manually, more control
+(custom fallback, logging, metrics per miss).
+
+
+==========================================================
+REDIS CACHING STRATEGIES - FULL SUMMARY
+==========================================================
+
+1. CACHE-ASIDE (LAZY LOADING)
+--------------------------------
+Flow: App checks cache -> MISS -> fetch DB -> store in cache -> return
+      App checks cache -> HIT -> return (no DB call)
+
+Code:
+@Cacheable(value = "orders", key = "#orderId")
+public Order getOrderById(String orderId) {
+    return orderRepository.findById(orderId).orElseThrow();
+}
+
+Pros: Simple, only caches what's requested
+Cons: First request always slow, can go stale
+
+
+2. WRITE-THROUGH
+--------------------
+Flow: App writes to Redis -> Redis writes to DB -> Confirm (synchronous)
+
+Code:
+@CachePut(value = "orders", key = "#order.id")
+public Order updateOrder(Order order) {
+    return orderRepository.save(order);
+}
+
+Pros: Cache always in sync with DB
+Cons: Writes slightly slower (2 operations)
+
+
+3. WRITE-BEHIND (WRITE-BACK)
+--------------------------------
+Flow: App writes to Redis (fast) -> background job batches to DB later
+
+Code:
+@Service
+public class DriverLocationService {
+
+    private final RedisTemplate<String, String> redisTemplate;
+
+    public void updateLocation(String driverId, double lat, double lng) {
+        redisTemplate.opsForValue().set("driver:location:" + driverId, lat + "," + lng);
+    }
+
+    @Scheduled(fixedRate = 60000)
+    public void persistLocationsToDb() {
+        Set<String> keys = redisTemplate.keys("driver:location:*");
+        for (String key : keys) {
+            String value = redisTemplate.opsForValue().get(key);
+            // parse and bulk save to DB
+        }
+    }
+}
+
+Pros: Very fast writes, good for high-frequency data (GPS)
+Cons: Risk of data loss if Redis crashes before DB sync
+
+
+4. READ-THROUGH
+--------------------
+Flow: Cache layer itself owns "check -> miss -> fetch -> store"
+(see full code examples above)
+
+Pros: Clean separation, reusable, framework or custom-managed
+Cons: Slightly more setup than plain cache-aside
+
+
+5. TTL-BASED EXPIRY
+------------------------
+Flow: Data auto-expires after set duration, no manual invalidation
+
+Code:
+redisTemplate.opsForValue().set("otp:" + phoneNumber, otp, Duration.ofMinutes(2));
+redisTemplate.opsForValue().set("driver:location:" + driverId, json, Duration.ofMinutes(5));
+
+Use for: OTP, live location, session tokens, rate-limit counters
+
+
+6. EVICT-ON-WRITE (CACHE INVALIDATION)
+-------------------------------------------
+Flow: On write, delete cache entry instead of updating it.
+Next read repopulates fresh from DB.
+
+Code:
+@CacheEvict(value = "orders", key = "#orderId")
+public void updateOrderStatus(String orderId, String status) {
+    orderRepository.updateStatus(orderId, status);
+}
+
+Pros: Simpler than write-through
+Cons: Next read after write is a cache miss (slightly slower once)
+
+
+----------------------------------------------------------
+QUICK COMPARISON TABLE
+----------------------------------------------------------
+STRATEGY        | WRITE SPEED   | READ SPEED         | FRESHNESS      | BEST FOR
+-----------------|----------------|---------------------|-----------------|---------------------------
+Cache-Aside      | Normal         | Fast after 1st hit  | Can go stale   | General lookup (orders)
+Write-Through    | Slower         | Always fast          | Always fresh   | Critical consistent data
+Write-Behind     | Very fast      | Fast                 | Risk of loss   | High-frequency writes (GPS)
+Read-Through     | N/A (read op)  | Fast after 1st hit   | Depends on TTL | Clean abstraction, reusable
+TTL Expiry        | Normal         | Fast until expiry    | Self-cleaning  | OTP, sessions, rate limits
+Evict-on-Write   | Fast           | Fast (miss on 1st)   | Fresh (lazy)   | Simple write alternative
+
+
+----------------------------------------------------------
+WHICH TO USE IN LOGISTICS APP
+----------------------------------------------------------
+Order lookup (driver checks status)     -> Cache-Aside / Read-Through
+Order status update (dispatcher edits)  -> Evict-on-Write or Write-Through
+Live GPS location (every few sec)       -> Write-Behind + TTL
+OTP / login session                     -> TTL Expiry
+Rate limiting API calls                 -> TTL Expiry (setIfAbsent)
+
+==========================================================
+
+
+
+
+
+
+
+
+==========================================================
+REDIS TIERS - INTERVIEW QUICK ANSWERS
+==========================================================
+
+1. STANDALONE
+   One Redis server. No HA. Crash = downtime.
+
+2. REPLICATION (Master-Replica)
+   Master handles writes, replicas hold read-only copies.
+   Async replication (near real-time, tiny lag possible).
+   NO auto-failover if master dies.
+
+3. SENTINEL
+   3+ Sentinel processes monitor master via heartbeat.
+   Master down -> Sentinels vote (quorum) -> promote best
+   replica -> app auto-reconnects to new master.
+   Use for: production HA, single dataset.
+
+4. CLUSTER
+   Data sharded across N masters using 16384 hash slots.
+   Each master has its own replica(s) for failover.
+   Client connects to any node, gets redirected to correct one.
+   Use for: large datasets, high write throughput, horizontal scale.
+
+
+==========================================================
+SYNC MECHANISM (LIKELY FOLLOW-UP QUESTION)
+==========================================================
+Initial sync: Master runs BGSAVE -> sends RDB snapshot to replica
+Ongoing sync: Every write on master is streamed to replica
+Type: Asynchronous by default (master doesn't wait for replica ack)
+Tradeoff: Fast, but a write can be lost if master crashes before
+          replicating it (use WAIT command for stronger guarantee)
+
+
+==========================================================
+FAILOVER MECHANISM (LIKELY FOLLOW-UP QUESTION)
+==========================================================
+Sentinel pings master every second
+  -> Master unresponsive -> marked SDOWN (subjectively down)
+  -> Other Sentinels confirm -> ODOWN (objectively down) via quorum
+  -> Sentinels elect a leader among themselves
+  -> Leader picks best replica (least lag) and promotes it
+  -> Other replicas re-point to new master
+  -> Sentinels notify app of new master address
+
+KEY POINT: Replica does NOT decide on its own. Promotion is a
+voting process among Sentinels (or cluster nodes), not automatic
+self-promotion. This avoids false failover from network blips.
+
+
+==========================================================
+ONE-LINE ANSWER IF ASKED DIRECTLY
+==========================================================
+"Master streams writes to replica asynchronously. If master
+fails, it's not the replica that decides to become master -
+Sentinels (or cluster nodes) detect the failure via quorum
+voting, then promote the most up-to-date replica and redirect
+all clients to it automatically."
+
+==========================================================
+

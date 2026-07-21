@@ -1,0 +1,245 @@
+SPRING AOP - WHY USE IT
+
+Purpose: Separate cross-cutting concerns (logging, security, 
+transactions, caching) from business logic - avoid repeating 
+same code in every method.
+
+--------------------------------------------------------------
+PROBLEM WITHOUT AOP
+--------------------------------------------------------------
+public void placeOrder(Order order) {
+    log.info("Method started");
+    long start = System.currentTimeMillis();
+
+    orderRepository.save(order);   // actual business logic
+
+    log.info("Time taken: " + (System.currentTimeMillis() - start));
+}
+-> Logging/timing code repeated in every method = messy, hard to maintain
+
+
+--------------------------------------------------------------
+WITH AOP
+--------------------------------------------------------------
+@Aspect
+@Component
+public class LoggingAspect {
+
+    @Around("execution(* com.app.service.*.*(..))")
+    public Object logExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
+        long start = System.currentTimeMillis();
+        Object result = joinPoint.proceed();
+        log.info(joinPoint.getSignature() + " took " +
+                  (System.currentTimeMillis() - start) + "ms");
+        return result;
+    }
+}
+-> placeOrder() stays clean. AOP wraps it automatically.
+
+
+================================================================
+USE CASES WITH EXAMPLES
+================================================================
+
+1. LOGGING (method entry/exit)
+----------------------------------------------------------------
+@Aspect
+@Component
+public class LoggingAspect {
+
+    @Before("execution(* com.app.service.OrderService.*(..))")
+    public void logBefore(JoinPoint jp) {
+        log.info("Entering: " + jp.getSignature().getName());
+    }
+
+    @After("execution(* com.app.service.OrderService.*(..))")
+    public void logAfter(JoinPoint jp) {
+        log.info("Exiting: " + jp.getSignature().getName());
+    }
+}
+What happens: Every method call in OrderService auto logs entry/exit
+- no code change needed inside OrderService.
+
+
+2. TRANSACTIONS
+----------------------------------------------------------------
+@Service
+public class OrderService {
+
+    @Transactional
+    public void placeOrder(Order order) {
+        orderRepository.save(order);
+        inventoryRepository.reduceStock(order.getProductId());
+        // exception here -> Spring AOP rolls back BOTH operations
+    }
+}
+What happens: Spring creates a proxy around OrderService. Proxy (AOP)
+wraps placeOrder() with transaction start/commit/rollback logic.
+
+
+3. SECURITY
+----------------------------------------------------------------
+@Service
+public class AdminService {
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public void deleteUser(Long userId) {
+        userRepository.deleteById(userId);
+    }
+}
+What happens: Before deleteUser() runs, AOP interceptor checks role.
+If not ADMIN -> throws AccessDeniedException, method body never runs.
+
+
+4. CACHING
+----------------------------------------------------------------
+@Service
+public class ProductService {
+
+    @Cacheable(value = "products", key = "#id")
+    public Product getProduct(Long id) {
+        return productRepository.findById(id).orElseThrow();
+    }
+}
+What happens: AOP proxy checks cache BEFORE method runs. If cached
+value exists, method body is skipped entirely.
+
+
+5. EXCEPTION HANDLING (centralized)
+----------------------------------------------------------------
+@Aspect
+@Component
+public class ExceptionLoggingAspect {
+
+    @AfterThrowing(pointcut = "execution(* com.app.service.*.*(..))", 
+                   throwing = "ex")
+    public void logException(JoinPoint jp, Exception ex) {
+        log.error("Exception in " + jp.getSignature() + ": " + ex.getMessage());
+        // send alert, save to error table, etc.
+    }
+}
+What happens: Any exception from ANY service method is auto-caught
+here for logging/alerting - no try-catch needed in every method.
+
+
+6. PERFORMANCE MONITORING
+----------------------------------------------------------------
+@Aspect
+@Component
+public class PerformanceAspect {
+
+    @Around("execution(* com.app.service.*.*(..))")
+    public Object trackTime(ProceedingJoinPoint pjp) throws Throwable {
+        long start = System.currentTimeMillis();
+        Object result = pjp.proceed();
+        long duration = System.currentTimeMillis() - start;
+
+        if (duration > 1000) {
+            log.warn(pjp.getSignature() + " took " + duration + "ms - SLOW!");
+        }
+        return result;
+    }
+}
+What happens: Wraps every service method with a timer, flags slow
+methods (>1 sec) - useful for finding bottlenecks in production.
+
+
+KEY TAKEAWAY
+----------------------------------------------------------------
+Business method stays 100% clean - AOP intercepts the call from
+outside (via proxy) and adds behavior before/after/around it,
+without modifying the method itself.
+
+
+================================================================
+KEY TERMS
+================================================================
+Aspect     - Class containing cross-cutting logic (e.g. LoggingAspect)
+Advice     - The actual code that runs (@Before, @After, @Around)
+Pointcut   - Expression defining WHERE advice applies
+             (execution(* service.*.*(..)))
+JoinPoint  - The actual method being intercepted
+
+
+================================================================
+@RestControllerAdvice VS @AfterThrowing (AOP)
+================================================================
+
+@RestControllerAdvice
+----------------------------------------------------------------
+Purpose: Convert exceptions into HTTP responses for the client
+(API layer only).
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(OrderNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handle(OrderNotFoundException ex) {
+        return ResponseEntity.status(404).body(new ErrorResponse(ex.getMessage()));
+    }
+}
+
+- Only catches exceptions from Controller layer
+- Builds JSON error response + HTTP status code
+- User-facing
+
+
+@AfterThrowing (AOP)
+----------------------------------------------------------------
+Purpose: Observe/log exceptions from ANY layer (Service, Repository,
+Controller) WITHOUT handling them.
+
+@AfterThrowing(pointcut = "execution(* com.app.service.*.*(..))", 
+               throwing = "ex")
+public void logException(JoinPoint jp, Exception ex) {
+    log.error("Exception in " + jp.getSignature() + ": " + ex.getMessage());
+}
+
+- Catches exceptions from ANY layer (Kafka consumers, scheduled jobs,
+  internal service calls - not just REST APIs)
+- Exception still propagates after this runs (side-effect, not a handler)
+- Not user-facing - used for internal logging/monitoring/alerting
+
+
+WHY YOU NEED BOTH TOGETHER
+----------------------------------------------------------------
+Kafka Consumer / Scheduled Job / Service method
+        |  throws exception
+   @AfterThrowing (AOP) -> logs to file/Sentry/Slack alert
+        |  (no HTTP involved here)
+        |  exception still propagates
+   Controller layer
+        |  throws exception
+   @RestControllerAdvice -> converts to JSON + 404/500 response for client
+
+
+WHY AOP IS NEEDED EVEN WITH @RestControllerAdvice
+----------------------------------------------------------------
+@RestControllerAdvice ONLY works for exceptions reaching the 
+Controller via an HTTP request.
+
+Does NOT catch exceptions from:
+- Kafka @KafkaListener consumer methods
+- @Scheduled cron jobs
+- @Async methods
+- Internal service-to-service calls (no HTTP)
+- Batch jobs
+
+For all these, there's no HTTP request/response cycle, so
+@RestControllerAdvice never triggers. @AfterThrowing AOP fills
+this gap for centralized logging/alerting.
+
+
+ONE-LINE INTERVIEW ANSWERS
+----------------------------------------------------------------
+AOP: "Spring AOP lets you apply cross-cutting concerns like logging,
+security, and transactions across multiple methods/classes without
+duplicating code - Spring itself uses AOP internally for
+@Transactional, @Cacheable, and @PreAuthorize."
+
+RestControllerAdvice vs AfterThrowing: "@RestControllerAdvice handles
+exceptions and builds HTTP responses, but only for exceptions from
+Controller/HTTP calls. @AfterThrowing AOP logs/monitors exceptions
+from ANY layer - including Kafka consumers, scheduled jobs, and
+internal service calls - without interfering with the exception or
+the response; it's for observability, not for the API response."

@@ -1,0 +1,118 @@
+None selected
+
+Skip to content
+Using Programming.com Mail with screen readers
+Enable desktop notifications for Programming.com Mail.
+   OK  No thanks
+
+5 of 317
+(no subject)
+Inbox
+
+Thirumoorthy Muthu <thirumoorthy.muthu@programming.com>
+Attachments
+Jul 15, 2026, 4:19 PM (5 days ago)
+to me
+
+
+ 3 Attachments
+  •  Scanned by Gmail
+The Specialized "@Component" FamilyAs you build real applications, you won't actually see the generic @Component tag everywhere. Instead, Spring gives us Specialized Stereotypes.These are literally just @Component wearing a fancy hat. They do the exact same thing, but they tell Spring (and other developers) exactly what layer of the architecture the class belongs to.AnnotationWhat it representsExample Use Case@ServiceBusiness LogicCalculating discounts, processing a checkout, coordinating data.@RepositoryData Access LayerTalking to your database (SQL/NoSQL). It also translates database errors into Spring exceptions.@Controller / @RestControllerWeb LayerHandling HTTP requests (GET, POST) and returning JSON data or HTML views.
+
+
+
+Field Injection (The "Easy" but Avoided Way)
+You might see people use @Autowired directly on the field.
+Don't do this. It makes unit testing incredibly difficult because you can't easily swap out WeatherService for a mock object without fancy reflection tools. Stick to constructor injection!
+
+
+constructor injection:
+entor Note: Notice the final keyword on the dependency? Constructor injection allows you to make dependencies immutable (unchangeable), which is amazing for preventing bugs. If a class has only one constructor, Spring automatically injects the dependencies without you needing any extra annotations.
+
+
+Java
+public interface MessageSender {
+    void send(String message);
+}
+Now, let's create two different components implementing this interface:
+
+Java
+@Component
+public class EmailSender implements MessageSender {
+    public void send(String m) { System.out.println("Emailing: " + m); }
+}
+
+@Component
+public class SmsSender implements MessageSender {
+    public void send(String m) { System.out.println("Texting: " + m); }
+}
+
+
+
+
+
+
+A circular dependency happens when Class A needs Class B to work, but Class B also needs Class A to work.
+
+
+A Real-World Example
+Imagine a food delivery app with an OrderService and a DeliveryService.
+
+OrderService needs DeliveryService to schedule a driver when an order is placed.
+
+DeliveryService needs OrderService to update the order's status to "Out for Delivery".
+
+
+@Service
+public class OrderService {
+    private final DeliveryService deliveryService;
+
+    // To make OrderService, Spring must first make DeliveryService...
+    public OrderService(DeliveryService deliveryService) {
+        this.deliveryService = deliveryService;
+    }
+}
+Java
+@Service
+public class DeliveryService {
+    private final OrderService orderService;
+
+    // ...but to make DeliveryService, Spring must first make OrderService!
+    public DeliveryService(OrderService orderService) {
+        this.orderService = orderService;
+    }
+}
+
+
+How to Fix It Easily
+The absolute best way to fix this as a developer is to refactor your architecture. Break the circle by introducing a third party or an event.
+
+The Best Fix: Intermediary Class / Event Broker
+Instead of the services talking directly to each other, have them talk to a third component (like an event system or a shared manager) that coordinates them.
+
+The Quick Fix: @Lazy
+If you are in a rush and can't redesign the code, you can use Spring's @Lazy annotation on one of the constructors. This tells Spring: "Don't fully build thi
+
+
+
+The Third Component (The Coordinator)
+This new component takes the dependencies of both services. Since neither service depends on it, Spring can easily build them first, and then build this orchestrator last.
+
+
+
+
+
+
+
+@PostConstruct with a clear, real-world example.
+
+Think of it as a "setup checklist" that runs automatically immediately after Spring finishes creating your @Component and injecting its dependencies.
+
+
+The Problem (Why we don't just use a standard Constructor)
+If you try to load external data inside a class's normal Java constructor, it might crash. Why? Because when the constructor runs, Spring hasn't finished wiring your dependencies or loading your configuration files yet. Everything is still null.
+
+The Solution Example: App Configuration Cache
+Imagine you are building a system that processes payments, and you need to load a list of supported currencies from a database or a remote API exactly once right when the app starts up.
+component.txt
+Displaying ListUserOrderRow tableData = Arrays.txt.

@@ -1,0 +1,443 @@
+Dependency Injection (DI) – Complete Summary
+What is Dependency Injection?
+
+Dependency Injection (DI) is a design pattern where Spring creates and manages objects (beans) and injects them into other classes instead of those classes creating the objects themselves using new.
+
+A dependency is simply an object that another class needs to perform its work.
+
+Example:
+
+UserController
+      │
+      ▼
+UserService
+
+Here, UserController depends on UserService.
+
+Without Dependency Injection
+
+The controller creates the object itself.
+
+@RestController
+public class UserController {
+
+    private UserService service = new UserService();
+
+    @GetMapping("/users")
+    public String getUser() {
+        return service.getUser();
+    }
+}
+Problems
+Controller is responsible for creating the object.
+Tight coupling between Controller and Service.
+If the implementation changes, the controller must also change.
+Difficult to test and maintain.
+
+Example:
+
+Initially:
+
+private UserService service = new UserService();
+
+Later requirement:
+
+private PremiumUserService service = new PremiumUserService();
+
+❌ You modified the controller.
+
+With Dependency Injection
+
+Spring creates the object and injects it.
+
+@Service
+public class UserService {
+
+    public String getUser() {
+        return "John";
+    }
+}
+@RestController
+public class UserController {
+
+    private final UserService service;
+
+    public UserController(UserService service) {
+        this.service = service;
+    }
+
+    @GetMapping("/users")
+    public String getUser() {
+        return service.getUser();
+    }
+}
+
+Notice:
+
+There is no
+
+new UserService();
+
+Spring automatically provides the object.
+
+How Spring Works Internally
+Application Starts
+        │
+        ▼
+Spring scans @Service
+        │
+        ▼
+Creates UserService object (Bean)
+        │
+        ▼
+Stores it in Spring IoC Container
+        │
+        ▼
+UserController needs UserService
+        │
+        ▼
+Spring injects UserService into UserController
+Real-World Example
+Restaurant
+
+Without DI
+
+Waiter
+
+↓
+
+Creates Chef himself
+
+If chef changes,
+
+the waiter must change.
+
+With DI
+
+Restaurant Manager
+
+↓
+
+Assigns Chef
+
+↓
+
+Waiter
+
+The waiter simply asks for a chef.
+
+The manager decides which chef to provide.
+
+Spring is like the Restaurant Manager.
+
+Advantages
+✅ Loose Coupling
+✅ Easy to Maintain
+✅ Easy to Test
+✅ Reusable Code
+✅ Better Scalability
+✅ Spring Manages Object Lifecycle
+Types of Dependency Injection
+1. Constructor Injection ⭐⭐⭐⭐⭐ (Recommended)
+public UserController(UserService service) {
+    this.service = service;
+}
+
+Most commonly used in Spring Boot.
+
+2. Setter Injection
+@Autowired
+public void setUserService(UserService service) {
+    this.service = service;
+}
+
+Used when the dependency is optional.
+
+3. Field Injection
+@Autowired
+private UserService service;
+
+Easy to write, but not recommended because it makes testing harder and hides dependencies.
+
+Real Corporate Example
+OrderController
+        │
+        ▼
+OrderService
+        │
+        ▼
+PaymentService
+        │
+        ▼
+InventoryService
+        │
+        ▼
+Repository
+
+Spring creates all these objects and injects them where needed.
+
+No class uses new to create its dependencies.
+
+Interview Definition
+
+Dependency Injection (DI) is a design pattern in which the Spring IoC container creates and manages objects (beans) and injects the required dependencies into classes instead of those classes creating them using new. This reduces tight coupling, improves maintainability, reusability, and testability.
+
+One-Line Memory Trick
+
+Without DI: I create the object. (new UserService())
+With DI: Spring creates the object and gives it to me.
+
+
+
+
+
+
+
+
+
+
+Application Starts
+
+        │
+        ▼
+
+Spring scans annotations
+
+        │
+        ▼
+
+@Service found
+
+        │
+        ▼
+
+Creates UserService object
+
+        │
+        ▼
+
+Stores inside Spring Container
+
+        │
+        ▼
+
+UserController needs UserService
+
+        │
+        ▼
+
+Spring injects it
+
+        │
+        ▼
+
+Application Ready
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Singleton Pattern – Complete Summary
+What is Singleton Pattern?
+
+A Singleton is a design pattern that ensures only one object (instance) of a class is created and shared throughout the application.
+
+Purpose: Save memory and ensure a single shared object.
+
+Real-World Example
+Printer in an Office
+
+Imagine an office has 100 employees.
+
+Without Singleton:
+
+Employee 1 → New Printer
+Employee 2 → New Printer
+Employee 3 → New Printer
+...
+Employee 100 → New Printer
+
+❌ 100 printers are created (waste of money and memory).
+
+With Singleton:
+
+Employee 1 ─┐
+Employee 2 ─┤
+Employee 3 ─┤
+...         ├──► One Printer
+Employee100 ┘
+
+✅ Everyone uses the same printer.
+
+Without Singleton
+
+Every time an object is needed, a new one is created.
+
+UserService s1 = new UserService();
+UserService s2 = new UserService();
+UserService s3 = new UserService();
+
+Memory:
+
+UserService Object 1
+
+UserService Object 2
+
+UserService Object 3
+
+Three separate objects.
+
+With Singleton
+
+Only one object exists.
+
+UserService s1 = Singleton.getInstance();
+UserService s2 = Singleton.getInstance();
+UserService s3 = Singleton.getInstance();
+
+Memory:
+
+             UserService Object
+             ▲        ▲       ▲
+             │        │       │
+            s1       s2      s3
+
+All variables point to the same object.
+
+Singleton in Spring Boot
+
+By default, every Spring Bean is a Singleton.
+
+Example:
+
+@Service
+public class UserService {
+
+}
+
+Spring creates only one UserService object.
+
+Whenever any class needs it:
+
+@RestController
+public class UserController {
+
+    private final UserService service;
+
+    public UserController(UserService service) {
+        this.service = service;
+    }
+}
+
+or
+
+@Service
+public class OrderService {
+
+    private final UserService service;
+
+    public OrderService(UserService service) {
+        this.service = service;
+    }
+}
+
+Spring injects the same UserService object into both classes.
+
+How Spring Works Internally
+Application Starts
+        │
+        ▼
+Spring scans @Service
+        │
+        ▼
+Creates ONE UserService object
+        │
+        ▼
+Stores it in Spring IoC Container
+        │
+        ▼
+Whenever any class requests UserService
+        │
+        ▼
+Spring returns the SAME object
+Real Corporate Example
+UserController
+        │
+        ▼
+      UserService
+        ▲
+        │
+OrderController
+        ▲
+        │
+PaymentController
+
+There is only one UserService object shared by all controllers.
+
+Why Use Singleton?
+✅ Saves memory (one object instead of many).
+✅ Faster object reuse.
+✅ Centralized shared object.
+✅ Spring manages the object's lifecycle.
+Common Singleton Beans in Spring
+@Service
+@Repository
+@Controller
+@RestController
+@Component
+
+All are Singleton by default unless configured otherwise.
+
+Singleton vs Normal Object
+Normal Object
+UserService s1 = new UserService();
+UserService s2 = new UserService();
+
+Output:
+
+s1 != s2
+
+Two different objects.
+
+Singleton
+UserService s1 = context.getBean(UserService.class);
+UserService s2 = context.getBean(UserService.class);
+
+Output:
+
+s1 == s2
+
+Same object.
+
+Difference Between Dependency Injection and Singleton
+Dependency Injection (DI)	Singleton
+Purpose: Provide required objects to a class	Purpose: Ensure only one object exists
+Spring injects dependencies	Spring reuses the same object
+Focuses on object wiring	Focuses on object creation and reuse
+Example: Controller gets UserService	Example: Only one UserService bean is created

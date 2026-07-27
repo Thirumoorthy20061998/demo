@@ -1,5 +1,253 @@
 
 
+What is a Functional Interface?
+An interface with exactly one abstract method (SAM - Single Abstract Method). It can have default/static methods too, those don't count.
+
+
+If you add a second abstract method to an interface marked with @FunctionalInterface, the Java compiler will immediately throw a compilation error and refuse to build the application.
+
+
+
+Why does this matter in Spring Boot?
+Because it lets you pass behavior as a parameter instead of writing a new class every time. This is huge for:
+
+Reducing boilerplate (no more anonymous inner classes)
+Writing pluggable, testable business logic
+Cleaner service-layer strategy patterns
+
+
+
+Real-World Example 3: Custom Functional Interface for Spring Bean Strategy Pattern
+Say you have multiple payment gateways — instead of if-else chains:
+java@FunctionalInterface
+public interface PaymentProcessor {
+    PaymentResult process(PaymentRequest request);
+}
+java@Configuration
+public class PaymentConfig {
+
+    @Bean
+    public Map<String, PaymentProcessor> paymentProcessors() {
+        Map<String, PaymentProcessor> map = new HashMap<>();
+        map.put("UPI", req -> upiGateway.pay(req));
+        map.put("CARD", req -> cardGateway.pay(req));
+        return map;
+    }
+}
+java@Service
+public class PaymentService {
+    private final Map<String, PaymentProcessor> processors;
+
+    public PaymentResult pay(String type, PaymentRequest req) {
+        return processors.get(type).process(req);
+    }
+}
+No switch statement, no new class per gateway. Add a new payment method = one line.
+
+Usage — no separate class needed for each rule:
+
+
+
+
+why use functional interfaces?":
+
+"They let us treat behavior as data — pass logic as a method parameter, reduce boilerplate from anonymous classes, and enable clean functional-style composition, especially critical in reactive stacks like WebFlux."
+
+
+A lambda expression is an anonymous function — no method name, no access modifier, no return type declaration — used to implement a functional interface's single abstract method concisely, without writing a full class."
+
+
+
+
+
+
+
+A Spring Boot annotation is metadata attached to a class, method, field, or parameter at compile time, which is read at runtime (or during class loading) via Java Reflection by the Spring container. The container uses this metadata to alter bean behavior — dependency injection, proxying, request mapping, transaction boundaries, etc. — without you writing that plumbing code yourself
+
+
+Scenario: In a Spring Boot microservice (say, your Order Service calling an Inventory Service), you don't want every class that needs an HTTP client to manually build one with its own timeout settings, base URL, and error handlers scattered everywhere. You centralize it in one @Configuration class.
+java@Configuration
+public class HttpClientConfig {
+
+    @Bean
+    public RestClient inventoryRestClient() {
+        return RestClient.builder()
+            .baseUrl("http://inventory-service/api")
+            .requestFactory(clientHttpRequestFactory())  // reuses the bean below
+            .defaultHeader("Content-Type", "application/json")
+            .build();
+    }
+
+    @Bean
+    public ClientHttpRequestFactory clientHttpRequestFactory() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(3000);
+        factory.setReadTimeout(5000);
+        return factory;
+    }
+}
+@Service
+public class OrderService {
+
+    private final RestClient inventoryRestClient;
+
+    public OrderService(RestClient inventoryRestClient) {
+        this.inventoryRestClient = inventoryRestClient;
+    }
+
+    public boolean checkStock(String productId) {
+        return inventoryRestClient.get()
+            .uri("/stock/{id}", productId)
+            .retrieve()
+            .body(Boolean.class);
+    }
+}
+
+
+
+
+
+Easy example: @Configuration for a Rate Limiter Bean
+Imagine your app needs a "rule" for how fast people can call your API — say, 100 requests per second. Instead of writing that rule inside every controller, you write it ONCE in a @Configuration class.
+java@Configuration
+public class AppConfig {
+
+    @Bean
+    public RateLimiter rateLimiter() {
+        return RateLimiter.create(100.0); // allow 100 requests/sec
+    }
+}
+Now, ANY class in your app that needs this rate limiter just asks Spring for it — it doesn't create its own copy:
+java@RestController
+public class OrderController {
+
+    private final RateLimiter rateLimiter;
+
+    public OrderController(RateLimiter rateLimiter) {
+        this.rateLimiter = rateLimiter;
+    }
+
+    @GetMapping("/orders")
+    public String getOrders() {
+        if (!rateLimiter.tryAcquire()) {
+            return "Too many requests, slow down!";
+        }
+        return "Here are your orders";
+    }
+}
+
+
+
+
+
+Component — Mid-Level Explanation
+@Component is a stereotype annotation that marks a class as a Spring-managed bean, discovered via classpath scanning (@ComponentScan) and registered in the ApplicationContext as a singleton (by default).
+
+
+Example 1: A reusable validation utility
+java@Component
+public class TransactionValidator {
+
+    public boolean isValidAmount(BigDecimal amount) {
+        return amount != null && amount.compareTo(BigDecimal.ZERO) > 0;
+    }
+
+    public boolean isValidAccount(String accountNumber) {
+        return accountNumber != null && accountNumber.matches("\\d{10,16}");
+    }
+}
+
+
+
+@Component — More Mid-Level Examples
+
+Example 4: An event listener/publisher helper
+java@Component
+public class OrderEventPublisher {
+
+    private final ApplicationEventPublisher eventPublisher;
+
+    public OrderEventPublisher(ApplicationEventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
+    }
+
+    public void publishOrderPlaced(Order order) {
+        eventPublisher.publishEvent(new OrderPlacedEvent(this, order));
+    }
+}
+Used inside a
+
+
+
+
+
+
+
+Example 5: A JWT token utility (common in Spring Security setups)
+java@Component
+public class JwtTokenUtil {
+
+    private final String secretKey = "your-secret-key";
+
+    public String generateToken(String username) {
+        return Jwts.builder()
+            .setSubject(username)
+            .setIssuedAt(new Date())
+            .setExpiration(new Date(System.currentTimeMillis() + 3600_000))
+            .signWith(SignatureAlgorithm.HS256, secretKey)
+            .compact();
+    }
+
+    public boolean isTokenValid(String token, String username) {
+        String extractedUsername = Jwts.parser()
+            .setSigningKey(secretKey)
+            .parseClaimsJws(token)
+            .getBody()
+            .getSubject();
+        return extractedUsername.equals(username);
+    }
+}
+Injected into a filter or auth service used during login/authentication flow:
+java@Component
+public class JwtAuthFilter extends OncePerRequestFilter {
+
+    private final JwtTokenUtil jwtTokenUtil;
+
+    public JwtAuthFilter(JwtTokenUtil jwtTokenUtil) {
+        this.jwtTokenUtil = jwtTokenUtil;
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+            throws ServletException, IOException {
+        // extract token, validate using jwtTokenUtil, set SecurityContext
+        chain.doFilter(request, response);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+Interview one-liner: "If you use @Component instead of @Repository on a manual DAO class, the bean still works, but you lose Spring's automatic translation of database-specific exceptions into its unified DataAccessException hierarchy — meaning your code becomes tightly coupled to the specific persistence technology's exception types."
+
+
+
+
+
+
+
+
+
+
+
+
 
 For Java 17 to 21 migration, use these medium-level points:
 
@@ -1020,3 +1268,15 @@ The Spring ApplicationContext Lifecycle
 Initialization / Refresh
 Active / Running:  he container is rerady, serving bean requests, managing scopes, and handling events.
 Stop / Close (close()): Triggered on application shutdown. It gracefully destroys all singleton beans
+
+
+
+
+
+Record class:
+
+The Best Use Case: DTOs (Data Transfer Objects)
+The absolute best place to use a Java record in Spring Boot is for REST API Request and Response payloads.
+
+
+Native Immutability: Records are immutable by default. Once a payload is received from the client, the data is locked and thread-safe. No developer can accidentally modify it mid-flight.
